@@ -1,0 +1,8 @@
+name: pmlord-partner-scorecard
+description: Evaluate manufacturing partner performance with weighted scoring across quality, delivery, cost, and communication. Assign A-F letter grades.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

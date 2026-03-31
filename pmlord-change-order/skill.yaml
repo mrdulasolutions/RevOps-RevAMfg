@@ -1,0 +1,8 @@
+name: pmlord-change-order
+description: Mid-stream change management with full impact analysis (cost, time, tooling, quality, partner, logistics), PM approval gate, cascading updates, and revision control.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

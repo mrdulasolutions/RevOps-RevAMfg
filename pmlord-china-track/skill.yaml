@@ -1,0 +1,8 @@
+name: pmlord-china-track
+description: Track manufacturing progress with Chinese partners using 10-milestone system. Detect delays, schedule quality checkpoints, generate progress reports.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

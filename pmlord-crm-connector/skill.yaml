@@ -1,0 +1,8 @@
+name: pmlord-crm-connector
+description: Sync with Microsoft Dynamics 365 / Power Apps or HubSpot CRM. Read and write customer, order, and RFQ data with bidirectional field mapping.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

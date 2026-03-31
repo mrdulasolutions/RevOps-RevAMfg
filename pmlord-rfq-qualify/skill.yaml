@@ -1,0 +1,8 @@
+name: pmlord-rfq-qualify
+description: Gate checks on incoming RFQs. Evaluates customer status, capability match, complexity, capacity, and credit readiness. Produces PROCEED / CONDITIONAL / DECLINE decision.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

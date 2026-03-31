@@ -1,0 +1,265 @@
+{
+  "engine": "pmlord-engine",
+  "version": "1.0.0",
+  "client": "Rev A Manufacturing",
+  "skills": {
+    "pmlord-engine": {
+      "type": "orchestrator",
+      "description": "Master orchestrator — routes intent to sub-skills",
+      "path": "pmlord-engine/SKILL.md"
+    },
+    "pmlord-rfq-intake": {
+      "type": "content",
+      "group": "rfq-pipeline",
+      "description": "Parse incoming RFQs from email/website/CRM",
+      "path": "pmlord-rfq-intake/SKILL.md",
+      "next": "pmlord-rfq-qualify"
+    },
+    "pmlord-rfq-qualify": {
+      "type": "content",
+      "group": "rfq-pipeline",
+      "description": "Gate checks: new/returning, capability, capacity, credit",
+      "path": "pmlord-rfq-qualify/SKILL.md",
+      "next": "pmlord-rfq-quote",
+      "conditional_next": {
+        "new_customer": "pmlord-customer-gate"
+      }
+    },
+    "pmlord-rfq-quote": {
+      "type": "content",
+      "group": "rfq-pipeline",
+      "description": "Generate customer-facing quote",
+      "path": "pmlord-rfq-quote/SKILL.md",
+      "next": "pmlord-customer-comms"
+    },
+    "pmlord-customer-gate": {
+      "type": "content",
+      "group": "customer",
+      "description": "New customer onboarding gate",
+      "path": "pmlord-customer-gate/SKILL.md",
+      "next": "pmlord-rfq-quote"
+    },
+    "pmlord-customer-profile": {
+      "type": "content",
+      "group": "customer",
+      "description": "Customer profile management",
+      "path": "pmlord-customer-profile/SKILL.md"
+    },
+    "pmlord-customer-comms": {
+      "type": "content",
+      "group": "customer",
+      "description": "Draft customer communications",
+      "path": "pmlord-customer-comms/SKILL.md",
+      "next": "pmlord-china-package"
+    },
+    "pmlord-china-package": {
+      "type": "content",
+      "group": "manufacturing",
+      "description": "Package specs for China manufacturing partners",
+      "path": "pmlord-china-package/SKILL.md",
+      "next": "pmlord-china-track"
+    },
+    "pmlord-china-track": {
+      "type": "content",
+      "group": "manufacturing",
+      "description": "Track manufacturing progress with China partners",
+      "path": "pmlord-china-track/SKILL.md",
+      "next": "pmlord-inspect"
+    },
+    "pmlord-partner-scorecard": {
+      "type": "content",
+      "group": "manufacturing",
+      "description": "Evaluate partner performance (A-F)",
+      "path": "pmlord-partner-scorecard/SKILL.md"
+    },
+    "pmlord-inspect": {
+      "type": "content",
+      "group": "quality",
+      "description": "Incoming inspection workflow",
+      "path": "pmlord-inspect/SKILL.md",
+      "next": "pmlord-quality-gate",
+      "conditional_next": {
+        "reject": "pmlord-ncr"
+      }
+    },
+    "pmlord-ncr": {
+      "type": "content",
+      "group": "quality",
+      "description": "Non-conformance report",
+      "path": "pmlord-ncr/SKILL.md"
+    },
+    "pmlord-quality-gate": {
+      "type": "content",
+      "group": "quality",
+      "description": "Quality gate checks (G1-G4)",
+      "path": "pmlord-quality-gate/SKILL.md",
+      "next": "pmlord-repackage"
+    },
+    "pmlord-order-track": {
+      "type": "content",
+      "group": "order",
+      "description": "Full order lifecycle tracking (12 stages)",
+      "path": "pmlord-order-track/SKILL.md"
+    },
+    "pmlord-logistics": {
+      "type": "content",
+      "group": "order",
+      "description": "Shipping and logistics coordination",
+      "path": "pmlord-logistics/SKILL.md"
+    },
+    "pmlord-repackage": {
+      "type": "content",
+      "group": "order",
+      "description": "Repackaging workflow",
+      "path": "pmlord-repackage/SKILL.md",
+      "next": "pmlord-logistics"
+    },
+    "pmlord-dashboard": {
+      "type": "content",
+      "group": "reporting",
+      "description": "PM workload dashboard",
+      "path": "pmlord-dashboard/SKILL.md"
+    },
+    "pmlord-report": {
+      "type": "content",
+      "group": "reporting",
+      "description": "Periodic report generation",
+      "path": "pmlord-report/SKILL.md"
+    },
+    "pmlord-audit-trail": {
+      "type": "content",
+      "group": "reporting",
+      "description": "Decision audit trail",
+      "path": "pmlord-audit-trail/SKILL.md"
+    },
+    "pmlord-escalate": {
+      "type": "system",
+      "group": "system",
+      "description": "Escalation workflow",
+      "path": "pmlord-escalate/SKILL.md"
+    },
+    "pmlord-docx": {
+      "type": "utility",
+      "group": "system",
+      "description": "Markdown to DOCX converter",
+      "path": "pmlord-docx/SKILL.md"
+    },
+    "pmlord-templates": {
+      "type": "utility",
+      "group": "system",
+      "description": "Central template management",
+      "path": "pmlord-templates/SKILL.md"
+    },
+    "pmlord-cron": {
+      "type": "system",
+      "group": "scheduling",
+      "description": "Scheduled recurring tasks",
+      "path": "pmlord-cron/SKILL.md"
+    },
+    "pmlord-reminder": {
+      "type": "system",
+      "group": "scheduling",
+      "description": "PM reminders and follow-ups",
+      "path": "pmlord-reminder/SKILL.md"
+    },
+    "pmlord-email-connector": {
+      "type": "connector",
+      "group": "integration",
+      "description": "Email integration (Hostinger/Gmail MCP)",
+      "path": "pmlord-email-connector/SKILL.md"
+    },
+    "pmlord-crm-connector": {
+      "type": "connector",
+      "group": "integration",
+      "description": "CRM integration (Power Apps/Dynamics/HubSpot)",
+      "path": "pmlord-crm-connector/SKILL.md"
+    },
+    "pmlord-erp-connector": {
+      "type": "connector",
+      "group": "integration",
+      "description": "ERP/inventory integration",
+      "path": "pmlord-erp-connector/SKILL.md"
+    },
+    "pmlord-autopilot": {
+      "type": "system",
+      "group": "magic",
+      "description": "Invisible workflow auto-advancement — hands-free lifecycle transitions",
+      "path": "pmlord-autopilot/SKILL.md"
+    },
+    "pmlord-pulse": {
+      "type": "system",
+      "group": "magic",
+      "description": "Real-time alert feed via Slack, iMessage, and email",
+      "path": "pmlord-pulse/SKILL.md"
+    },
+    "pmlord-intel": {
+      "type": "system",
+      "group": "magic",
+      "description": "Predictive analytics — lead time forecasting, risk scoring, trend analysis",
+      "path": "pmlord-intel/SKILL.md"
+    },
+    "pmlord-quick": {
+      "type": "system",
+      "group": "magic",
+      "description": "One-shot natural language actions — fast PM commands",
+      "path": "pmlord-quick/SKILL.md"
+    },
+    "pmlord-sync": {
+      "type": "connector",
+      "group": "magic",
+      "description": "Bidirectional auto-sync with CRM, email, and external systems",
+      "path": "pmlord-sync/SKILL.md"
+    },
+    "pmlord-change-order": {
+      "type": "content",
+      "group": "magic",
+      "description": "Mid-stream change management with impact analysis",
+      "path": "pmlord-change-order/SKILL.md"
+    },
+    "pmlord-profit": {
+      "type": "content",
+      "group": "magic",
+      "description": "Actual vs estimated cost tracking, margin analysis, profitability reports",
+      "path": "pmlord-profit/SKILL.md"
+    },
+    "pmlord-handoff": {
+      "type": "system",
+      "group": "magic",
+      "description": "Multi-PM collaboration, vacation handoff, approval chains",
+      "path": "pmlord-handoff/SKILL.md"
+    },
+    "pmlord-rules": {
+      "type": "system",
+      "group": "magic",
+      "description": "YAML-based business rules engine — pricing, quality, capacity, escalation policies",
+      "path": "pmlord-rules/SKILL.md"
+    }
+  },
+  "lifecycle": [
+    "pmlord-rfq-intake",
+    "pmlord-rfq-qualify",
+    "pmlord-customer-gate",
+    "pmlord-rfq-quote",
+    "pmlord-customer-comms",
+    "pmlord-china-package",
+    "pmlord-china-track",
+    "pmlord-inspect",
+    "pmlord-quality-gate",
+    "pmlord-repackage",
+    "pmlord-logistics",
+    "pmlord-customer-comms",
+    "pmlord-order-track"
+  ],
+  "groups": {
+    "rfq-pipeline": "RFQ intake, qualification, and quoting",
+    "customer": "Customer onboarding, profiles, and communications",
+    "manufacturing": "China partner packaging, tracking, and scoring",
+    "quality": "Inspection, NCR, and quality gates",
+    "order": "Order tracking, logistics, and repackaging",
+    "reporting": "Dashboard, reports, and audit trail",
+    "system": "Escalation, templates, and document conversion",
+    "scheduling": "Cron jobs and reminders",
+    "integration": "Email, CRM, and ERP connectors",
+    "magic": "Autopilot, pulse alerts, intel analytics, quick actions, sync, change orders, profit tracking, handoff, business rules"
+  }
+}

@@ -1,0 +1,8 @@
+name: pmlord-engine
+description: PMLORD master orchestrator for Rev A Manufacturing PM workflow. Routes requests to sub-skills, chains the RFQ-to-delivery lifecycle. Use for any PM activity.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

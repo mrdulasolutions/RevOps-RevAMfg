@@ -1,0 +1,8 @@
+name: pmlord-email-connector
+description: Parse emails for RFQs and updates. Connects to Hostinger, Gmail, or generic inbox MCP tools to classify and route incoming emails.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

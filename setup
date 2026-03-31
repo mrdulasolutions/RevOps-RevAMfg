@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# PMLORD Setup Script — One-step installer for Rev A Manufacturing PM Engine
+#
+# Usage:
+#   ./setup
+#
+# What it does:
+#   1. Creates ~/.pmlord/ directory structure
+#   2. Links skills to ~/.claude/skills/pmlord/
+#   3. Installs npm dependencies for docx converter
+#   4. Prompts for initial configuration
+set -euo pipefail
+
+PMLORD_DIR="$(cd "$(dirname "$0")" && pwd)"
+STATE_DIR="$HOME/.pmlord"
+SKILLS_DIR="$HOME/.claude/skills/pmlord"
+
+echo ""
+echo "  ╔═══════════════════════════════════════════╗"
+echo "  ║  PMLORD — PM Workflow Engine Setup        ║"
+echo "  ║  Rev A Manufacturing                      ║"
+echo "  ╚═══════════════════════════════════════════╝"
+echo ""
+
+# Step 1: Create runtime state directories
+echo "[1/5] Creating runtime directories..."
+mkdir -p "$STATE_DIR"/{sessions,analytics,state,reports/PMLORD-Reports,contributor-logs}
+echo "  ✓ ~/.pmlord/ directory structure created"
+
+# Step 2: Link skills to Claude Code skills directory
+echo "[2/5] Linking skills to Claude Code..."
+mkdir -p "$HOME/.claude/skills"
+
+# Remove existing link if present
+if [ -L "$SKILLS_DIR" ]; then
+  rm "$SKILLS_DIR"
+elif [ -d "$SKILLS_DIR" ]; then
+  echo "  WARNING: $SKILLS_DIR exists as a directory. Backing up to ${SKILLS_DIR}.bak"
+  mv "$SKILLS_DIR" "${SKILLS_DIR}.bak"
+fi
+
+ln -s "$PMLORD_DIR" "$SKILLS_DIR"
+echo "  ✓ Linked $PMLORD_DIR -> $SKILLS_DIR"
+
+# Step 3: Make bin scripts executable
+echo "[3/5] Setting permissions..."
+chmod +x "$PMLORD_DIR/bin/"* 2>/dev/null || true
+chmod +x "$PMLORD_DIR/pmlord-engine/bin/"* 2>/dev/null || true
+echo "  ✓ Bin scripts made executable"
+
+# Step 4: Install npm dependencies for docx converter
+echo "[4/5] Installing docx converter dependencies..."
+if command -v npm >/dev/null 2>&1; then
+  if [ -f "$PMLORD_DIR/pmlord-docx/scripts/package.json" ]; then
+    cd "$PMLORD_DIR/pmlord-docx/scripts" && npm install --silent 2>/dev/null
+    echo "  ✓ DOCX converter dependencies installed"
+  elif [ -f "$PMLORD_DIR/scripts/package.json" ]; then
+    cd "$PMLORD_DIR/scripts" && npm install --silent 2>/dev/null
+    echo "  ✓ DOCX converter dependencies installed"
+  else
+    echo "  ⚠ No package.json found for docx converter (install later)"
+  fi
+else
+  echo "  ⚠ npm not found. Install Node.js to enable .docx report generation."
+fi
+
+# Step 5: Initial configuration
+echo "[5/5] Configuring PMLORD..."
+CONFIG_CMD="$PMLORD_DIR/bin/pmlord-config"
+
+# Set defaults if not already configured
+if [ ! -f "$STATE_DIR/config.yaml" ]; then
+  "$CONFIG_CMD" set telemetry off
+  "$CONFIG_CMD" set proactive true
+  "$CONFIG_CMD" set report_format docx
+  "$CONFIG_CMD" set crm_type none
+
+  # Detect platform
+  if [ "$(uname)" = "Darwin" ]; then
+    "$CONFIG_CMD" set platform mac
+  else
+    "$CONFIG_CMD" set platform windows
+  fi
+
+  echo "  ✓ Default configuration created at ~/.pmlord/config.yaml"
+else
+  echo "  ✓ Existing configuration preserved"
+fi
+
+echo ""
+echo "  ═══════════════════════════════════════════"
+echo "  PMLORD v$(cat "$PMLORD_DIR/VERSION" 2>/dev/null | tr -d '[:space:]' || echo '1.0.0') installed successfully!"
+echo ""
+echo "  Skills available at: $SKILLS_DIR"
+echo "  Config at:           $STATE_DIR/config.yaml"
+echo "  Reports saved to:    $STATE_DIR/reports/PMLORD-Reports/"
+echo ""
+echo "  Quick start:"
+echo "    /pmlord-engine    — Master orchestrator (routes to all skills)"
+echo "    /pmlord-rfq-intake — Process a new RFQ"
+echo "    /pmlord-dashboard  — View PM workload"
+echo ""
+echo "  Configure: pmlord-config set <key> <value>"
+echo "  ═══════════════════════════════════════════"
+echo ""

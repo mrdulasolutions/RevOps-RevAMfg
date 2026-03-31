@@ -1,0 +1,8 @@
+name: pmlord-repackage
+description: Repackaging workflow for inspect-and-forward orders. Creates work orders, manages labeling and packaging requirements, tracks completion.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

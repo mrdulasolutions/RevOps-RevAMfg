@@ -1,0 +1,8 @@
+name: pmlord-inspect
+description: Incoming inspection workflow. Check received parts against original specs, document findings, and assign disposition (ACCEPT / REJECT / HOLD).
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

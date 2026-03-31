@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# pmlord-session-track — PID-based session lifecycle management
+#
+# Usage:
+#   pmlord-session-track start   — register this session
+#   pmlord-session-track count   — count active sessions (last 2h)
+#   pmlord-session-track cleanup — remove stale session files
+set -euo pipefail
+
+STATE_DIR="${PMLORD_STATE_DIR:-$HOME/.pmlord}"
+SESSIONS_DIR="$STATE_DIR/sessions"
+
+case "${1:-}" in
+  start)
+    mkdir -p "$SESSIONS_DIR"
+    touch "$SESSIONS_DIR/$PPID"
+    echo "$PPID"
+    ;;
+  count)
+    if [ -d "$SESSIONS_DIR" ]; then
+      find "$SESSIONS_DIR" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' '
+    else
+      echo "0"
+    fi
+    ;;
+  cleanup)
+    if [ -d "$SESSIONS_DIR" ]; then
+      find "$SESSIONS_DIR" -mmin +120 -type f -delete 2>/dev/null || true
+      echo "Stale sessions cleaned"
+    fi
+    ;;
+  *)
+    echo "Usage: pmlord-session-track {start|count|cleanup}"
+    exit 1
+    ;;
+esac

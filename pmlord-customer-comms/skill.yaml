@@ -1,0 +1,8 @@
+name: pmlord-customer-comms
+description: Draft customer communications for Rev A Manufacturing. Supports RFQ Acknowledgment, Quote Submission, Order Confirmation, Status Update, and Shipment Notification.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

@@ -1,0 +1,12 @@
+{
+  "name": "pmlord",
+  "version": "1.0.0",
+  "description": "PMLORD — PM Workflow Engine for Rev A Manufacturing",
+  "private": true,
+  "scripts": {
+    "setup": "./setup",
+    "docx": "node pmlord-docx/scripts/report-to-docx.mjs"
+  },
+  "keywords": ["pmlord", "pm-workflow", "manufacturing", "rfq"],
+  "license": "UNLICENSED"
+}

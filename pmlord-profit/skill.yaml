@@ -1,0 +1,8 @@
+name: pmlord-profit
+description: Real cost vs estimated tracking with per-order and per-customer lifetime profitability analysis, variance reporting, and margin adjustment recommendations.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

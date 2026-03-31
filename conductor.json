@@ -50,7 +50,36 @@
       "group": "customer",
       "description": "Draft customer communications",
       "path": "pmlord-customer-comms/SKILL.md",
-      "next": "pmlord-china-package"
+      "next": "pmlord-export-compliance"
+    },
+    "pmlord-export-compliance": {
+      "type": "content",
+      "group": "compliance",
+      "description": "Export compliance gate — EAR/ITAR/sanctions via ExChek engine (exchek.us)",
+      "path": "pmlord-export-compliance/SKILL.md",
+      "next": "pmlord-china-package",
+      "hard_gate": true,
+      "autopilot": "pause",
+      "external_engine": {
+        "name": "ExChek",
+        "website": "exchek.us",
+        "community_repo": "exchekinc/exchekskills",
+        "enterprise": true
+      }
+    },
+    "pmlord-import-compliance": {
+      "type": "content",
+      "group": "compliance",
+      "description": "Import compliance gate — HTS/duties/customs via TradeInsights.ai",
+      "path": "pmlord-import-compliance/SKILL.md",
+      "next": "pmlord-inspect",
+      "hard_gate": true,
+      "autopilot": "conditional",
+      "external_engine": {
+        "name": "TradeInsights.ai",
+        "website": "tradeinsights.ai",
+        "integration": "api"
+      }
     },
     "pmlord-china-package": {
       "type": "content",
@@ -64,7 +93,7 @@
       "group": "manufacturing",
       "description": "Track manufacturing progress with China partners",
       "path": "pmlord-china-track/SKILL.md",
-      "next": "pmlord-inspect"
+      "next": "pmlord-import-compliance"
     },
     "pmlord-partner-scorecard": {
       "type": "content",
@@ -241,8 +270,10 @@
     "pmlord-customer-gate",
     "pmlord-rfq-quote",
     "pmlord-customer-comms",
+    "pmlord-export-compliance",
     "pmlord-china-package",
     "pmlord-china-track",
+    "pmlord-import-compliance",
     "pmlord-inspect",
     "pmlord-quality-gate",
     "pmlord-repackage",
@@ -260,6 +291,7 @@
     "system": "Escalation, templates, and document conversion",
     "scheduling": "Cron jobs and reminders",
     "integration": "Email, CRM, and ERP connectors",
+    "compliance": "Export compliance (EAR/ITAR/sanctions) and import compliance (HTS/duties/customs)",
     "magic": "Autopilot, pulse alerts, intel analytics, quick actions, sync, change orders, profit tracking, handoff, business rules"
   }
 }

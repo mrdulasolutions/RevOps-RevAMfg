@@ -125,6 +125,8 @@ When a user makes a request, detect the intent and route to the correct sub-skil
 | Profit, margin, cost vs estimate, P&L | pmlord-profit | `~/.claude/skills/pmlord/pmlord-profit/SKILL.md` |
 | Handoff, transfer, vacation, cover for, approval | pmlord-handoff | `~/.claude/skills/pmlord/pmlord-handoff/SKILL.md` |
 | Rules, business rule, policy, threshold, guard | pmlord-rules | `~/.claude/skills/pmlord/pmlord-rules/SKILL.md` |
+| Export compliance, ITAR, EAR, sanctions, can we export | pmlord-export-compliance | `~/.claude/skills/pmlord/pmlord-export-compliance/SKILL.md` |
+| Import compliance, HTS, tariff, duty, customs, Section 301 | pmlord-import-compliance | `~/.claude/skills/pmlord/pmlord-import-compliance/SKILL.md` |
 
 **To invoke a sub-skill:** Read the target SKILL.md using the Read tool, then follow its instructions exactly. Skip these sections (handled by this orchestrator):
 - Preamble (already run)
@@ -141,14 +143,18 @@ pmlord-rfq-intake
     -> pmlord-rfq-quote (generate quote)
       -> pmlord-customer-comms (send quote to customer)
         -> [customer accepts]
-        -> pmlord-china-package (build mfg package for China)
-          -> pmlord-china-track (track manufacturing progress)
-            -> pmlord-inspect (incoming inspection at Rev A)
-              -> pmlord-quality-gate (quality check)
-                -> pmlord-repackage (if inspect-and-forward)
-                  -> pmlord-logistics (ship to customer)
-                    -> pmlord-customer-comms (shipment notification)
-                      -> pmlord-order-track (close order)
+        -> pmlord-export-compliance (HARD GATE — EAR/ITAR/sanctions before sending data to China)
+          -> pmlord-china-package (build mfg package for China)
+            -> pmlord-china-track (track manufacturing progress)
+              -> [goods shipped from China]
+              -> pmlord-import-compliance (HARD GATE — HTS/duties/customs before entry)
+                -> pmlord-inspect (incoming inspection at Rev A)
+                  -> pmlord-quality-gate (quality check)
+                    -> pmlord-repackage (if inspect-and-forward)
+                      -> pmlord-export-compliance (if shipping internationally — re-screen)
+                        -> pmlord-logistics (ship to customer)
+                          -> pmlord-customer-comms (shipment notification)
+                            -> pmlord-order-track (close order)
 ```
 
 After completing a skill, tell the PM: "Next step in the workflow: [skill name]. Want me to run it?"

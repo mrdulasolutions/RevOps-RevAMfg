@@ -33,7 +33,7 @@ Every decision is logged. Every communication is drafted. Every report is genera
 
 ---
 
-## Skills (36)
+## Skills (38)
 
 ### RFQ Pipeline
 
@@ -102,6 +102,13 @@ Every decision is logged. Every communication is drafted. Every report is genera
 | **CRM** | `/pmlord-crm-connector` | CRM integration for Microsoft Power Apps (Dataverse), Dynamics 365, and HubSpot. Adapter pattern supports all three. Field mapping: RFQ->Opportunity, Customer->Account, Order->Sales Order. |
 | **ERP** | `/pmlord-erp-connector` | ERP/inventory integration for capacity and cost data. Flexible adapter — Rev A's ERP tooling is evolving. |
 
+### Compliance
+
+| Skill | Command | What It Does |
+|-------|---------|-------------|
+| **Export Compliance** | `/pmlord-export-compliance` | EAR/ITAR/sanctions screening via ExChek engine (exchek.us). Auto-detects installation, offers Enterprise or installs free Community engine from GitHub. Hard gate before sending technical data to China or shipping internationally. |
+| **Import Compliance** | `/pmlord-import-compliance` | HTS classification, duty calculation (MFN + Section 301 + AD/CVD), customs documentation via TradeInsights.ai API. Hard gate before customs entry on inbound China shipments. |
+
 ### Magic Layer
 
 | Skill | Command | What It Does |
@@ -165,7 +172,16 @@ rfq-intake --> rfq-qualify --> rfq-quote
               customer-gate    Quote .docx
                     |
                     v
-china-package --> china-track --> inspect --> quality-gate
+         EXPORT COMPLIANCE (EAR/ITAR/sanctions — hard gate)
+                    |
+                    v
+china-package --> china-track --> [goods shipped from China]
+                                    |
+                                    v
+                          IMPORT COMPLIANCE (HTS/duties — hard gate)
+                                    |
+                                    v
+                           inspect --> quality-gate
                                     |
                                     v (if reject)
                                    ncr
@@ -370,6 +386,8 @@ PMLORD/
   pmlord-email-connector/       Email integration
   pmlord-crm-connector/         CRM integration
   pmlord-erp-connector/         ERP integration
+  pmlord-export-compliance/     Export compliance (ExChek engine)
+  pmlord-import-compliance/     Import compliance (TradeInsights.ai)
   pmlord-autopilot/             Workflow auto-advancement
   pmlord-pulse/                 Real-time alerts
   pmlord-intel/                 Predictive analytics
@@ -381,7 +399,7 @@ PMLORD/
   pmlord-rules/                 Business rules engine
 ```
 
-**36 skill directories. 310 files. Zero tribal knowledge.**
+**38 skill directories. 330+ files. Zero tribal knowledge.**
 
 ---
 

@@ -18,9 +18,10 @@ PMLORD replaces all of that with a structured, auditable, AI-assisted workflow.
 RFQ arrives
   -> Parse & intake (extract specs, quantities, materials, tolerances)
   -> Qualify (capability match, capacity check, credit readiness)
+  -> New customer? -> Customer gate (onboarding, CRM, NDA, credit terms)
+  -> EXPORT COMPLIANCE (EAR/ITAR/sanctions screening — hard gate)
   -> Quote (cost estimation, margin calculation, lead time)
   -> Customer accepts
-  -> EXPORT COMPLIANCE (EAR/ITAR/sanctions screening — hard gate)
   -> Package specs for China partner (metric conversion, drawing prep, IP protection)
   -> Track manufacturing (10 milestones, delay detection)
   -> [Goods shipped from China]
@@ -31,6 +32,8 @@ RFQ arrives
   -> Ship to customer (routing, customs, tracking)
   -> Close order (audit trail, profitability analysis, partner scorecard)
 ```
+
+> Export compliance is screened **before** quoting — you must confirm you can legally export before investing time in pricing.
 
 Every decision is logged. Every communication is drafted. Every report is generated as `.docx`. Every escalation follows the matrix. No step is skipped.
 
@@ -101,7 +104,7 @@ Every decision is logged. Every communication is drafted. Every report is genera
 
 | Skill | Command | What It Does |
 |-------|---------|-------------|
-| **Email** | `/pmlord-email-connector` | Email integration via Hostinger/Gmail MCP. RFQ detection patterns (subject/body/sender matching). Auto-intake pipeline. |
+| **Email** | `/pmlord-email-connector` | Universal email connector. Native Claude M365 (primary, read-only, Team/Enterprise plan), Hostinger MCP (send/receive), Gmail MCP (drafts), Generic Inbox MCP (Microsoft send/reply/forward). Auto-detects providers, classifies inbound emails, routes to skills. |
 | **CRM** | `/pmlord-crm-connector` | CRM integration for Microsoft Power Apps (Dataverse), Dynamics 365, and HubSpot. Adapter pattern supports all three. Field mapping: RFQ->Opportunity, Customer->Account, Order->Sales Order. |
 | **ERP** | `/pmlord-erp-connector` | ERP/inventory integration for capacity and cost data. Flexible adapter — Rev A's ERP tooling is evolving. |
 
@@ -175,8 +178,9 @@ Layer 3: Composition Skills
   dashboard, report, audit-trail, intel, profit — aggregate from atomics
 
 Layer 2: Content Skills (Atomic)
-  rfq-intake, rfq-qualify, rfq-quote, customer-gate, china-package,
-  inspect, ncr, quality-gate, order-track, logistics, change-order, etc.
+  rfq-intake, rfq-qualify, customer-gate, export-compliance, rfq-quote,
+  china-package, import-compliance, inspect, ncr, quality-gate,
+  order-track, logistics, change-order, etc.
 
 Layer 1: Infrastructure
   Connectors (email, CRM, ERP), scheduling (cron, reminder),
@@ -417,21 +421,27 @@ PMLORD/
     pmlord-slug                 Report slug generator
 
   pmlord-engine/                Master orchestrator (intent + command routing)
+
+  # Lifecycle order (left to right = flow direction)
   pmlord-rfq-intake/            RFQ parsing & intake
   pmlord-rfq-qualify/           Gate checks
-  pmlord-rfq-quote/             Quote generation
-  pmlord-customer-gate/         New customer onboarding
-  pmlord-customer-profile/      Customer profiles
+  pmlord-customer-gate/         New customer onboarding (if new)
+  pmlord-export-compliance/     Export compliance (ExChek engine) [HARD GATE]
+  pmlord-rfq-quote/             Quote generation (after compliance clears)
   pmlord-customer-comms/        Customer emails
   pmlord-china-package/         Spec packaging for China
   pmlord-china-track/           Manufacturing tracking
-  pmlord-partner-scorecard/     Partner scoring
+  pmlord-import-compliance/     Import compliance (TradeInsights.ai) [HARD GATE]
   pmlord-inspect/               Incoming inspection
-  pmlord-ncr/                   Non-conformance reports
   pmlord-quality-gate/          Quality gates (G1-G4)
-  pmlord-order-track/           Order lifecycle
-  pmlord-logistics/             Shipping & customs
   pmlord-repackage/             Repackaging workflow
+  pmlord-logistics/             Shipping & customs
+  pmlord-order-track/           Order lifecycle
+
+  # Supporting skills
+  pmlord-customer-profile/      Customer profiles
+  pmlord-partner-scorecard/     Partner scoring
+  pmlord-ncr/                   Non-conformance reports
   pmlord-dashboard/             PM dashboard
   pmlord-report/                Periodic reports
   pmlord-audit-trail/           Decision audit log
@@ -440,11 +450,11 @@ PMLORD/
   pmlord-templates/             Template management
   pmlord-cron/                  Scheduled tasks
   pmlord-reminder/              PM reminders
-  pmlord-email-connector/       Email integration
+  pmlord-email-connector/       Email (Native M365 + Hostinger + Gmail + MCP Inbox)
   pmlord-crm-connector/         CRM integration
   pmlord-erp-connector/         ERP integration
-  pmlord-export-compliance/     Export compliance (ExChek engine) [HARD GATE]
-  pmlord-import-compliance/     Import compliance (TradeInsights.ai) [HARD GATE]
+
+  # Magic layer
   pmlord-autopilot/             Workflow auto-advancement
   pmlord-pulse/                 Real-time alerts
   pmlord-intel/                 Predictive analytics
@@ -454,6 +464,8 @@ PMLORD/
   pmlord-profit/                Profitability tracking
   pmlord-handoff/               PM handoff & collaboration
   pmlord-rules/                 Business rules engine
+
+  # Personalization
   pmlord-setup/                 Onboarding wizard (7 sections, 6 config files)
   pmlord-trust/                 Progressive autonomy (LEARN/ASSIST/OPERATE)
   pmlord-voice/                 Per-PM voice & personality tuner

@@ -1,6 +1,6 @@
 {
   "engine": "pmlord-engine",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "client": "Rev A Manufacturing",
   "skills": {
     "pmlord-engine": {
@@ -262,6 +262,24 @@
       "group": "magic",
       "description": "YAML-based business rules engine — pricing, quality, capacity, escalation policies",
       "path": "pmlord-rules/SKILL.md"
+    },
+    "pmlord-setup": {
+      "type": "system",
+      "group": "personalization",
+      "description": "Interactive onboarding wizard — 7-section config for company, workflow, connectors, partners, shipping, documents, CoWork",
+      "path": "pmlord-setup/SKILL.md"
+    },
+    "pmlord-trust": {
+      "type": "system",
+      "group": "personalization",
+      "description": "Progressive autonomy system — Level 1 LEARN (crawl), Level 2 ASSIST (walk), Level 3 OPERATE (run)",
+      "path": "pmlord-trust/SKILL.md"
+    },
+    "pmlord-voice": {
+      "type": "system",
+      "group": "personalization",
+      "description": "Per-user voice and personality tuner — captures communication style, applies to all engine output",
+      "path": "pmlord-voice/SKILL.md"
     }
   },
   "lifecycle": [
@@ -292,6 +310,29 @@
     "scheduling": "Cron jobs and reminders",
     "integration": "Email, CRM, and ERP connectors",
     "compliance": "Export compliance (EAR/ITAR/sanctions) and import compliance (HTS/duties/customs)",
-    "magic": "Autopilot, pulse alerts, intel analytics, quick actions, sync, change orders, profit tracking, handoff, business rules"
+    "magic": "Autopilot, pulse alerts, intel analytics, quick actions, sync, change orders, profit tracking, handoff, business rules",
+    "personalization": "Setup wizard, trust levels, voice profiles"
+  },
+  "commands": {
+    "status": {"type": "inline", "description": "Pipeline summary"},
+    "help": {"type": "inline", "description": "List all commands and skills"},
+    "config": {"type": "config", "description": "View/set engine config"},
+    "search": {"type": "inline", "description": "Search all state files"},
+    "switch": {"type": "inline", "description": "Switch working context"},
+    "back": {"type": "inline", "description": "Return to previous context"},
+    "save": {"type": "inline", "description": "Force session state snapshot"},
+    "export": {"type": "delegated", "skill": "pmlord-report", "mode": "export"},
+    "whoami": {"type": "inline", "description": "Show PM profile, trust, voice"},
+    "trust": {"type": "delegated", "skill": "pmlord-trust"},
+    "voice": {"type": "delegated", "skill": "pmlord-voice"},
+    "partners": {"type": "inline", "description": "Manufacturing partner table"},
+    "customers": {"type": "inline", "description": "Active customer table"},
+    "pipeline": {"type": "delegated", "skill": "pmlord-dashboard", "mode": "pipeline"},
+    "shortcuts": {"type": "inline", "description": "Command quick-reference"},
+    "backup": {"type": "config", "description": "Trigger state backup"},
+    "audit": {"type": "delegated", "skill": "pmlord-audit-trail", "mode": "summary"},
+    "alerts": {"type": "delegated", "skill": "pmlord-pulse", "mode": "review"},
+    "rules": {"type": "delegated", "skill": "pmlord-rules", "mode": "list"},
+    "setup": {"type": "delegated", "skill": "pmlord-setup"}
   }
 }

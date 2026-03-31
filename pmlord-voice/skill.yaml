@@ -1,0 +1,8 @@
+name: pmlord-voice
+description: Per-user voice and personality tuner — captures each PM's communication style through sample analysis and structured interview, then applies it to all engine-generated content.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

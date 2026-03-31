@@ -1,0 +1,41 @@
+# PMLORD PM Preferences
+# PM: {{PM_NAME}}
+# Created: {{CREATED_DATE}}
+# Last updated: {{UPDATED_DATE}}
+
+pain_points:
+  # What takes too much time or causes frustration
+  # - "Writing follow-up emails to partners"
+  # - "Formatting inspection reports"
+  # - "Tracking multiple orders across partners"
+  {{PAIN_POINTS}}
+
+time_sinks:
+  # Repetitive tasks that could be automated
+  # - "Status update emails to customers"
+  # - "Weekly pipeline reports"
+  # - "Quote formatting"
+  {{TIME_SINKS}}
+
+defaults:
+  preferred_report_format: "{{PREFERRED_FORMAT}}"         # docx | pdf | both
+  auto_attach_specs: {{AUTO_ATTACH_SPECS}}                # true | false
+  default_priority: "{{DEFAULT_PRIORITY}}"                # normal | high | low
+  preferred_communication_channel: "{{PREFERRED_CHANNEL}}" # email | slack | imessage
+  morning_briefing_time: "{{MORNING_TIME}}"               # e.g., "08:00"
+  end_of_day_time: "{{EOD_TIME}}"                         # e.g., "17:00"
+
+anti_patterns:
+  # Specific things to avoid in generated content
+  # - "Don't use exclamation marks in customer emails"
+  # - "Never use passive voice for action items"
+  # - "Don't include pricing in partner-facing documents"
+  {{ANTI_PATTERNS}}
+
+workflow_preferences:
+  morning_summary: {{MORNING_SUMMARY}}                    # true | false
+  end_of_day_report: {{EOD_REPORT}}                       # true | false
+  notification_frequency: "{{NOTIFICATION_FREQ}}"         # realtime | batched | daily
+  batch_time: "{{BATCH_TIME}}"                            # If batched, when to send (e.g., "09:00,14:00")
+  auto_file_reports: {{AUTO_FILE_REPORTS}}                 # true | false — auto-save to storage
+  weekly_digest_day: "{{WEEKLY_DIGEST_DAY}}"               # monday | friday | none

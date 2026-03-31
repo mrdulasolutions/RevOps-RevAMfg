@@ -1,8 +1,8 @@
 # PMLORD Roadmap
 
 **Last updated:** March 30, 2026
-**Current version:** 1.0.0
-**Status:** Core engine shipped. Magic layer shipped. Customer portal next.
+**Current version:** 1.2.0
+**Status:** Core engine shipped. Magic layer shipped. Personalization layer shipped. Customer portal next.
 
 ---
 
@@ -49,6 +49,36 @@
 | GitHub repo (private) | Shipped |
 
 **Total: 36 skills. 312 files. 32,028 lines.**
+
+---
+
+## Shipped (v1.2.0) — Personalization Layer
+
+### Setup Wizard + Trust Levels + Voice Profiles + In-Engine Commands
+
+| Component | What It Does | Status |
+|-----------|-------------|--------|
+| **pmlord-setup** | 7-section onboarding wizard: company, workflow, connectors, partners, shipping, docs, CoWork | Shipped |
+| **pmlord-trust** | Progressive autonomy: LEARN (crawl) → ASSIST (walk) → OPERATE (run). Per-user/skill/entity overrides | Shipped |
+| **pmlord-voice** | Per-PM voice tuning: 15+ dimensions, sample analysis, structured interview, continuous learning | Shipped |
+| **In-engine commands** | 20 slash commands (/status, /help, /whoami, /partners, /switch, etc.) | Shipped |
+| **First-run detection** | Auto-triggers setup wizard on first use | Shipped |
+| **Trust injection** | Orchestrator applies trust overlay to every skill invocation | Shipped |
+| **Voice loading** | Orchestrator applies voice profile to all generated content | Shipped |
+| **Context stack** | /switch and /back for navigating between customers/orders/RFQs | Shipped |
+
+### Config Files Created by Setup
+
+| File | Contents |
+|------|----------|
+| `~/.pmlord/company-profile.yaml` | Company name, address, team, escalation matrix |
+| `~/.pmlord/partners.yaml` | Manufacturing partner profiles |
+| `~/.pmlord/shipping-config.yaml` | Carriers, ports, broker, incoterms |
+| `~/.pmlord/document-config.yaml` | Logo, formats, storage, backup |
+| `~/.pmlord/connector-config.yaml` | CRM, email, ERP, Slack settings |
+| `~/.pmlord/workflow-config.yaml` | Stage activation, thresholds, SLAs |
+
+**Total: 41 skills. 20 commands. ~380 files.**
 
 ---
 
@@ -174,7 +204,7 @@ Build in two phases:
 
 ---
 
-## Future Considerations (v1.2.0+)
+## Future Considerations (v1.3.0+)
 
 Ideas not yet committed to the roadmap. These are possibilities, not promises.
 
@@ -202,9 +232,10 @@ Ideas not yet committed to the roadmap. These are possibilities, not promises.
 
 | Version | Scope | Status |
 |---------|-------|--------|
-| **v1.0.0** | Core engine (27 skills) + Magic Layer (9 skills) + docs | Shipped |
-| **v1.1.0** | Customer portal (skill + web app) | Next |
-| **v1.2.0** | Partner portal + mobile PWA | Future |
+| **v1.0.0** | Core engine (27 skills) + Magic Layer (9 skills) + Compliance (2 skills) + docs | Shipped |
+| **v1.2.0** | Personalization layer (setup, trust, voice) + 20 in-engine commands | Shipped |
+| **v1.3.0** | Customer portal (skill + web app) | Next |
+| **v1.4.0** | Partner portal + mobile PWA | Future |
 | **v2.0.0** | Multi-tenant + AI quote estimation + financial integration | Future |
 
 ---

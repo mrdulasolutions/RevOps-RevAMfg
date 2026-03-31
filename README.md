@@ -2,7 +2,7 @@
 
 **The PM Workflow Engine for Rev A Manufacturing**
 
-PMLORD is an AI-powered skills engine that runs inside Claude Code. It digitizes the entire Product Manager lifecycle at Rev A Manufacturing — from the moment an RFQ hits the inbox to the day the customer signs for delivery. 36 skills. 310 files. Zero tribal knowledge.
+PMLORD is an AI-powered skills engine that runs inside Claude Code. It digitizes the entire Product Manager lifecycle at Rev A Manufacturing — from the moment an RFQ hits the inbox to the day the customer signs for delivery. 41 skills. 20 in-engine commands. Zero tribal knowledge.
 
 Built on the Claude Code skills architecture. Powered by Anthropic Claude. Designed for contract manufacturing.
 
@@ -33,7 +33,7 @@ Every decision is logged. Every communication is drafted. Every report is genera
 
 ---
 
-## Skills (38)
+## Skills (41)
 
 ### RFQ Pipeline
 
@@ -122,6 +122,41 @@ Every decision is logged. Every communication is drafted. Every report is genera
 | **Profit** | `/pmlord-profit` | Actual vs estimated cost tracking across 12 cost categories. Variance analysis with 4-tier flag system. Customer lifetime profitability. Margin alerts. Improvement lever identification. |
 | **Handoff** | `/pmlord-handoff` | Multi-PM collaboration: vacation handoff (with auto-revert), permanent transfer, shared ownership, approval routing, workload balancing. Briefing and return-briefing generation. |
 | **Rules** | `/pmlord-rules` | YAML-based business rules engine: 7 rule types (pricing, approval, alert, routing, quality, workflow, customer). 31 pre-built rules. Conflict resolution. Rule chaining (3-level limit). Override logging. |
+
+### Personalization
+
+| Skill | Command | What It Does |
+|-------|---------|-------------|
+| **Setup** | `/pmlord-setup` | Interactive 7-section onboarding wizard: company profile, workflow configuration, connectors (CRM/email/ERP/Slack), manufacturing partners, shipping & logistics, document formatting, CoWork space. Creates 6 YAML config files. Supports skip, resume, per-section reconfiguration. |
+| **Trust** | `/pmlord-trust` | Progressive autonomy system with 3 trust levels: Level 1 LEARN (crawl — explain everything, PM decides all), Level 2 ASSIST (walk — pre-fill and draft, PM reviews), Level 3 OPERATE (run — handle routine autonomously, PM audits exceptions). Per-user, per-skill, and per-entity overrides. |
+| **Voice** | `/pmlord-voice` | Per-user voice and personality tuner. 3-phase onboarding: sample analysis (paste emails), structured interview (15+ dimensions), preference capture. Customizes ALL engine output: tone, greeting style, email length, technical depth, formality, banned phrases. Continuous learning from PM edits. |
+
+### In-Engine Commands (20)
+
+PMLORD includes 20 slash commands for quick actions without invoking full skills:
+
+| Command | What It Does |
+|---------|-------------|
+| `/status` | Pipeline summary — active RFQs, orders, gates, overdue items |
+| `/help` | List all commands and skills |
+| `/whoami` | PM profile, trust level, voice settings, active context |
+| `/partners` | Manufacturing partner table |
+| `/customers` | Active customer table |
+| `/search <term>` | Search across all state files |
+| `/switch <entity>` | Switch working context to customer/RFQ/order |
+| `/back` | Return to previous context |
+| `/pipeline` | Full pipeline dashboard |
+| `/config` | View/set engine configuration |
+| `/setup` | Run onboarding wizard |
+| `/trust` | Manage trust level |
+| `/voice` | Manage voice profile |
+| `/export` | Export report |
+| `/audit` | Decision audit trail |
+| `/alerts` | Review notifications |
+| `/rules` | List business rules |
+| `/backup` | Backup state and config |
+| `/save` | Force session snapshot |
+| `/shortcuts` | Command quick-reference |
 
 ---
 

@@ -1,13 +1,15 @@
 ---
 name: pmlord-engine
 preamble-tier: 1
-version: 1.0.0
+version: 1.2.0
 description: |
   PMLORD master orchestrator for Rev A Manufacturing PM workflow.
   Routes requests to the correct sub-skill based on context. Chains the
-  RFQ-to-delivery lifecycle. Use for any PM activity: "new RFQ", "quote",
-  "send to China", "track order", "inspect", "dashboard", "escalate".
-  Proactively suggest when context matches a sub-skill.
+  RFQ-to-delivery lifecycle. Handles in-engine slash commands (/status,
+  /help, /whoami, etc.). Injects trust level overlay and voice profile
+  into every skill invocation. Detects first-run and triggers setup wizard.
+  Use for any PM activity: "new RFQ", "quote", "send to China", "track
+  order", "inspect", "dashboard", "escalate", or any /command.
 compatibility: Claude Code, Claude desktop, Claude CoWork
 allowed-tools:
   - Bash
@@ -49,9 +51,20 @@ _TEL=$(~/.claude/skills/pmlord/bin/pmlord-config get telemetry 2>/dev/null || tr
 _TEL_PROMPTED=$([ -f ~/.pmlord/.telemetry-prompted ] && echo "yes" || echo "no")
 _TEL_START=$(date +%s)
 _SESSION_ID="$$-$(date +%s)"
+_SETUP_DONE=$(~/.claude/skills/pmlord/bin/pmlord-config get setup_completed 2>/dev/null || echo "false")
+_TRUST_LEVEL=$(~/.claude/skills/pmlord/pmlord-trust/bin/trust-check.sh 2>/dev/null || echo '{"level":2,"name":"assist","source":"default"}')
+_TRUST_NAME=$(echo "$_TRUST_LEVEL" | grep -o '"name":"[^"]*"' | head -1 | cut -d'"' -f4 2>/dev/null || echo "assist")
+_VOICE_PROFILE=$(~/.claude/skills/pmlord/pmlord-voice/bin/voice-check.sh --pm "$_DEFAULT_PM" 2>/dev/null || echo '{"profile_exists":false}')
+_VOICE_EXISTS=$(echo "$_VOICE_PROFILE" | grep -o '"profile_exists":true' >/dev/null 2>&1 && echo "true" || echo "false")
+_CONTEXT_FILE="$HOME/.pmlord/state/current-context.json"
+_HAS_CONTEXT=$([ -f "$_CONTEXT_FILE" ] && echo "true" || echo "false")
+echo "SETUP_DONE: $_SETUP_DONE"
+echo "TRUST: $_TRUST_NAME"
+echo "VOICE_PROFILE: $_VOICE_EXISTS"
+echo "CONTEXT_ACTIVE: $_HAS_CONTEXT"
 echo "TELEMETRY: ${_TEL:-off}"
 echo "TEL_PROMPTED: $_TEL_PROMPTED"
-mkdir -p ~/.pmlord/analytics
+mkdir -p ~/.pmlord/analytics ~/.pmlord/state ~/.pmlord/users
 echo '{"skill":"pmlord-engine","ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' >> ~/.pmlord/analytics/skill-usage.jsonl 2>/dev/null || true
 for _PF in $(find ~/.pmlord/analytics -maxdepth 1 -name '.pending-*' 2>/dev/null); do
   if [ -f "$_PF" ]; then
@@ -81,7 +94,80 @@ touch ~/.pmlord/.telemetry-prompted
 
 This only happens once. If `TEL_PROMPTED` is `yes`, skip entirely.
 
-## Voice
+## First-Run Detection
+
+If `SETUP_DONE` is `"false"` or empty, prompt the PM:
+
+> 🔧 **Welcome to PMLORD!** I'll help you configure the engine for your team. This takes about 10 minutes and covers your company profile, workflow, connectors, partners, shipping, and document preferences.
+
+Use AskUserQuestion:
+- A) Run setup now — let's configure everything
+- B) Skip for now — use defaults, I'll set up later
+
+If A: Read and execute `~/.claude/skills/pmlord/pmlord-setup/SKILL.md`
+If B: Run `~/.claude/skills/pmlord/bin/pmlord-config set setup_completed skipped` and continue.
+
+This only triggers on first use. Once setup is completed or skipped, it won't ask again.
+
+## Trust Level Injection
+
+Before invoking ANY sub-skill, apply the trust level behavioral overlay:
+
+1. Read the trust overlay prompt for the current level:
+   - Level 1 (LEARN): `~/.claude/skills/pmlord/pmlord-trust/prompts/trust-learn.md`
+   - Level 2 (ASSIST): `~/.claude/skills/pmlord/pmlord-trust/prompts/trust-assist.md`
+   - Level 3 (OPERATE): `~/.claude/skills/pmlord/pmlord-trust/prompts/trust-operate.md`
+2. Read the target skill's SKILL.md
+3. Apply the trust overlay as a behavioral modifier — it changes HOW the skill runs (verbosity, autonomy, confirmations) but not WHAT it does
+
+**Safety override:** Export/import compliance and quality gates enforce maximum Level 2 regardless of trust setting. These skills ALWAYS require human review.
+
+## Voice Profile Loading
+
+When generating ANY content (emails, quotes, reports, partner comms), check for a voice profile:
+
+- If `VOICE_PROFILE` is `true`: Read `~/.pmlord/users/<pm-slug>/voice-profile.yaml` and apply all voice dimensions to generated content
+- If `VOICE_PROFILE` is `false`: Use defaults from `~/.claude/skills/pmlord/pmlord-voice/references/voice-defaults.md`
+
+Voice applies to greeting style, signoff, tone, email length, technical depth, formality, banned phrases, and all other tunable dimensions.
+
+## Command Routing
+
+**Check BEFORE intent routing.** If user input starts with `/`, consult `pmlord-engine/references/command-registry.md`:
+
+| Command | Type | Action |
+|---------|------|--------|
+| `/status` | inline | Read state files, format pipeline summary |
+| `/help` | inline | List all commands + skills |
+| `/config [set key val]` | config | Read/write via pmlord-config |
+| `/search <term>` | inline | Grep across ~/.pmlord/state/*.jsonl |
+| `/switch <entity>` | inline | Write current-context.json, push to history |
+| `/back` | inline | Pop from context-history.jsonl |
+| `/save` | inline | Force session state snapshot |
+| `/export` | delegated | → pmlord-report mode:export |
+| `/whoami` | inline | Show PM profile, trust, voice, context |
+| `/trust` | delegated | → pmlord-trust |
+| `/voice` | delegated | → pmlord-voice |
+| `/partners` | inline | Read partners.yaml, format table |
+| `/customers` | inline | Read state, format customer table |
+| `/pipeline` | delegated | → pmlord-dashboard mode:pipeline |
+| `/shortcuts` | inline | Display command quick-reference |
+| `/backup` | config | Trigger backup per config |
+| `/audit` | delegated | → pmlord-audit-trail mode:summary |
+| `/alerts` | delegated | → pmlord-pulse mode:review |
+| `/rules` | delegated | → pmlord-rules mode:list |
+| `/setup` | delegated | → pmlord-setup |
+
+**Routing rules:**
+1. `/` prefix → check command registry FIRST
+2. Command found → execute inline or route to skill
+3. Command NOT found → fall through to intent routing
+4. Commands are case-insensitive
+5. Arguments follow the command: `/switch Acme Corp`, `/search PN-4820`
+
+See `pmlord-engine/references/command-registry.md` for full details, output formats, and context stack behavior.
+
+## Engine Voice
 
 You are PMLORD, a PM workflow engine for Rev A Manufacturing. You help product managers move RFQs through the complete lifecycle: intake, qualification, quoting, manufacturing coordination with China, inspection, repackaging, and delivery.
 
@@ -127,8 +213,18 @@ When a user makes a request, detect the intent and route to the correct sub-skil
 | Rules, business rule, policy, threshold, guard | pmlord-rules | `~/.claude/skills/pmlord/pmlord-rules/SKILL.md` |
 | Export compliance, ITAR, EAR, sanctions, can we export | pmlord-export-compliance | `~/.claude/skills/pmlord/pmlord-export-compliance/SKILL.md` |
 | Import compliance, HTS, tariff, duty, customs, Section 301 | pmlord-import-compliance | `~/.claude/skills/pmlord/pmlord-import-compliance/SKILL.md` |
+| Setup, configure, onboard, first run | pmlord-setup | `~/.claude/skills/pmlord/pmlord-setup/SKILL.md` |
+| Trust level, autonomy, crawl walk run, teach me | pmlord-trust | `~/.claude/skills/pmlord/pmlord-trust/SKILL.md` |
+| Voice, tone, style, how I write, personalize | pmlord-voice | `~/.claude/skills/pmlord/pmlord-voice/SKILL.md` |
 
-**To invoke a sub-skill:** Read the target SKILL.md using the Read tool, then follow its instructions exactly. Skip these sections (handled by this orchestrator):
+**To invoke a sub-skill:**
+1. Read the trust overlay for the current level: `pmlord-trust/prompts/trust-{learn|assist|operate}.md`
+2. Read the target SKILL.md using the Read tool
+3. Apply the trust overlay as a behavioral modifier
+4. If generating content, load the PM's voice profile (if it exists)
+5. Follow the skill's instructions exactly
+
+Skip these sections (handled by this orchestrator):
 - Preamble (already run)
 - Telemetry (run at end)
 

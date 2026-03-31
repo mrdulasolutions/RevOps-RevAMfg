@@ -1,6 +1,6 @@
 {
   "name": "pmlord",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "PMLORD — PM Workflow Engine for Rev A Manufacturing",
   "private": true,
   "scripts": {

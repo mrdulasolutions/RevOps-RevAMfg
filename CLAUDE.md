@@ -7,7 +7,7 @@ This is the **PMLORD Skills Engine** for Rev A Manufacturing. It is a Claude Cod
 - Each skill lives in its own directory with `SKILL.md`, `skill.yaml`, `README.md`, and supporting files
 - The master orchestrator is `pmlord-engine/SKILL.md`
 - Runtime state is stored at `~/.pmlord/` (config, sessions, analytics, workflow state)
-- All reports use `{{PLACEHOLDER}}` templates and are converted to `.docx` via `scripts/report-to-docx.mjs`
+- All reports use `{{PLACEHOLDER}}` templates and are converted to `.docx` via `pmlord-docx/scripts/report-to-docx.mjs`
 
 ## Key Rules
 
@@ -24,7 +24,7 @@ Skills are invoked via `/pmlord-*` slash commands. The `pmlord-engine` orchestra
 ## File Structure
 
 - `bin/` — Engine utilities (pmlord-config, pmlord-telemetry-log, etc.)
-- `scripts/` — Build/conversion scripts (report-to-docx.mjs)
+- `pmlord-docx/scripts/` — DOCX conversion script (report-to-docx.mjs)
 - `pmlord-*/` — Individual skill directories
 - `CLIENT.md` — Rev A Mfg company profile
 - `conductor.json` — Skill routing configuration

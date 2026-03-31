@@ -20,8 +20,11 @@ RFQ arrives
   -> Qualify (capability match, capacity check, credit readiness)
   -> Quote (cost estimation, margin calculation, lead time)
   -> Customer accepts
+  -> EXPORT COMPLIANCE (EAR/ITAR/sanctions screening — hard gate)
   -> Package specs for China partner (metric conversion, drawing prep, IP protection)
   -> Track manufacturing (10 milestones, delay detection)
+  -> [Goods shipped from China]
+  -> IMPORT COMPLIANCE (HTS classification, duty calculation — hard gate)
   -> Receive & inspect (dimensional, material, finish verification)
   -> Quality gate (G1-G4 stage gates: PASS / CONDITIONAL / FAIL)
   -> Repackage (relabel, kit, customer-spec packaging)
@@ -240,6 +243,19 @@ Runtime state persists at `~/.pmlord/`:
 | `state/rules-eval-log.jsonl` | JSONL | Rules engine evaluation log |
 | `rules.yaml` | YAML | Custom business rules |
 | `reports/PMLORD-Reports/` | .docx | Generated reports |
+| `company-profile.yaml` | YAML | Company name, address, team, escalation (via setup) |
+| `partners.yaml` | YAML | Manufacturing partner profiles (via setup) |
+| `shipping-config.yaml` | YAML | Carriers, ports, broker, incoterms (via setup) |
+| `document-config.yaml` | YAML | Logo, formats, storage, backup (via setup) |
+| `connector-config.yaml` | YAML | CRM, email, ERP, Slack settings (via setup) |
+| `workflow-config.yaml` | YAML | Stage activation, thresholds, SLAs (via setup) |
+| `users/<pm-slug>/voice-profile.yaml` | YAML | Per-PM voice dimensions (via voice) |
+| `users/<pm-slug>/preferences.yaml` | YAML | Per-PM workflow preferences (via voice) |
+| `users/<pm-slug>/edit-history.jsonl` | JSONL | Voice continuous learning edit log |
+| `state/trust-level.json` | JSON | System-wide trust level |
+| `state/current-context.json` | JSON | Active working context (customer/order) |
+| `state/context-history.jsonl` | JSONL | Context stack for /switch and /back |
+| `state/trust-overrides.jsonl` | JSONL | Per-skill/entity trust overrides |
 
 ### Hook System
 
@@ -281,6 +297,8 @@ pmlord-config set china_partner_default "Shenzhen Precision MFG"
 | `telemetry` | `off`, `anonymous`, `community` | `off` | Telemetry tier |
 | `proactive` | `true`, `false` | `true` | Auto-suggest skills based on context |
 | `china_partner_default` | Partner name | `""` | Default manufacturing partner |
+| `setup_completed` | `true`, `false`, `skipped` | `false` | Whether setup wizard has run |
+| `trust_level` | `1`, `2`, `3` | `2` | System-wide trust level (1=LEARN, 2=ASSIST, 3=OPERATE) |
 
 ---
 
@@ -368,6 +386,7 @@ Then in Claude Code:
 | [ETHOS.md](ETHOS.md) | Design philosophy and principles |
 | [LICENSE.md](LICENSE.md) | License terms |
 | [CLAUDE.md](CLAUDE.md) | Claude Code project instructions |
+| [ROADMAP.md](ROADMAP.md) | Versioned roadmap with customer portal options |
 
 ---
 
@@ -381,9 +400,10 @@ PMLORD/
   CLIENT.md                     Rev A Mfg company profile
   ETHOS.md                      Design philosophy
   LICENSE.md                    License terms
+  ROADMAP.md                    Versioned roadmap
   CLAUDE.md                     Claude Code project instructions
-  VERSION                       1.0.0
-  conductor.json                Skill routing configuration
+  VERSION                       1.2.0
+  conductor.json                Skill routing + commands registry
   setup                         One-step installer
   package.json                  Root package
 
@@ -394,7 +414,7 @@ PMLORD/
     pmlord-update-check         Version check
     pmlord-slug                 Report slug generator
 
-  pmlord-engine/                Master orchestrator
+  pmlord-engine/                Master orchestrator (intent + command routing)
   pmlord-rfq-intake/            RFQ parsing & intake
   pmlord-rfq-qualify/           Gate checks
   pmlord-rfq-quote/             Quote generation
@@ -421,8 +441,8 @@ PMLORD/
   pmlord-email-connector/       Email integration
   pmlord-crm-connector/         CRM integration
   pmlord-erp-connector/         ERP integration
-  pmlord-export-compliance/     Export compliance (ExChek engine)
-  pmlord-import-compliance/     Import compliance (TradeInsights.ai)
+  pmlord-export-compliance/     Export compliance (ExChek engine) [HARD GATE]
+  pmlord-import-compliance/     Import compliance (TradeInsights.ai) [HARD GATE]
   pmlord-autopilot/             Workflow auto-advancement
   pmlord-pulse/                 Real-time alerts
   pmlord-intel/                 Predictive analytics
@@ -432,9 +452,12 @@ PMLORD/
   pmlord-profit/                Profitability tracking
   pmlord-handoff/               PM handoff & collaboration
   pmlord-rules/                 Business rules engine
+  pmlord-setup/                 Onboarding wizard (7 sections, 6 config files)
+  pmlord-trust/                 Progressive autonomy (LEARN/ASSIST/OPERATE)
+  pmlord-voice/                 Per-PM voice & personality tuner
 ```
 
-**38 skill directories. 330+ files. Zero tribal knowledge.**
+**41 skill directories. 376 files. 36,937 lines. 20 in-engine commands. Zero tribal knowledge.**
 
 ---
 

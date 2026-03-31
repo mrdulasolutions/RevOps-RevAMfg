@@ -1,8 +1,0 @@
-name: pmlord-logistics
-description: Shipping and logistics coordination for international (China to Rev A) and domestic (Rev A to customer) shipments with routing decisions and customs management.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

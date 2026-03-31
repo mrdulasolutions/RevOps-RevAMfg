@@ -1,0 +1,8 @@
+name: reva-turbo-pulse
+description: Real-time alert feed and PM nervous system. Push notifications via Slack, iMessage, email on exceptions. Smart filtering, daily digest, weekly pulse. Only alerts on action-required items.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

@@ -1,8 +1,0 @@
-name: pmlord-customer-profile
-description: Build and maintain customer profiles with order history, preferences, quality requirements, payment terms, and relationship intelligence.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

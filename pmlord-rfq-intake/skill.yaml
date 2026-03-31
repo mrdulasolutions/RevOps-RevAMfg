@@ -1,8 +1,0 @@
-name: pmlord-rfq-intake
-description: Parse incoming RFQs from email, website, or CRM. Extract structured data into a standardized intake record. Push to CRM and route to qualification.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

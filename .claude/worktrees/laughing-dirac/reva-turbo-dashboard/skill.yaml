@@ -1,0 +1,8 @@
+name: reva-turbo-dashboard
+description: PM dashboard showing workload overview with open RFQs, active orders, quality issues, upcoming deliveries, partner performance, and capacity.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

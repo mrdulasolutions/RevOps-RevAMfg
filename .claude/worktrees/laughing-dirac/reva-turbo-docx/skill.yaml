@@ -1,0 +1,8 @@
+name: reva-turbo-docx
+description: Convert REVA-TURBO markdown reports to Word .docx with Rev A Manufacturing branding. Uses the docx npm package.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

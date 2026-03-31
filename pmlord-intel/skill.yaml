@@ -1,8 +1,0 @@
-name: pmlord-intel
-description: Predictive analytics and business intelligence. Learns from PMLORD historical data to predict, recommend, optimize, detect anomalies, and benchmark KPIs. Turns PMLORD from a logger into an advisor.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

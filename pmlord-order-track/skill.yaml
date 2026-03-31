@@ -1,8 +1,0 @@
-name: pmlord-order-track
-description: Full order lifecycle tracking through 12 stages from PO Received to Closed. Manages stage transitions, delays, and status reporting.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

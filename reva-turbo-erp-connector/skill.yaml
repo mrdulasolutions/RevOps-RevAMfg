@@ -1,0 +1,8 @@
+name: reva-turbo-erp-connector
+description: Connect to ERP and inventory systems for capacity, material availability, and cost data. Flexible backend supporting API, CSV, JSON, or manual entry.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

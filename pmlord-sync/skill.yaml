@@ -1,8 +1,0 @@
-name: pmlord-sync
-description: Bidirectional auto-sync between PMLORD and external systems (CRM, email, calendar, partner). Eliminates double-entry with conflict resolution and PM review.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

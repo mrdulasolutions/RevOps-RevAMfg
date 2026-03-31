@@ -1,0 +1,8 @@
+name: reva-turbo-rules
+description: Business rules engine that codifies tribal knowledge into automated policy covering pricing, approvals, alerts, routing, quality, and workflow rules.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

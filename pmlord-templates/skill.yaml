@@ -1,8 +1,0 @@
-name: pmlord-templates
-description: Central template management and inventory for all PMLORD skills. Catalog, lookup, versioning, and usage tracking.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

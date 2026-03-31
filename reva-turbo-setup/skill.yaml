@@ -1,0 +1,8 @@
+name: reva-turbo-setup
+description: Interactive onboarding wizard — configures company profile, workflow, connectors, partners, shipping, documents, and CoWork space for the REVA-TURBO engine.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+version: "1.0.0"
+main: SKILL.md

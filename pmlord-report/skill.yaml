@@ -1,8 +1,0 @@
-name: pmlord-report
-description: Generate periodic reports including Weekly PM Summary, Monthly Performance, Quarterly Review, and Customer-specific reports.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

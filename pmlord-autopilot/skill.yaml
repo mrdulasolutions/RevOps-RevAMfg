@@ -1,8 +1,0 @@
-name: pmlord-autopilot
-description: Invisible workflow transitions. Auto-advances the order lifecycle when conditions are met, pausing only at human-required decision points. Three modes — full auto, semi auto, manual.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

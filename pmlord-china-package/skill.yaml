@@ -1,8 +1,0 @@
-name: pmlord-china-package
-description: Package client specs, drawings, and requirements into standardized format for Chinese manufacturing partners. Handles metric conversion, translation, and IP protection.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

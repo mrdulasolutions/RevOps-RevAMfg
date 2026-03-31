@@ -1,8 +1,0 @@
-name: pmlord-handoff
-description: Multi-PM collaboration and portfolio transfer with vacation handoffs, permanent transfers, shared ownership, approval chains, and workload balancing.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

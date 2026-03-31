@@ -8,15 +8,19 @@
 # Env overrides:
 #   REVA-TURBO_STATE_DIR  — override ~/.reva-turbo state directory
 #   REVA-TURBO_DIR        — override auto-detected reva-turbo root
+#
+# Config (via reva-turbo-config):
+#   telemetry: on   — log to ~/.reva-turbo/analytics/skill-usage.jsonl
+#   telemetry: off  — do nothing (default)
 set -uo pipefail
 
-REVA-TURBO_DIR="${REVA-TURBO_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
-STATE_DIR="${REVA-TURBO_STATE_DIR:-$HOME/.reva-turbo}"
+REVA_TURBO_DIR="${REVA_TURBO_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
+STATE_DIR="${REVA_TURBO_STATE_DIR:-$HOME/.reva-turbo}"
 ANALYTICS_DIR="$STATE_DIR/analytics"
 JSONL_FILE="$ANALYTICS_DIR/skill-usage.jsonl"
 PENDING_DIR="$ANALYTICS_DIR"
-CONFIG_CMD="$REVA-TURBO_DIR/bin/reva-turbo-config"
-VERSION_FILE="$REVA-TURBO_DIR/VERSION"
+CONFIG_CMD="$REVA_TURBO_DIR/bin/reva-turbo-config"
+VERSION_FILE="$REVA_TURBO_DIR/VERSION"
 
 # ─── Parse flags ─────────────────────────────────────────────
 SKILL=""
@@ -46,18 +50,13 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-SOURCE="${SOURCE:-${REVA-TURBO_TELEMETRY_SOURCE:-live}}"
+SOURCE="${SOURCE:-live}"
 
-# ─── Read telemetry tier ─────────────────────────────────────
-TIER="$("$CONFIG_CMD" get telemetry 2>/dev/null || true)"
-TIER="${TIER:-off}"
+# ─── Check telemetry setting ──────────────────────────────────
+SETTING="$("$CONFIG_CMD" get telemetry 2>/dev/null || true)"
+SETTING="${SETTING:-off}"
 
-case "$TIER" in
-  off|anonymous|community) ;;
-  *) TIER="off" ;;
-esac
-
-if [ "$TIER" = "off" ]; then
+if [ "$SETTING" != "on" ]; then
   [ -n "$SESSION_ID" ] && rm -f "$PENDING_DIR/.pending-$SESSION_ID" 2>/dev/null || true
   exit 0
 fi
@@ -75,12 +74,12 @@ for PFILE in "$PENDING_DIR"/.pending-*; do
     P_SKILL="$(echo "$PENDING_DATA" | grep -o '"skill":"[^"]*"' | head -1 | awk -F'"' '{print $4}')"
     P_TS="$(echo "$PENDING_DATA" | grep -o '"ts":"[^"]*"' | head -1 | awk -F'"' '{print $4}')"
     P_SID="$(echo "$PENDING_DATA" | grep -o '"session_id":"[^"]*"' | head -1 | awk -F'"' '{print $4}')"
-    P_VER="$(echo "$PENDING_DATA" | grep -o '"reva-turbo_version":"[^"]*"' | head -1 | awk -F'"' '{print $4}')"
+    P_VER="$(echo "$PENDING_DATA" | grep -o '"reva_turbo_version":"[^"]*"' | head -1 | awk -F'"' '{print $4}')"
     P_OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
     P_ARCH="$(uname -m)"
 
     mkdir -p "$ANALYTICS_DIR"
-    printf '{"v":1,"ts":"%s","event_type":"skill_run","skill":"%s","session_id":"%s","reva-turbo_version":"%s","os":"%s","arch":"%s","duration_s":null,"outcome":"unknown","sessions":1}\n' \
+    printf '{"v":1,"ts":"%s","event_type":"skill_run","skill":"%s","session_id":"%s","reva_turbo_version":"%s","os":"%s","arch":"%s","duration_s":null,"outcome":"unknown","sessions":1}\n' \
       "$P_TS" "$P_SKILL" "$P_SID" "$P_VER" "$P_OS" "$P_ARCH" >> "$JSONL_FILE" 2>/dev/null || true
   fi
 done
@@ -89,34 +88,13 @@ done
 
 # ─── Collect metadata ────────────────────────────────────────
 TS="$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%S 2>/dev/null || echo "")"
-REVA-TURBO_VERSION="$(cat "$VERSION_FILE" 2>/dev/null | tr -d '[:space:]' || echo "unknown")"
+REVA_TURBO_VERSION="$(cat "$VERSION_FILE" 2>/dev/null | tr -d '[:space:]' || echo "unknown")"
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
 ARCH="$(uname -m)"
 SESSIONS="1"
 if [ -d "$STATE_DIR/sessions" ]; then
   _SC="$(find "$STATE_DIR/sessions" -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' \n\r\t')"
   [ -n "$_SC" ] && [ "$_SC" -gt 0 ] 2>/dev/null && SESSIONS="$_SC"
-fi
-
-INSTALL_ID=""
-if [ "$TIER" = "community" ]; then
-  ID_FILE="$HOME/.reva-turbo/installation-id"
-  if [ -f "$ID_FILE" ]; then
-    INSTALL_ID="$(cat "$ID_FILE" 2>/dev/null)"
-  fi
-  if [ -z "$INSTALL_ID" ]; then
-    if command -v uuidgen >/dev/null 2>&1; then
-      INSTALL_ID="$(uuidgen | tr '[:upper:]' '[:lower:]')"
-    elif [ -r /proc/sys/kernel/random/uuid ]; then
-      INSTALL_ID="$(cat /proc/sys/kernel/random/uuid)"
-    else
-      INSTALL_ID="$(od -An -tx1 -N16 /dev/urandom 2>/dev/null | tr -d ' \n')"
-    fi
-    if [ -n "$INSTALL_ID" ]; then
-      mkdir -p "$(dirname "$ID_FILE")" 2>/dev/null
-      printf '%s' "$INSTALL_ID" > "$ID_FILE" 2>/dev/null
-    fi
-  fi
 fi
 
 # ─── Construct and append JSON ───────────────────────────────
@@ -139,26 +117,18 @@ ERR_MSG_FIELD="null"
 STEP_FIELD="null"
 [ -n "$FAILED_STEP" ] && STEP_FIELD="\"$(json_safe "$FAILED_STEP")\""
 
-if [ -n "$DURATION" ] && [ "$DURATION" -gt 86400 ] 2>/dev/null; then
-  DURATION=""
-fi
-if [ -n "$DURATION" ] && [ "$DURATION" -lt 0 ] 2>/dev/null; then
-  DURATION=""
-fi
+if [ -n "$DURATION" ] && [ "$DURATION" -gt 86400 ] 2>/dev/null; then DURATION=""; fi
+if [ -n "$DURATION" ] && [ "$DURATION" -lt 0 ] 2>/dev/null; then DURATION=""; fi
 
 DUR_FIELD="null"
 [ -n "$DURATION" ] && DUR_FIELD="$DURATION"
 
-INSTALL_FIELD="null"
-[ -n "$INSTALL_ID" ] && INSTALL_FIELD="\"$INSTALL_ID\""
-
 PM_FIELD="null"
 [ -n "$PM" ] && PM_FIELD="\"$PM\""
 
-printf '{"v":1,"ts":"%s","event_type":"%s","skill":"%s","session_id":"%s","reva-turbo_version":"%s","os":"%s","arch":"%s","duration_s":%s,"outcome":"%s","error_class":%s,"error_message":%s,"failed_step":%s,"pm":%s,"sessions":%s,"installation_id":%s,"source":"%s"}\n' \
-  "$TS" "$EVENT_TYPE" "$SKILL" "$SESSION_ID" "$REVA-TURBO_VERSION" "$OS" "$ARCH" \
+printf '{"v":1,"ts":"%s","event_type":"%s","skill":"%s","session_id":"%s","reva_turbo_version":"%s","os":"%s","arch":"%s","duration_s":%s,"outcome":"%s","error_class":%s,"error_message":%s,"failed_step":%s,"pm":%s,"sessions":%s,"source":"%s"}\n' \
+  "$TS" "$EVENT_TYPE" "$SKILL" "$SESSION_ID" "$REVA_TURBO_VERSION" "$OS" "$ARCH" \
   "$DUR_FIELD" "$OUTCOME" "$ERR_FIELD" "$ERR_MSG_FIELD" "$STEP_FIELD" \
-  "$PM_FIELD" "${SESSIONS:-1}" \
-  "$INSTALL_FIELD" "$SOURCE" >> "$JSONL_FILE" 2>/dev/null || true
+  "$PM_FIELD" "${SESSIONS:-1}" "$SOURCE" >> "$JSONL_FILE" 2>/dev/null || true
 
 exit 0

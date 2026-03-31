@@ -14,7 +14,7 @@ The brain of the REVA-TURBO skills engine. Routes PM requests to the correct sub
 6. **Voice Loading** — Reads the PM's voice profile and applies it to all generated content
 7. **Context Stack** — Maintains working context (`/switch`, `/back`) so commands and skills scope to the active customer/order
 8. **Session Tracking** — PID-based session management with auto-cleanup
-9. **Telemetry** — Opt-in usage tracking (3 tiers: off/anonymous/community)
+9. **Telemetry** — Opt-in local usage logging (`on`/`off`)
 
 ## Invocation
 

@@ -84,7 +84,7 @@ Options:
 - A) Enable local telemetry (recommended)
 - B) No thanks
 
-If A: run `~/.claude/skills/reva-turbo/bin/reva-turbo-config set telemetry community`
+If A: run `~/.claude/skills/reva-turbo/bin/reva-turbo-config set telemetry on`
 If B: run `~/.claude/skills/reva-turbo/bin/reva-turbo-config set telemetry off`
 
 Always run:

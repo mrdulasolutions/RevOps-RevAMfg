@@ -216,8 +216,8 @@ reva-turbo-config set default_pm ray-yeh
 # Set your CRM type
 reva-turbo-config set crm_type dynamics    # or: powerapps, hubspot, none
 
-# Enable telemetry (optional)
-reva-turbo-config set telemetry community
+# Enable telemetry (optional, local only)
+reva-turbo-config set telemetry on
 
 # Set proactive mode
 reva-turbo-config set proactive true       # auto-suggest skills based on context

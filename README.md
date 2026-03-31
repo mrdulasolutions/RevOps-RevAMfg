@@ -287,7 +287,7 @@ reva-turbo-config set default_pm ray-yeh
 reva-turbo-config set report_format docx
 reva-turbo-config set platform mac
 reva-turbo-config set crm_type dynamics
-reva-turbo-config set telemetry community
+reva-turbo-config set telemetry on
 reva-turbo-config set proactive true
 reva-turbo-config set china_partner_default "Shenzhen Precision MFG"
 ```
@@ -300,7 +300,7 @@ reva-turbo-config set china_partner_default "Shenzhen Precision MFG"
 | `report_format` | `docx` | `docx` | Report output format |
 | `platform` | `mac`, `windows` | auto-detected | Operating system |
 | `crm_type` | `dynamics`, `powerapps`, `hubspot`, `none` | `none` | CRM integration target |
-| `telemetry` | `off`, `anonymous`, `community` | `off` | Telemetry tier |
+| `telemetry` | `on`, `off` | `off` | Local usage logging |
 | `proactive` | `true`, `false` | `true` | Auto-suggest skills based on context |
 | `china_partner_default` | Partner name | `""` | Default manufacturing partner |
 | `setup_completed` | `true`, `false`, `skipped` | `false` | Whether setup wizard has run |
@@ -352,15 +352,14 @@ All reports are saved as `.docx` to `~/.reva-turbo/reports/REVA-TURBO-Reports/` 
 
 ## Telemetry
 
-REVA-TURBO tracks skill usage locally to improve the engine. Three tiers:
+REVA-TURBO tracks skill usage locally. All data stays on your machine — nothing is sent anywhere.
 
-| Tier | What's Collected | Where |
-|------|-----------------|-------|
+| Setting | What's Collected | Where |
+|---------|-----------------|-------|
 | `off` | Nothing | — |
-| `anonymous` | Skill name, duration, outcome (no PII) | `~/.reva-turbo/analytics/skill-usage.jsonl` |
-| `community` | Same as anonymous + installation ID | `~/.reva-turbo/analytics/skill-usage.jsonl` |
+| `on` | Skill name, duration, outcome (no PII) | `~/.reva-turbo/analytics/skill-usage.jsonl` |
 
-No code, file paths, customer data, or PII are ever collected. Telemetry is opt-in and prompted on first run.
+No code, file paths, customer data, or PII are ever collected.
 
 ---
 

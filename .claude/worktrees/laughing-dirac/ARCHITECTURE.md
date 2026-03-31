@@ -115,7 +115,7 @@ PreToolUse hooks intercept tool invocations before execution:
 
 ## Telemetry
 
-Three tiers: `off` (default), `anonymous`, `community`.
+Two settings: `on, off`.
 Events logged to `~/.reva-turbo/analytics/skill-usage.jsonl` in JSONL format.
 Managed by `bin/reva-turbo-telemetry-log`.
 

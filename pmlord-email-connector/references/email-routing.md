@@ -18,10 +18,27 @@ Maintain a list of known China manufacturing partner domains. Emails from these 
 | @dbschenker.com | DB Schenker |
 | @expeditors.com | Expeditors |
 
+### Customs / Compliance Domains
+| Domain Pattern | Company |
+|---------------|---------|
+| @cbp.dhs.gov | U.S. Customs & Border Protection |
+| @bis.doc.gov | Bureau of Industry & Security |
+| @trade.gov | International Trade Administration |
+| @customsbroker.com | (various customs brokers) |
+
+### Microsoft / System Domains (auto-skip)
+| Domain Pattern | Source |
+|---------------|--------|
+| @microsoft.com | Microsoft notifications (skip unless relevant) |
+| @microsoftonline.com | Azure AD / OAuth notifications (skip) |
+| noreply@* | System auto-replies (skip) |
+| mailer-daemon@* | Bounce notifications (flag for PM) |
+
 ### Internal Domains
 | Domain | Source |
 |--------|--------|
 | @revamfg.com | Rev A Manufacturing (internal) |
+| @revamfg.onmicrosoft.com | Rev A Manufacturing (Microsoft 365) |
 
 ## Routing Decision Tree
 
@@ -62,6 +79,26 @@ Maintain a list of known China manufacturing partner domains. Emails from these 
 | Morning scan | Start of business day | Process all unread emails from overnight |
 | Midday check | After lunch | Quick scan for urgent items |
 | On-demand | PM requests | Check for specific emails or senders |
+
+## Provider-Specific Search Strategies
+
+### Hostinger
+Use `mcp__hostinger-email__search_emails` with:
+- `query` for full-text search
+- `from_addr` for sender filtering
+- `since`/`before` for date ranges
+- `subject` for subject-line matching
+
+### Gmail
+Use `mcp__bc6bacab__gmail_search_messages` with Gmail query syntax:
+- `q: "is:unread from:customer has:attachment after:2026/3/25"`
+- Supports `-` exclusion, `OR`, `"exact phrase"`, `label:`, `in:`
+
+### Microsoft 365 / Generic Inbox
+Use `mcp__82432f48__list_threads` with:
+- `after`/`before` for date ranges
+- `labels` for label filtering
+- Then read individual threads with `get_thread` for content-based classification
 
 ## Deduplication Strategy
 

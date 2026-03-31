@@ -236,22 +236,23 @@ After one skill completes, suggest the natural next skill in the PM lifecycle:
 pmlord-rfq-intake
   -> pmlord-rfq-qualify (gate check)
     -> pmlord-customer-gate (if new customer)
-    -> pmlord-rfq-quote (generate quote)
-      -> pmlord-customer-comms (send quote to customer)
-        -> [customer accepts]
-        -> pmlord-export-compliance (HARD GATE — EAR/ITAR/sanctions before sending data to China)
+    -> EXPORT COMPLIANCE (HARD GATE — screen before quoting: can we even export this?)
+      -> pmlord-rfq-quote (generate quote — only after compliance clears)
+        -> pmlord-customer-comms (send quote to customer)
+          -> [customer accepts]
           -> pmlord-china-package (build mfg package for China)
             -> pmlord-china-track (track manufacturing progress)
               -> [goods shipped from China]
-              -> pmlord-import-compliance (HARD GATE — HTS/duties/customs before entry)
+              -> IMPORT COMPLIANCE (HARD GATE — HTS/duties/customs before entry)
                 -> pmlord-inspect (incoming inspection at Rev A)
                   -> pmlord-quality-gate (quality check)
                     -> pmlord-repackage (if inspect-and-forward)
-                      -> pmlord-export-compliance (if shipping internationally — re-screen)
-                        -> pmlord-logistics (ship to customer)
-                          -> pmlord-customer-comms (shipment notification)
-                            -> pmlord-order-track (close order)
+                      -> pmlord-logistics (ship to customer)
+                        -> pmlord-customer-comms (shipment notification)
+                          -> pmlord-order-track (close order)
 ```
+
+**Why export compliance comes before the quote:** You must know if an item can legally be exported before investing time in quoting it. If the item is ITAR-controlled, sanctioned, or requires a license that won't be granted, quoting is wasted effort. The compliance gate screens the RFQ specs against EAR/ITAR/sanctions BEFORE the PM generates pricing.
 
 After completing a skill, tell the PM: "Next step in the workflow: [skill name]. Want me to run it?"
 

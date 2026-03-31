@@ -20,7 +20,7 @@
       "group": "rfq-pipeline",
       "description": "Gate checks: new/returning, capability, capacity, credit",
       "path": "pmlord-rfq-qualify/SKILL.md",
-      "next": "pmlord-rfq-quote",
+      "next": "pmlord-export-compliance",
       "conditional_next": {
         "new_customer": "pmlord-customer-gate"
       }
@@ -37,7 +37,7 @@
       "group": "customer",
       "description": "New customer onboarding gate",
       "path": "pmlord-customer-gate/SKILL.md",
-      "next": "pmlord-rfq-quote"
+      "next": "pmlord-export-compliance"
     },
     "pmlord-customer-profile": {
       "type": "content",
@@ -50,14 +50,14 @@
       "group": "customer",
       "description": "Draft customer communications",
       "path": "pmlord-customer-comms/SKILL.md",
-      "next": "pmlord-export-compliance"
+      "next": "pmlord-china-package"
     },
     "pmlord-export-compliance": {
       "type": "content",
       "group": "compliance",
       "description": "Export compliance gate — EAR/ITAR/sanctions via ExChek engine (exchek.us)",
       "path": "pmlord-export-compliance/SKILL.md",
-      "next": "pmlord-china-package",
+      "next": "pmlord-rfq-quote",
       "hard_gate": true,
       "autopilot": "pause",
       "external_engine": {
@@ -286,9 +286,9 @@
     "pmlord-rfq-intake",
     "pmlord-rfq-qualify",
     "pmlord-customer-gate",
+    "pmlord-export-compliance",
     "pmlord-rfq-quote",
     "pmlord-customer-comms",
-    "pmlord-export-compliance",
     "pmlord-china-package",
     "pmlord-china-track",
     "pmlord-import-compliance",

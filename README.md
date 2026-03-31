@@ -204,29 +204,31 @@ skill-name/
 Email / Website / CRM
        |
        v
-rfq-intake --> rfq-qualify --> rfq-quote
-                    |               |
-                    v               v
-              customer-gate    Quote .docx
-                    |
-                    v
-         EXPORT COMPLIANCE (EAR/ITAR/sanctions — hard gate)
-                    |
-                    v
-china-package --> china-track --> [goods shipped from China]
-                                    |
-                                    v
-                          IMPORT COMPLIANCE (HTS/duties — hard gate)
-                                    |
-                                    v
-                           inspect --> quality-gate
-                                    |
-                                    v (if reject)
-                                   ncr
-                                    |
-                                    v
-                  repackage --> logistics --> order-track (close)
+rfq-intake --> rfq-qualify --+--> EXPORT COMPLIANCE (EAR/ITAR/sanctions — hard gate)
+                    |        |              |
+                    v        |              v
+              customer-gate -+        rfq-quote --> Quote .docx
+              (new customers)               |
+                                            v
+                                    customer-comms
+                                            |
+                                            v
+                              china-package --> china-track --> [goods shipped]
+                                                                    |
+                                                                    v
+                                                          IMPORT COMPLIANCE (HTS/duties — hard gate)
+                                                                    |
+                                                                    v
+                                                           inspect --> quality-gate
+                                                                    |
+                                                                    v (if reject)
+                                                                   ncr
+                                                                    |
+                                                                    v
+                                              repackage --> logistics --> order-track (close)
 ```
+
+> **Key:** Export compliance screening happens BEFORE quoting — you must know if you can legally export before investing time in pricing.
 
 ### State Management
 

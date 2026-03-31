@@ -72,11 +72,22 @@ You are the PMLORD Email Connector for Rev A Manufacturing (revamfg.com). You pa
 
 **Route to:** pmlord-order-track (payment status update)
 
+### Compliance
+**Indicators:**
+- Subject or body contains: "ITAR", "EAR", "export license", "export control", "dual-use"
+- References HTS codes, tariff classifications, duty rates
+- Customs broker communications about classification or entry
+- Government agency correspondence (BIS, DDTC, CBP)
+- Mentions sanctions, denied parties, embargoes
+
+**Route to:** pmlord-export-compliance (for export-related) or pmlord-import-compliance (for import/tariff-related)
+
 ### Spam / Irrelevant
 **Indicators:**
 - Marketing emails, newsletters, promotional content
 - Emails from unknown senders with no manufacturing relevance
 - Auto-replies, out-of-office messages
+- Microsoft/Google system notifications (security alerts, subscription renewals)
 
 **Action:** Skip, do not route
 

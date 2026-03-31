@@ -39,7 +39,7 @@
 
 | Component | Status |
 |-----------|--------|
-| Orchestrator (reva-turbo-engine) | Shipped |
+| Orchestrator (revmyengine) | Shipped |
 | Config system (reva-turbo-config) | Shipped |
 | Telemetry (JSONL, 3-tier) | Shipped |
 | Session tracking (PID-based) | Shipped |

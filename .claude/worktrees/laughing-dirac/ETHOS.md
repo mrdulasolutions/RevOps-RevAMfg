@@ -110,11 +110,11 @@ Every skill is independent. Every skill can run alone. Every skill can run as pa
 This means:
 - A PM can use just `/reva-turbo-rfq-quote` without the rest of the engine
 - A PM can use just `/reva-turbo-inspect` for receiving
-- A PM can run the full lifecycle through `/reva-turbo-engine`
+- A PM can run the full lifecycle through `/revmyengine`
 - New skills can be added without modifying existing skills
 - Skills can be updated independently
 
-The `conductor.json` file defines the wiring between skills. The `reva-turbo-engine` orchestrator reads it. But each skill's `SKILL.md` contains everything needed to run that skill in isolation.
+The `conductor.json` file defines the wiring between skills. The `revmyengine` orchestrator reads it. But each skill's `SKILL.md` contains everything needed to run that skill in isolation.
 
 ---
 

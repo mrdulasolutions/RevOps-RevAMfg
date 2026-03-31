@@ -412,7 +412,7 @@ Display summary, confirm, write `document-config.yaml`.
    - "REVA-TURBO — [Customer Name]" (for each team member's top customer)
 
 3. **Pin key skills** — recommend pinning these skills to CoWork sidebar:
-   - reva-turbo-engine
+   - revmyengine
    - reva-turbo-dashboard
    - reva-turbo-rfq-intake
    - reva-turbo-pulse

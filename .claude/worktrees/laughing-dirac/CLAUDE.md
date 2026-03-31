@@ -5,7 +5,7 @@ This is the **REVA-TURBO Skills Engine** for Rev A Manufacturing. It is a Claude
 ## Architecture
 
 - Each skill lives in its own directory with `SKILL.md`, `skill.yaml`, `README.md`, and supporting files
-- The master orchestrator is `reva-turbo-engine/SKILL.md`
+- The master orchestrator is `revmyengine/SKILL.md`
 - Runtime state is stored at `~/.reva-turbo/` (config, sessions, analytics, workflow state)
 - All reports use `{{PLACEHOLDER}}` templates and are converted to `.docx` via `reva-turbo-docx/scripts/report-to-docx.mjs`
 
@@ -19,7 +19,7 @@ This is the **REVA-TURBO Skills Engine** for Rev A Manufacturing. It is a Claude
 
 ## Skill Invocation
 
-Skills are invoked via `/reva-turbo-*` slash commands. The `reva-turbo-engine` orchestrator routes intent to the correct sub-skill automatically.
+Skills are invoked via `/reva-turbo-*` slash commands. The `revmyengine` orchestrator routes intent to the correct sub-skill automatically.
 
 ## File Structure
 

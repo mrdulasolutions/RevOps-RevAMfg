@@ -73,7 +73,7 @@ ls -la ~/.claude/skills/reva-turbo
 
 # Launch REVA-TURBO in Claude Code
 claude
-# Then type: /reva-turbo-engine
+# Then type: /revmyengine
 ```
 
 ---
@@ -91,7 +91,7 @@ Claude will:
 1. Clone the repo to a local directory
 2. Run `./setup` to create runtime directories and symlink skills
 3. Confirm the installation
-4. You can immediately use `/reva-turbo-engine`
+4. You can immediately use `/revmyengine`
 
 **Alternative — install from within an existing Claude Code session:**
 
@@ -254,7 +254,7 @@ If using HubSpot:
 After installation, start REVA-TURBO:
 
 ```
-/reva-turbo-engine
+/revmyengine
 ```
 
 The engine will:

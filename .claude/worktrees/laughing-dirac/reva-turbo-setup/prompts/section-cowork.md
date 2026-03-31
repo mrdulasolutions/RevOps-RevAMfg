@@ -68,7 +68,7 @@ Collect project names in a loop:
 
 > REVA-TURBO recommends pinning these skills to your CoWork sidebar for quick access:
 >
-> 1. reva-turbo-engine (master orchestrator)
+> 1. revmyengine (master orchestrator)
 > 2. reva-turbo-dashboard (status overview)
 > 3. reva-turbo-rfq-intake (new RFQ processing)
 > 4. reva-turbo-pulse (alerts and notifications)

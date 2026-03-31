@@ -1,4 +1,4 @@
-# reva-turbo-engine
+# revmyengine
 
 **REVA-TURBO Master Orchestrator**
 
@@ -19,7 +19,7 @@ The brain of the REVA-TURBO skills engine. Routes PM requests to the correct sub
 ## Invocation
 
 ```
-/reva-turbo-engine
+/revmyengine
 ```
 
 Or simply describe what you need — the engine detects intent automatically.

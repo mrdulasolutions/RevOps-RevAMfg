@@ -1,4 +1,4 @@
-name: reva-turbo-engine
+name: revmyengine
 description: REVA-TURBO master orchestrator for Rev A Manufacturing PM workflow. Routes requests to sub-skills, chains the RFQ-to-delivery lifecycle. Use for any PM activity.
 compatibility:
   - Claude Code

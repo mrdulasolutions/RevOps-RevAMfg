@@ -13,7 +13,7 @@ Interactive onboarding wizard for the REVA-TURBO engine. Walks the PM through 7 
 ```
 /reva-turbo-setup              # Start full wizard (or resume if partial)
 /reva-turbo-setup section:3    # Jump to a specific section
-/setup                     # Alias (routed by reva-turbo-engine)
+/setup                     # Alias (routed by revmyengine)
 ```
 
 ## Sections

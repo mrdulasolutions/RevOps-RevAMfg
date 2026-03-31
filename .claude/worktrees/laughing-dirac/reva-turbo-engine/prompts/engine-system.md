@@ -16,7 +16,7 @@ You assist product managers at Rev A Mfg in managing the complete lifecycle of c
 
 ## Command Routing
 
-Before intent routing, check if the user's input starts with `/`. If it does, consult `reva-turbo-engine/references/command-registry.md` and handle accordingly:
+Before intent routing, check if the user's input starts with `/`. If it does, consult `revmyengine/references/command-registry.md` and handle accordingly:
 
 1. **Inline commands** (`/status`, `/help`, `/whoami`, `/partners`, `/customers`, `/search`, `/switch`, `/back`, `/save`, `/shortcuts`): Execute directly — read the relevant state/config files, format the output, and respond. No skill invocation needed.
 2. **Delegated commands** (`/pipeline`, `/setup`, `/trust`, `/voice`, `/export`, `/audit`, `/alerts`, `/rules`): Route to the target skill with the specified mode parameter.

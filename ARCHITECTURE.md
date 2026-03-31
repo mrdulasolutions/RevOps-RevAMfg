@@ -9,7 +9,7 @@ REVA-TURBO is a Claude Code skills engine that automates the Product Manager wor
 ```
 ┌─────────────────────────────────────────────────┐
 │  Layer 4: Orchestrator                          │
-│  reva-turbo-engine — intent routing, lifecycle      │
+│  revmyengine — intent routing, lifecycle      │
 │  chaining, workflow state management            │
 ├─────────────────────────────────────────────────┤
 │  Layer 3: Composition Skills                    │

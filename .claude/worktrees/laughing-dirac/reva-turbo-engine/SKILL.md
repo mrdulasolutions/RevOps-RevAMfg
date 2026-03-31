@@ -1,5 +1,5 @@
 ---
-name: reva-turbo-engine
+name: revmyengine
 preamble-tier: 1
 version: 1.2.0
 description: |
@@ -65,7 +65,7 @@ echo "CONTEXT_ACTIVE: $_HAS_CONTEXT"
 echo "TELEMETRY: ${_TEL:-off}"
 echo "TEL_PROMPTED: $_TEL_PROMPTED"
 mkdir -p ~/.reva-turbo/analytics ~/.reva-turbo/state ~/.reva-turbo/users
-echo '{"skill":"reva-turbo-engine","ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' >> ~/.reva-turbo/analytics/skill-usage.jsonl 2>/dev/null || true
+echo '{"skill":"revmyengine","ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' >> ~/.reva-turbo/analytics/skill-usage.jsonl 2>/dev/null || true
 for _PF in $(find ~/.reva-turbo/analytics -maxdepth 1 -name '.pending-*' 2>/dev/null); do
   if [ -f "$_PF" ]; then
     rm -f "$_PF" 2>/dev/null || true
@@ -133,7 +133,7 @@ Voice applies to greeting style, signoff, tone, email length, technical depth, f
 
 ## Command Routing
 
-**Check BEFORE intent routing.** If user input starts with `/`, consult `reva-turbo-engine/references/command-registry.md`:
+**Check BEFORE intent routing.** If user input starts with `/`, consult `revmyengine/references/command-registry.md`:
 
 | Command | Type | Action |
 |---------|------|--------|
@@ -165,7 +165,7 @@ Voice applies to greeting style, signoff, tone, email length, technical depth, f
 4. Commands are case-insensitive
 5. Arguments follow the command: `/switch Acme Corp`, `/search PN-4820`
 
-See `reva-turbo-engine/references/command-registry.md` for full details, output formats, and context stack behavior.
+See `revmyengine/references/command-registry.md` for full details, output formats, and context stack behavior.
 
 ## Engine Voice
 

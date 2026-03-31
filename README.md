@@ -93,7 +93,7 @@ Every decision is logged. Every communication is drafted. Every report is genera
 
 | Skill | Command | What It Does |
 |-------|---------|-------------|
-| **Engine** | `/reva-turbo-engine` | Master orchestrator: intent routing, lifecycle chaining, workflow state management. The brain of REVA-TURBO. |
+| **Engine** | `/revmyengine` | Master orchestrator: intent routing, lifecycle chaining, workflow state management. The brain of REVA-TURBO. |
 | **Escalate** | `/reva-turbo-escalate` | Escalation workflow with 3-level matrix. Auto-detects escalation triggers (quality, delay, customer complaint). Routes to Senior PM then Donovan Weber. |
 | **DOCX** | `/reva-turbo-docx` | Markdown-to-Word converter. Handles `{{PLACEHOLDER}}` template filling. Consistent Rev A branding. |
 | **Templates** | `/reva-turbo-templates` | Central template inventory: quotes, reports, emails, inspection forms, NCRs. Version tracking and management. |
@@ -172,7 +172,7 @@ REVA-TURBO follows a 4-layer architecture:
 
 ```
 Layer 4: Orchestrator
-  reva-turbo-engine — intent routing, lifecycle chaining, workflow state
+  revmyengine — intent routing, lifecycle chaining, workflow state
 
 Layer 3: Composition Skills
   dashboard, report, audit-trail, intel, profit — aggregate from atomics
@@ -376,7 +376,7 @@ cd reva-turbo
 
 Then in Claude Code:
 ```
-/reva-turbo-engine
+/revmyengine
 ```
 
 ---
@@ -420,7 +420,7 @@ REVA-TURBO/
     reva-turbo-update-check         Version check
     reva-turbo-slug                 Report slug generator
 
-  reva-turbo-engine/                Master orchestrator (intent + command routing)
+  revmyengine/                Master orchestrator (intent + command routing)
 
   # Lifecycle order (left to right = flow direction)
   reva-turbo-rfq-intake/            RFQ parsing & intake

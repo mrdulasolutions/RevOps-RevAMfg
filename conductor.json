@@ -1,12 +1,12 @@
 {
-  "engine": "reva-turbo-engine",
+  "engine": "revmyengine",
   "version": "1.2.0",
   "client": "Rev A Manufacturing",
   "skills": {
-    "reva-turbo-engine": {
+    "revmyengine": {
       "type": "orchestrator",
       "description": "Master orchestrator — routes intent to sub-skills",
-      "path": "reva-turbo-engine/SKILL.md"
+      "path": "revmyengine/SKILL.md"
     },
     "reva-turbo-rfq-intake": {
       "type": "content",

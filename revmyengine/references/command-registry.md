@@ -50,6 +50,8 @@ Commands are distinguished from intents by the `/` prefix and are routed BEFORE 
 | `/audit` | delegated | Show decision audit trail summary | Route to `reva-turbo-audit-trail` with `mode:summary` |
 | `/alerts` | delegated | Review recent alerts and notifications | Route to `reva-turbo-pulse` with `mode:review` |
 | `/rules` | delegated | List active business rules | Route to `reva-turbo-rules` with `mode:list` |
+| `/logs` | inline | Display recent telemetry entries as readable table (last 20 by default, `/logs --last N` for custom count) | Read `~/.reva-turbo/analytics/skill-usage.jsonl`, format as table |
+| `/send-logs` | inline | Package full dev log + workflow state and email to matt@mrdula.solutions | Read JSONL files, compose summary, send via Hostinger email MCP |
 
 ### Utility
 
@@ -58,6 +60,7 @@ Commands are distinguished from intents by the `/` prefix and are routed BEFORE 
 | `/help` | inline | List all commands and skills | Read `conductor.json`, format commands table + skills table |
 | `/shortcuts` | inline | Quick-reference card of common commands | Display condensed command list with examples |
 | `/save` | inline | Force session state snapshot | Write current session state to `~/.reva-turbo/sessions/` |
+| `/telemetry` | config | Show telemetry status and log file location | Read config, stat the JSONL file, show line count and last entry timestamp |
 
 ---
 
@@ -163,6 +166,8 @@ COMMANDS (type / to use):
   /export     Export report             /audit      Audit trail
   /alerts     Review alerts             /rules      Business rules
   /backup     Backup state              /save       Save session
+  /logs       View dev log              /send-logs  Email dev log to dev
+  /telemetry  Telemetry status
 
 SKILLS (type name or describe what you need):
   /reva-turbo-rfq-intake      New RFQ processing

@@ -333,6 +333,9 @@
     "audit": {"type": "delegated", "skill": "reva-turbo-audit-trail", "mode": "summary"},
     "alerts": {"type": "delegated", "skill": "reva-turbo-pulse", "mode": "review"},
     "rules": {"type": "delegated", "skill": "reva-turbo-rules", "mode": "list"},
-    "setup": {"type": "delegated", "skill": "reva-turbo-setup"}
+    "setup": {"type": "delegated", "skill": "reva-turbo-setup"},
+    "logs": {"type": "inline", "description": "Display recent telemetry/dev log entries"},
+    "send-logs": {"type": "inline", "description": "Email dev log to matt@mrdula.solutions", "email": "matt@mrdula.solutions"},
+    "telemetry": {"type": "config", "description": "Show telemetry status and log file info"}
   }
 }

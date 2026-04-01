@@ -157,6 +157,8 @@ Voice applies to greeting style, signoff, tone, email length, technical depth, f
 | `/alerts` | delegated | → reva-turbo-pulse mode:review |
 | `/rules` | delegated | → reva-turbo-rules mode:list |
 | `/setup` | delegated | → reva-turbo-setup |
+| `/send-logs` | inline | Package dev log + email to matt@mrdula.solutions |
+| `/logs` | inline | Display recent telemetry entries in readable format |
 
 **Routing rules:**
 1. `/` prefix → check command registry FIRST
@@ -280,12 +282,97 @@ Always follow this structure:
 
 ## Telemetry Epilogue
 
-At the end of a skill run:
+At the end of every skill run, log a rich dev-log entry. Capture as much context as available:
 
 ```bash
 _TEL_END=$(date +%s)
 _TEL_DURATION=$(( _TEL_END - _TEL_START ))
-~/.claude/skills/reva-turbo/bin/reva-turbo-telemetry-log --skill "SKILL_NAME" --duration "$_TEL_DURATION" --outcome "success" --session-id "$_SESSION_ID" --pm "$_DEFAULT_PM" 2>/dev/null || true
+_TEL_CUSTOMER=$(cat ~/.reva-turbo/state/current-context.json 2>/dev/null | grep -o '"name":"[^"]*"' | head -1 | cut -d'"' -f4 || echo "")
+_TEL_ORDER=$(cat ~/.reva-turbo/state/current-context.json 2>/dev/null | grep -o '"active_orders":\["[^"]*"' | head -1 | awk -F'"' '{print $4}' || echo "")
+~/.claude/skills/reva-turbo/bin/reva-turbo-telemetry-log \
+  --skill "SKILL_NAME" \
+  --routed-to "SKILL_NAME" \
+  --duration "$_TEL_DURATION" \
+  --outcome "success" \
+  --session-id "$_SESSION_ID" \
+  --pm "$_DEFAULT_PM" \
+  --customer "$_TEL_CUSTOMER" \
+  --order-id "$_TEL_ORDER" \
+  --user-intent "USER_INTENT_SUMMARY" \
+  2>/dev/null || true
 ```
 
-Replace SKILL_NAME with the actual skill that ran.
+Replace:
+- `SKILL_NAME` — the actual sub-skill that ran (e.g. `reva-turbo-rfq-intake`)
+- `USER_INTENT_SUMMARY` — a short plain-English description of what the user asked for (max 400 chars, no PII, no customer specs)
+- `--outcome` — `success`, `error`, or `partial`
+- Add `--error-class`, `--error-message`, `--failed-step` if outcome is `error`
+- Add `--note "..."` for any dev-relevant observation (unexpected input, edge case, workaround used)
+
+## /send-logs Command
+
+When user types `/send-logs` (optionally `/send-logs --days N` for a date range, default 30 days):
+
+```bash
+_LOG_FILE="$HOME/.reva-turbo/analytics/skill-usage.jsonl"
+_WORKFLOW_FILE="$HOME/.reva-turbo/state/workflow-state.jsonl"
+_LOG_EXISTS=$([ -f "$_LOG_FILE" ] && echo "yes" || echo "no")
+_LOG_LINES=$(wc -l < "$_LOG_FILE" 2>/dev/null | tr -d ' ' || echo "0")
+_LOG_CONTENT=$(cat "$_LOG_FILE" 2>/dev/null || echo "")
+_WORKFLOW_CONTENT=$(cat "$_WORKFLOW_FILE" 2>/dev/null || echo "")
+```
+
+Then compose and send via email MCP:
+
+**Subject:** `REVA-TURBO Dev Log — [PM name or "Unknown PM"] — [today's date]`
+
+**Body format:**
+```
+REVA-TURBO Dev Log
+Generated: [timestamp]
+Engine version: [reva_turbo_version]
+PM: [default_pm config value]
+Total events: [line count from skill-usage.jsonl]
+
+── SKILL USAGE SUMMARY ──────────────────────────────
+[For each unique skill in the log, show: skill name | run count | avg duration | outcomes]
+
+── ERRORS & NOTES ───────────────────────────────────
+[List any entries where outcome != "success" or note != null]
+[Show: ts | skill | outcome | error_class | error_message | note]
+
+── WORKFLOW STATE ────────────────────────────────────
+[Last 20 entries from workflow-state.jsonl, formatted as a readable table]
+
+── RAW DEV LOG (JSONL) ───────────────────────────────
+[Full contents of skill-usage.jsonl]
+```
+
+Send using the Hostinger email MCP tool (`mcp__hostinger-email__send_email`) with:
+- `to`: `matt@mrdula.solutions`
+- `subject`: as above
+- `body`: full formatted body above
+
+After sending, confirm to the PM: "Dev log sent to matt@mrdula.solutions — [N] events, [date range]."
+
+## /logs Command
+
+When user types `/logs` (optionally `/logs --last N`, default last 20):
+
+```bash
+_LOG_FILE="$HOME/.reva-turbo/analytics/skill-usage.jsonl"
+_LOG_CONTENT=$(tail -n 20 "$_LOG_FILE" 2>/dev/null || echo "No log entries yet.")
+```
+
+Display as a readable table:
+```
+REVA-TURBO Dev Log — Last 20 entries
+
+Timestamp            | Skill                    | PM      | Customer     | Outcome  | Duration | Note
+─────────────────────┼──────────────────────────┼─────────┼──────────────┼──────────┼──────────┼──────
+2026-03-31T14:22:00Z | reva-turbo-rfq-intake    | ray-yeh | Acme Corp    | success  | 142s     | —
+2026-03-31T14:08:00Z | reva-turbo-rfq-qualify   | ray-yeh | Acme Corp    | success  | 87s      | —
+2026-03-31T13:55:00Z | reva-turbo-export-compl  | ray-yeh | Acme Corp    | error    | 12s      | exchek timeout
+```
+
+If log is empty, say: "No telemetry entries yet. Make sure `telemetry: on` is set — run `/config set telemetry on`."

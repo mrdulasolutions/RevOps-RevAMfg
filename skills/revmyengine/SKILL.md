@@ -222,6 +222,7 @@ When a user makes a request, detect the intent and route to the correct sub-skil
 | Cost tracking, landed cost, cost vs estimate, running costs, actual vs budget | reva-turbo-cost-tracking | `~/.claude/skills/reva-turbo/skills/reva-turbo-cost-tracking/SKILL.md` |
 | Partner record, partner info, vendor capabilities, certifications, partner contacts | reva-turbo-partner-master | `~/.claude/skills/reva-turbo/skills/reva-turbo-partner-master/SKILL.md` |
 | Communication preferences, notification settings, channel config, quiet hours, alert routing | reva-turbo-comms-preferences | `~/.claude/skills/reva-turbo/skills/reva-turbo-comms-preferences/SKILL.md` |
+| ISF filing, importer security filing, CBP 10+2, ISF submission, security filing | reva-turbo-isf-filing | `~/.claude/skills/reva-turbo/skills/reva-turbo-isf-filing/SKILL.md` |
 
 **To invoke a sub-skill:**
 1. Read the trust overlay for the current level: `reva-turbo-trust/prompts/trust-{learn|assist|operate}.md`

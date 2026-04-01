@@ -1,5 +1,7 @@
 ---
 name: reva-turbo-ncr
+preamble-tier: 2
+version: 1.0.0
 description: |
   Non-Conformance Report workflow. Document defects, perform root cause
   analysis (5-Why, fishbone, 8D), define corrective action (CAPA), and

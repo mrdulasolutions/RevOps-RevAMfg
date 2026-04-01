@@ -45,14 +45,14 @@ echo "  ✓ Linked $REVA-TURBO_DIR -> $SKILLS_DIR"
 # Step 3: Make bin scripts executable
 echo "[3/5] Setting permissions..."
 chmod +x "$REVA-TURBO_DIR/bin/"* 2>/dev/null || true
-chmod +x "$REVA-TURBO_DIR/revmyengine/bin/"* 2>/dev/null || true
+chmod +x "$REVA-TURBO_DIR/skills/revmyengine/bin/"* 2>/dev/null || true
 echo "  ✓ Bin scripts made executable"
 
 # Step 4: Install npm dependencies for docx converter
 echo "[4/5] Installing docx converter dependencies..."
 if command -v npm >/dev/null 2>&1; then
-  if [ -f "$REVA-TURBO_DIR/reva-turbo-docx/scripts/package.json" ]; then
-    cd "$REVA-TURBO_DIR/reva-turbo-docx/scripts" && npm install --silent 2>/dev/null
+  if [ -f "$REVA-TURBO_DIR/skills/reva-turbo-docx/scripts/package.json" ]; then
+    cd "$REVA-TURBO_DIR/skills/reva-turbo-docx/scripts" && npm install --silent 2>/dev/null
     echo "  ✓ DOCX converter dependencies installed"
   elif [ -f "$REVA-TURBO_DIR/scripts/package.json" ]; then
     cd "$REVA-TURBO_DIR/scripts" && npm install --silent 2>/dev/null
@@ -96,9 +96,9 @@ echo "  Config at:           $STATE_DIR/config.yaml"
 echo "  Reports saved to:    $STATE_DIR/reports/REVA-TURBO-Reports/"
 echo ""
 echo "  Quick start:"
-echo "    /revmyengine    — Master orchestrator (routes to all skills)"
-echo "    /reva-turbo-rfq-intake — Process a new RFQ"
-echo "    /reva-turbo-dashboard  — View PM workload"
+echo "    /reva-turbo:revmyengine           — Master orchestrator (routes to all skills)"
+echo "    /reva-turbo:reva-turbo-rfq-intake — Process a new RFQ"
+echo "    /reva-turbo:reva-turbo-dashboard  — View PM workload"
 echo ""
 echo "  Configure: reva-turbo-config set <key> <value>"
 echo "  ═══════════════════════════════════════════"

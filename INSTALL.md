@@ -316,7 +316,7 @@ rm -rf /path/to/reva-turbo
 |---------|-----|
 | `./setup: Permission denied` | Run `chmod +x setup` first |
 | Skills not found in Claude Code | Check symlink: `ls -la ~/.claude/skills/reva-turbo` |
-| `.docx` reports not generating | Run `cd skills/reva-turbo-docx/scripts && npm install` |
+| `.docx` reports not generating | Run `cd ~/.claude/skills/reva-turbo/skills/reva-turbo-docx/scripts && npm install` |
 | Config not loading | Check `~/.reva-turbo/config.yaml` exists |
 | Telemetry prompt keeps appearing | Run `touch ~/.reva-turbo/.telemetry-prompted` |
 | Hook scripts not running | Run `chmod +x` on all scripts in `bin/` directories |

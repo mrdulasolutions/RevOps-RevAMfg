@@ -30,7 +30,8 @@
       "group": "rfq-pipeline",
       "description": "Generate customer-facing quote",
       "path": "skills/reva-turbo-rfq-quote/SKILL.md",
-      "next": "reva-turbo-customer-comms"
+      "next": "reva-turbo-customer-comms",
+      "next_after_acceptance": "reva-turbo-partner-select"
     },
     "reva-turbo-customer-gate": {
       "type": "content",
@@ -80,6 +81,16 @@
         "website": "tradeinsights.ai",
         "integration": "api"
       }
+    },
+    "reva-turbo-partner-select": {
+      "type": "content",
+      "group": "manufacturing",
+      "description": "Score and rank manufacturing partners for an RFQ/order; HITL confirmation before assignment",
+      "path": "skills/reva-turbo-partner-select/SKILL.md",
+      "prev": "reva-turbo-rfq-quote",
+      "next": "reva-turbo-china-package",
+      "hard_gate": true,
+      "hitl": "required"
     },
     "reva-turbo-china-package": {
       "type": "content",
@@ -263,6 +274,24 @@
       "description": "YAML-based business rules engine — pricing, quality, capacity, escalation policies",
       "path": "skills/reva-turbo-rules/SKILL.md"
     },
+    "reva-turbo-cost-tracking": {
+      "type": "content",
+      "group": "order",
+      "description": "Estimated vs actual cost ledger per order — tracks partner quote, tooling, duties, freight, and margin",
+      "path": "skills/reva-turbo-cost-tracking/SKILL.md"
+    },
+    "reva-turbo-partner-master": {
+      "type": "utility",
+      "group": "manufacturing",
+      "description": "Partner master record management — capabilities, certifications, contacts, IP agreements, history",
+      "path": "skills/reva-turbo-partner-master/SKILL.md"
+    },
+    "reva-turbo-comms-preferences": {
+      "type": "system",
+      "group": "personalization",
+      "description": "Communication channel and frequency preferences — per PM, per customer, per alert type",
+      "path": "skills/reva-turbo-comms-preferences/SKILL.md"
+    },
     "reva-turbo-setup": {
       "type": "system",
       "group": "personalization",
@@ -289,6 +318,7 @@
     "reva-turbo-export-compliance",
     "reva-turbo-rfq-quote",
     "reva-turbo-customer-comms",
+    "reva-turbo-partner-select",
     "reva-turbo-china-package",
     "reva-turbo-china-track",
     "reva-turbo-import-compliance",

@@ -154,28 +154,53 @@ Reference `references/email-matching.md` for subject line patterns, domain match
 
 ### Step 4 — Conflict Resolution
 
-When REVA-TURBO and an external system disagree on a value, do not auto-overwrite. Reference `references/conflict-resolution.md` for resolution rules.
+When REVA-TURBO and an external system disagree on a value, do not auto-overwrite. Apply the conflict resolution rules table below before presenting to PM.
 
-> **Sync Conflict Detected**
+**Conflict Resolution Rules:**
+
+| Data Type | On Conflict | Winner | Log? | Alert PM? |
+|-----------|-------------|--------|------|-----------|
+| Customer name | CRM wins — CRM is authoritative source for legal entity names | CRM | Yes | No |
+| Customer email | Most recent edit wins — compare timestamps | Timestamp | Yes | No |
+| Order status / stage | REVA-TURBO wins — RT is system of record for order state | REVA-TURBO | Yes | No |
+| Pricing / cost / margin | REVA-TURBO wins — pricing set by PM inside RT | REVA-TURBO | Yes | **Yes — alert PM** |
+| Contact phone | CRM wins — CRM is authoritative for contact details | CRM | Yes | No |
+| Order notes | Merge both values — append CRM note to RT note with source tag | Both | Yes | No |
+| Compliance status (ECCN, ITAR, sanctions) | REVA-TURBO wins — **never overwrite compliance decisions from external system** | REVA-TURBO | Yes | **Yes — alert PM** |
+| Ship date / tracking | Most recent update wins — compare timestamps | Timestamp | Yes | No |
+| Invoice amount | REVA-TURBO wins if set; flag if external differs >5% | REVA-TURBO | Yes | **Yes — alert PM** |
+| Customer credit status | CRM wins (finance system is authoritative) | CRM | Yes | **Yes — alert PM** |
+
+**Auto-resolution:** Apply the winner rule automatically for non-alerted fields. No PM confirmation needed unless the rule says "alert PM."
+
+**PM-alerted conflicts:** For pricing, compliance status, invoice amount, and credit status — always present to PM before applying resolution:
+
+> **Sync Conflict Detected — PM Review Required**
 >
 > Field: {{FIELD_NAME}}
 > REVA-TURBO value: {{REVA-TURBO_VALUE}} (updated {{REVA-TURBO_UPDATED}})
 > {{EXTERNAL_SYSTEM}} value: {{EXTERNAL_VALUE}} (updated {{EXTERNAL_UPDATED}})
 >
 > **Conflict rule:** {{CONFLICT_RULE}}
+> **Recommended resolution:** {{WINNER}} wins — {{WINNER_VALUE}}
 >
-> A) Keep REVA-TURBO value
-> B) Accept {{EXTERNAL_SYSTEM}} value
-> C) Enter a different value
-> D) Skip (resolve later)
+> A) Apply recommended resolution
+> B) Keep REVA-TURBO value
+> C) Accept {{EXTERNAL_SYSTEM}} value
+> D) Enter a different value manually
+> E) Skip (resolve later)
 
-**HUMAN-IN-THE-LOOP:** Financial data conflicts (price, amount, margin) are ALWAYS flagged for PM review, never auto-resolved.
+**HUMAN-IN-THE-LOOP:** Financial data conflicts (price, cost, margin, invoice amount) and compliance status conflicts are ALWAYS flagged for PM review, never auto-resolved.
 
-**Conflict resolution logging:**
+When a conflict is detected, log to sync-log.jsonl with both values, which won, and why:
 
 ```bash
-echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","event":"conflict","field":"{{FIELD_NAME}}","reva-turbo_value":"{{REVA-TURBO_VALUE}}","external_value":"{{EXTERNAL_VALUE}}","external_system":"{{EXTERNAL_SYSTEM}}","resolution":"{{RESOLUTION}}","resolved_by":"{{PM_NAME}}"}' >> ~/.reva-turbo/state/sync-log.jsonl
+echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","event":"conflict","field":"{{FIELD_NAME}}","reva_turbo_value":"{{REVA-TURBO_VALUE}}","external_value":"{{EXTERNAL_VALUE}}","external_system":"{{EXTERNAL_SYSTEM}}","winner":"{{WINNER}}","resolution_rule":"{{RULE}}","resolution":"{{RESOLUTION}}","resolved_by":"{{PM_OR_AUTO}}"}' >> ~/.reva-turbo/state/sync-log.jsonl
 ```
+
+Fire a reva-turbo-pulse alert for pricing and compliance conflicts:
+- Pricing conflict: `reva-turbo-pulse alert --type pricing_conflict --order {{ORDER_ID}} --message "Pricing conflict detected in sync: REVA-TURBO {{RT_VALUE}} vs {{SYSTEM}} {{EXT_VALUE}}"`
+- Compliance conflict: `reva-turbo-pulse alert --type compliance_conflict --urgency urgent --order {{ORDER_ID}} --message "Compliance status conflict: REVA-TURBO value protected, external value rejected"`
 
 ### Step 5 — Sync Log
 
@@ -243,6 +268,27 @@ PM can force a sync for a specific entity:
 > Sync complete. 0 conflicts found.
 
 ### Step 8 — Sync Schedule
+
+**Config key:** `sync_interval` — controls the default sync cadence for all channels unless overridden per-channel.
+
+```bash
+# View current sync_interval setting
+~/.claude/skills/reva-turbo/bin/reva-turbo-config get sync_interval 2>/dev/null || echo "hourly (default)"
+
+# Set sync_interval
+~/.claude/skills/reva-turbo/bin/reva-turbo-config set sync_interval hourly
+```
+
+**Valid options for `sync_interval`:**
+
+| Option | Behavior | Use When |
+|--------|----------|----------|
+| `realtime` | Sync on every REVA-TURBO state change (outbound) | High-volume PM with always-connected CRM |
+| `hourly` | Batch sync every hour — **default** | Standard use — balanced performance and freshness |
+| `daily` | Sync once daily at 8:00 AM local time | Low-volume use or limited API quota |
+| `manual` | Only sync when PM explicitly requests | Air-gapped systems or API-limited environments |
+
+Per-channel overrides (in sync-config.yaml) always take precedence over `sync_interval`.
 
 Configure how often each channel syncs:
 

@@ -129,8 +129,47 @@ Build the report using `templates/Inspection Report.md`:
 | Disposition | Next Action |
 |------------|-------------|
 | **ACCEPT** | "Parts accepted. Run `/reva-turbo:reva-turbo-quality-gate` for G1 gate check? Or `/reva-turbo:reva-turbo-repackage` to prepare for customer shipment?" |
-| **REJECT** | "Parts rejected. Run `/reva-turbo:reva-turbo-ncr` to create a Non-Conformance Report?" |
-| **HOLD** | "Parts on hold. Escalate to Senior PM (Ray Yeh or Harley Scott) for engineering review." |
+| **REJECT** | "Parts rejected. Run `/reva-turbo:reva-turbo-ncr` to create a Non-Conformance Report?" — auto-suggest reva-turbo-ncr on REJECT |
+| **HOLD** | "Parts on hold. Escalate to Senior PM (Ray Yeh or Harley Scott) for engineering review." — notify via reva-turbo-pulse on HOLD |
+
+**Auto-triggers:**
+- **REJECT** → automatically suggest `/reva-turbo:reva-turbo-ncr`. If autopilot is active at Trust Level 3, auto-invoke NCR creation.
+- **HOLD** → invoke reva-turbo-pulse to fire a HOLD alert to PM and Senior PM. Do NOT advance the order until HOLD is resolved.
+
+---
+
+## AQL Sampling Plan
+
+Use ANSI/ASQ Z1.4 standard for sampling-based inspection. Always present the sample size to the PM before beginning dimensional inspection.
+
+**Standard:** ANSI/ASQ Z1.4 — Inspection Level II — AQL 1.0
+
+| Lot Size (Qty Received) | Sample Size | Accept If ≤ | Reject If ≥ |
+|------------------------|-------------|------------|------------|
+| 2–8 | 100% inspect | 0 defects | 1 defect |
+| 9–15 | 8 pcs | 0 defects | 1 defect |
+| 16–25 | 13 pcs | 0 defects | 1 defect |
+| 26–50 | 20 pcs | 0 defects | 1 defect |
+| 51–90 | 32 pcs | 1 defect | 2 defects |
+| 91–150 | 50 pcs | 1 defect | 2 defects |
+| 151–280 | 80 pcs | 2 defects | 3 defects |
+| 281–500 | 125 pcs | 3 defects | 4 defects |
+| 501–1200 | 200 pcs | 5 defects | 6 defects |
+| 1201+ | 315 pcs | 7 defects | 8 defects |
+
+**Before starting dimensional inspection, present to PM:**
+
+> For a lot of {{QUANTITY_RECEIVED}} pieces, inspect **{{SAMPLE_SIZE}} pieces** per AQL 1.0 (ANSI/ASQ Z1.4 Level II).
+> Accept if ≤ {{ACCEPT_NUMBER}} defects. Reject if ≥ {{REJECT_NUMBER}} defects.
+>
+> A) Proceed with AQL sample inspection
+> B) Inspect 100% of parts (higher cost, slower — appropriate for critical parts)
+> C) Adjust AQL level (provide justification)
+
+**Notes:**
+- 100% inspection is always appropriate for: safety-critical parts, ITAR-controlled hardware, first article inspection (FAI), or when customer contract requires 100%.
+- AQL sampling does not replace visual inspection of all parts — 100% visual, AQL-sampled dimensional.
+- If a defect is found during AQL sampling, complete the full sample before making disposition. Do not stop at first defect.
 
 ## Report Naming
 

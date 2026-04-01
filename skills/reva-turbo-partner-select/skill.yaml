@@ -1,0 +1,17 @@
+name: reva-turbo-partner-select
+version: 1.0.0
+description: |
+  Match order specifications to manufacturing partner capabilities. Score and
+  rank qualified partners for a specific RFQ/order. Document selection rationale.
+  HITL confirmation before partner is assigned. Sits between rfq-quote and
+  china-package in the lifecycle.
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+group: manufacturing
+type: content
+prev: reva-turbo-rfq-quote
+next: reva-turbo-china-package
+hitl: required
+hard_gate: true

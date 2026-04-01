@@ -135,6 +135,53 @@ Required for all China imports:
 - Country of Origin Certificate
 - ISF (Importer Security Filing) for ocean shipments
 
+#### Carrier Restrictions by Product Type
+
+| Product Type | Air Restrictions | Ocean Restrictions | Special Handling |
+|-------------|------------------|--------------------|-----------------|
+| Lithium batteries (standalone) | Many carriers restrict or prohibit — verify with carrier before booking | No general restriction | UN3480 / UN3481 labeling required; IATA PI 965/966/967 compliance |
+| Lithium batteries (in equipment) | Allowed with restrictions — state of charge limits apply | No general restriction | PI 966 / 967 compliance; quantity limits per package |
+| Hazmat (flammable, corrosive, oxidizer) | Requires IATA DGR compliance; some carriers refuse | Requires IMDG compliance | Dangerous Goods Declaration required; shipper's certification |
+| ITAR-controlled hardware | Check BIS/DDTC export license before any carrier booking | Same | Carrier must agree to controlled cargo; end-user restrictions apply |
+| Oversized / overweight | Not air-eligible above 300kg or dimensions exceeding airline maximums | No general restriction | Special handling surcharges apply |
+| Standard commercial goods | No restriction | No restriction | Standard commercial |
+
+If shipping lithium batteries or hazmat: confirm carrier acceptance in writing before booking. Do not assume.
+
+#### ISF Filing Deadline
+
+**Ocean shipments only.** ISF (Importer Security Filing, CBP Form ISF-10+2) must be filed **at least 24 hours before vessel departure** from the foreign port. Late filing triggers CBP penalties ($5,000 per violation). Rev A Manufacturing is the Importer of Record and responsible for ISF filing. Flag to PM if ETA from partner leaves less than 48 hours of buffer for ISF preparation.
+
+```bash
+# Log ISF filing status
+echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","po":"{{PO_NUMBER}}","action":"isf_filed","vessel_etd":"{{VESSEL_ETD}}","filed_at":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","filing_agent":"{{AGENT}}"}' >> ~/.reva-turbo/shipments/shipment-log.jsonl
+```
+
+#### Incoterms Selection Logic
+
+Choose the correct Incoterm based on routing and Rev A's role:
+
+| Incoterm | Who Arranges Transport | Rev A Pays From | Use When |
+|----------|----------------------|-----------------|----------|
+| **FOB (Free on Board)** | Rev A from port of export | Port of export (China) to destination | Standard — partner delivers to port in China, Rev A pays freight from that point forward |
+| **EXW (Ex Works)** | Rev A arranges all transport | Partner's factory door | Rev A wants full control of freight and customs from factory; partner does nothing after production |
+| **DDP (Delivered Duty Paid)** | Partner arranges to customer door | Nothing (partner covers all) | Direct-to-customer flow where partner is trusted to deliver; good for qualified vendors on returning-customer orders |
+| **DAP (Delivered at Place)** | Partner to named destination | Duty and import clearance only | Partner ships to customer address but Rev A handles import clearance |
+
+Default recommendation:
+- **Direct China→Customer flow:** DDP (trusted partner delivers to customer door, Rev A handles import compliance) or FOB (Rev A coordinates customs from port)
+- **Inspect & Forward flow:** FOB or EXW (Rev A controls all freight to its facility)
+
+#### Direct-to-Customer: Customs Entry Notes
+
+When routing is Direct China→Customer:
+- **Ultimate Consignee:** Customer name and delivery address (not Rev A)
+- **Importer of Record:** Rev A Manufacturing (Rev A remains legally responsible for import compliance)
+- **Customs entry filed to:** Customer delivery address as ultimate consignee
+- **Notify party:** Rev A Manufacturing (for import visibility and duty payment)
+- Rev A coordinates duty payment, ISF filing, and customs release remotely — goods never touch Rev A's facility
+- Customer receives goods directly from partner; Rev A provides shipping documentation and customs clearance confirmation
+
 ### Step 6: Shipment Coordination
 
 Use `templates/Shipping Coordination.md` to generate the coordination document. Log the shipment:

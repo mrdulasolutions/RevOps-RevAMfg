@@ -25,16 +25,69 @@ echo '{"skill":"reva-turbo-partner-scorecard","ts":"'$(date -u +%Y-%m-%dT%H:%M:%
 
 Generate a weighted performance scorecard for manufacturing partners. Score across four categories (quality, delivery, cost, communication), assign an A-F letter grade, identify strengths and weaknesses, and recommend actions.
 
-## Scoring Weights
+## Score Calculation Formula
 
-| Category | Weight | Description |
-|----------|--------|-------------|
-| Quality | 35% | Defect rate, NCRs, first article pass rate, returns |
-| Delivery | 30% | On-time delivery, lead time accuracy, milestone adherence |
-| Cost | 20% | Price competitiveness, cost stability, hidden costs |
-| Communication | 15% | Responsiveness, proactive updates, issue resolution speed |
+The partner score is a weighted composite of 5 dimensions, each scored 0–100:
+
+| Dimension | Weight | Key Metrics |
+|-----------|--------|------------|
+| **Quality** | 40% | NCR rate (per order), defect PPM (parts per million), incoming inspection pass rate, first article pass rate |
+| **Delivery** | 25% | On-time delivery % (orders delivered on committed date), average delay days (when late), lead time accuracy |
+| **Responsiveness** | 15% | Average response time to communications (hours), communication quality and clarity, proactive update rate |
+| **Capability** | 10% | Certification coverage (ISO 9001, IATF, AS9100, etc.), process breadth (machining, molding, finishing, etc.) |
+| **Commercial** | 10% | Pricing stability (% of unexpected cost increases), payment compliance, tooling cost accuracy |
+
+**Weighted score formula:**
+
+```
+Score = (Quality × 0.40) + (Delivery × 0.25) + (Responsiveness × 0.15) + (Capability × 0.10) + (Commercial × 0.10)
+```
+
+**Note:** The previous 4-category model (Quality 35%, Delivery 30%, Cost 20%, Communication 15%) is deprecated. The 5-dimension model above is canonical. Existing scorecards using the 4-category model should be recalculated on next refresh.
 
 Reference: `references/scoring-criteria.md`
+
+## Letter Grade Bands
+
+| Score Range | Grade | Description |
+|------------|-------|-------------|
+| 85–100 | **A** | Excellent — preferred partner; eligible for Direct routing qualification |
+| 70–84 | **B** | Good — reliable partner; eligible for Direct routing qualification |
+| 55–69 | **C** | Acceptable — monitor closely; Inspect & Forward routing required |
+| 40–54 | **D** | Below expectations — corrective action required; 60-day review |
+| <40 | **F** | Unacceptable — escalate to Donovan Weber; begin replacement process |
+
+**Routing dependency:** `reva-turbo-logistics` Direct routing qualification requires partner score **A or B**. Partners with score C or below are routed through Inspect & Forward until score improves.
+
+## Refresh Cadence
+
+| Trigger | Action |
+|---------|--------|
+| After every completed order | Score recalculated for the partner on that order |
+| Weekly (automated) | Full scorecard regenerated for all active partners via `reva-turbo-cron` task `weekly-partner-scorecard` |
+| Manual refresh | `/reva-turbo:reva-turbo-partner-scorecard refresh <partner>` — recalculates immediately |
+
+## Score Persistence
+
+Scores are written to two locations:
+1. **`~/.reva-turbo/state/partner-scores.jsonl`** — append-only event log; one entry per scorecard calculation
+2. **`~/.reva-turbo/config/partners.yaml`** — current score and grade written to each partner's record for quick lookup by reva-turbo-logistics and reva-turbo-rfq-qualify
+
+## Routing Dependency Note
+
+- **reva-turbo-logistics:** Reads partner score from `partners.yaml` to determine Direct vs Inspect & Forward routing. Score A or B required for Direct.
+- **reva-turbo-rfq-qualify:** Uses partner score as one qualification factor when evaluating whether Rev A can commit to an order with the proposed partner. Score D or F may trigger a CONDITIONAL or REJECT qualification recommendation.
+
+## Scoring Weights (Legacy Reference — Deprecated)
+
+> The following 4-category weighting is deprecated as of 2026-04-01. The 5-dimension model above is the new canonical standard.
+>
+> | Category | Old Weight |
+> |----------|-----------|
+> | Quality | 35% |
+> | Delivery | 30% |
+> | Cost | 20% |
+> | Communication | 15% |
 
 ## Flow
 
@@ -104,23 +157,54 @@ Ask the PM for communication metrics:
 | Issue resolution speed | Fast / Average / Slow |
 | Dedicated contact person? | Yes / No |
 
-### Step 6 — Calculate Scores
+### Step 5b — Collect Capability and Commercial Data
 
-Score each category 0-100 using the criteria in `references/scoring-criteria.md`, then apply weights:
+Ask PM for capability and commercial metrics:
+
+**Capability:**
+
+| Metric | Value |
+|--------|-------|
+| ISO 9001 certified? | Yes / No / Expired |
+| Other certifications (IATF, AS9100, etc.) | List |
+| Process types available | Machining, molding, sheet metal, casting, etc. |
+| Rev A process coverage (% of Rev A part types this partner can make) | % |
+
+**Commercial:**
+
+| Metric | Value |
+|--------|-------|
+| Price increases in period (count and %) | |
+| Unexpected charges (tooling, rework, expedite) | $ amount |
+| Invoice accuracy (% of invoices matching quoted amounts) | % |
+| Payment compliance (disputes, short pays, etc.) | None / Occasional / Frequent |
+
+### Step 6 — Calculate Scores (5-Dimension Model)
+
+Score each dimension 0–100 using the criteria in `references/scoring-criteria.md`, then apply the canonical weighted formula:
 
 ```
-Weighted Score = (Quality Score x 0.35) + (Delivery Score x 0.30) + (Cost Score x 0.20) + (Communication Score x 0.15)
+Score = (Quality × 0.40) + (Delivery × 0.25) + (Responsiveness × 0.15) + (Capability × 0.10) + (Commercial × 0.10)
 ```
+
+| Dimension | Raw Score (0–100) | Weight | Weighted |
+|-----------|------------------|--------|---------|
+| Quality | {{QUALITY_RAW}} | 40% | {{QUALITY_WEIGHTED}} |
+| Delivery | {{DELIVERY_RAW}} | 25% | {{DELIVERY_WEIGHTED}} |
+| Responsiveness | {{RESP_RAW}} | 15% | {{RESP_WEIGHTED}} |
+| Capability | {{CAP_RAW}} | 10% | {{CAP_WEIGHTED}} |
+| Commercial | {{COMM_RAW}} | 10% | {{COMM_WEIGHTED}} |
+| **TOTAL** | — | 100% | **{{TOTAL_SCORE}}** |
 
 ### Step 7 — Assign Letter Grade
 
 | Score Range | Grade | Description |
 |------------|-------|-------------|
-| 90-100 | A | Excellent — preferred partner |
-| 80-89 | B | Good — reliable partner |
-| 70-79 | C | Acceptable — monitor closely |
-| 60-69 | D | Below expectations — corrective action needed |
-| Below 60 | F | Unacceptable — consider replacing |
+| 85–100 | **A** | Excellent — preferred partner; Direct routing eligible |
+| 70–84 | **B** | Good — reliable partner; Direct routing eligible |
+| 55–69 | **C** | Acceptable — monitor closely; I&F routing required |
+| 40–54 | **D** | Below expectations — corrective action needed |
+| <40 | **F** | Unacceptable — escalate to Donovan Weber |
 
 ### Step 8 — Generate Scorecard
 
@@ -151,11 +235,17 @@ Based on the grade:
 
 ## State Tracking
 
-Log scorecard results to `~/.reva-turbo/state/partner-scores.jsonl`:
+Scores are written to two locations:
+
+**1. Append-only event log** — `~/.reva-turbo/state/partner-scores.jsonl`:
 
 ```bash
-echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","partner":"PARTNER","period":"PERIOD","quality":Q,"delivery":D,"cost":C,"communication":COM,"total":TOTAL,"grade":"GRADE"}' >> ~/.reva-turbo/state/partner-scores.jsonl
+echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","partner":"PARTNER","period":"PERIOD","quality":Q,"delivery":D,"responsiveness":R,"capability":CAP,"commercial":COM,"total":TOTAL,"grade":"GRADE","direct_routing_eligible":true}' >> ~/.reva-turbo/state/partner-scores.jsonl
 ```
+
+**2. Partner master record** — update `~/.reva-turbo/config/partners.yaml` to reflect current score and grade:
+
+The `score` and `grade` fields in the partner's YAML record should be updated after each scorecard calculation so that reva-turbo-logistics and reva-turbo-rfq-qualify can read the current score without querying the full JSONL log.
 
 ## References
 

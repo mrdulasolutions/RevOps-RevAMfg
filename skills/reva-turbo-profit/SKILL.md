@@ -28,9 +28,15 @@ echo '{"skill":"reva-turbo-profit","ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' >> 
 
 Track real profitability for Rev A Manufacturing orders. Compare actual costs against original estimates, surface systematic quoting errors, and provide actionable margin guidance. Answers the question every PM needs answered: "Am I making money on this order, and where am I leaving it on the table?"
 
+## Cost Data Source
+
+**This skill reads from `~/.reva-turbo/state/cost-ledger.jsonl`** — the canonical cost source of truth. All estimated and actual costs are sourced from this file, which is written by `reva-turbo-cost-tracking` and upstream skills. Do not source cost data from any other file; always read cost-ledger.jsonl for the authoritative figures.
+
+See `skills/revmyengine/references/data-carryover.md` for the cost data flow and schema.
+
 ## Prerequisites
 
-This skill expects a delivered order with a completed quote (from `reva-turbo-rfq-quote`) and actual cost data available. If the order has not been delivered, warn the PM:
+This skill expects a delivered order with a completed quote (from `reva-turbo-rfq-quote`) and actual cost data available in `cost-ledger.jsonl`. If the order has not been delivered, warn the PM:
 
 > This order has not been marked as delivered. Profit analysis is most accurate after all costs are finalized.
 > A) Proceed with preliminary analysis (costs may change)
@@ -66,9 +72,19 @@ Display the order summary:
 >
 > Is this the correct order? (Y/N)
 
-### Step 2: Estimated Cost Pull
+### Step 2: Estimated Cost Pull from cost-ledger.jsonl
 
-Retrieve the original quote cost breakdown from the quote record. Reference `references/cost-categories.md` for category definitions.
+Retrieve the original quote cost breakdown from the canonical cost ledger:
+
+```bash
+# Read all cost entries for this order from the canonical cost ledger
+grep '"po":"{{ORDER_ID}}"' ~/.reva-turbo/state/cost-ledger.jsonl 2>/dev/null | \
+  grep '"type":"estimate"' || echo "No estimate records found in cost-ledger.jsonl for {{ORDER_ID}}"
+```
+
+If no records found in cost-ledger.jsonl, check for legacy format (`"event":"estimate"`) or ask PM to enter manually.
+
+Reference `references/cost-categories.md` for category definitions.
 
 **Estimated cost breakdown (from original quote):**
 
@@ -303,6 +319,34 @@ Generate top 3 recommendations based on the data:
 > 1. {{RECOMMENDATION_1}}
 > 2. {{RECOMMENDATION_2}}
 > 3. {{RECOMMENDATION_3}}
+
+### Step 7a — Validate Placeholders
+
+Before generating the margin report, scan all data fields for any unfilled `{{PLACEHOLDER}}` patterns:
+
+```bash
+# Collect all fields to be written into output
+_OUTPUT_PREVIEW="{{ALL_FIELDS_CONCATENATED}}"
+_MISSING=$(echo "$_OUTPUT_PREVIEW" | grep -oE '\{\{[A-Z_]+\}\}' | sort -u 2>/dev/null)
+if [ -n "$_MISSING" ]; then
+  echo "UNFILLED FIELDS DETECTED:"
+  echo "$_MISSING"
+fi
+```
+
+If any `{{PLACEHOLDER}}` patterns are found in the data:
+
+> **Unfilled Fields Detected**
+>
+> The following fields have not been filled in:
+>
+> {{LIST_OF_MISSING_FIELDS}}
+>
+> A) Fill in the missing fields now — I'll provide the values
+> B) Proceed anyway — I acknowledge these fields are incomplete
+> C) Cancel — do not generate this document
+>
+> Do NOT proceed to output unless PM selects B, or after fields are filled via option A.
 
 ### Step 8: Build Report
 

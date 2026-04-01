@@ -76,20 +76,24 @@ Ask the PM for the current milestone status:
 
 ### Step 4 — Delay Detection
 
-Compare actual dates against baseline. Flag delays using standardized delay codes from `references/delay-codes.md`:
+Compare actual dates against baseline. Flag delays using standardized delay codes from `references/delay-codes.md`. Escalation thresholds are governed by `skills/revmyengine/references/escalation-thresholds.md` (Section 1: Manufacturing Delays) — do not use hardcoded values.
 
 | Delay Status | Criteria |
 |-------------|----------|
 | **On Track** | Within 2 business days of baseline |
-| **At Risk** | 3-5 business days behind baseline |
-| **Delayed** | More than 5 business days behind baseline |
-| **Critical** | More than 10 business days behind, or delivery date at risk |
+| **At Risk** | 3–7 business days behind baseline |
+| **Delayed** | 7–14 business days behind baseline |
+| **Critical** | More than 14 business days behind, or delivery date at risk |
 
 For any delay:
 1. Assign a delay code (e.g., DLY-MTL for material delay).
 2. Ask PM for root cause notes.
 3. Calculate impact on final delivery date.
-4. If status is **Critical**, suggest escalation: "This delay may impact the customer delivery date. Escalate to Senior PM? (`/reva-turbo:reva-turbo-escalate`)"
+4. Apply thresholds from `skills/revmyengine/references/escalation-thresholds.md`:
+   - >3 days (At Risk): Send PM pulse notification
+   - >7 days (Delayed): Recommend customer communication
+   - >14 days (Critical): Suggest escalation: "This delay exceeds the Critical threshold (>14 days). Escalate to Senior PM? (`/reva-turbo:reva-turbo-escalate`)"
+   - Delivery date at risk: Customer notification required
 
 ### Step 5 — Quality Checkpoint Scheduling
 

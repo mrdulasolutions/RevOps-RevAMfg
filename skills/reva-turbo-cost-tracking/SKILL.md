@@ -183,24 +183,27 @@ If margin is below the minimum threshold (from config or CLIENT.md defaults):
 > B) Review costs — find reduction opportunities
 > C) Reprice — generate a revised quote
 
-## State File
+## State File — Canonical Cost Source
 
-**`~/.reva-turbo/state/cost-ledger.jsonl`** — append-only cost event log.
+**`~/.reva-turbo/state/cost-ledger.jsonl`** is the **canonical source of truth** for all order cost data in the REVA-TURBO system. This is the definitive cost record. See `skills/revmyengine/references/data-carryover.md` for the full cost data flow and governance rules.
 
 One entry per cost event:
 ```json
 {
-  "ts": "ISO 8601 UTC",
-  "order_id": "ORD-2026-0142",
-  "event": "estimate|actual",
-  "category": "partner_quote|tooling|materials|shipping_intl|duties_tariffs|shipping_domestic|inspection|repackage|overhead|other",
-  "amount": 1250.00,
-  "currency": "USD",
-  "invoice_ref": "INV-2026-0089 (actual only)",
+  "ts": "ISO8601",
+  "po": "PO_NUMBER",
+  "type": "estimate|actual|duty|variance|correction",
+  "category": "material|manufacturing|tooling|shipping|duty|freight|overhead|other",
+  "amount_usd": 1250.00,
+  "currency_orig": "CNY",
+  "amount_orig": 8750.00,
+  "exchange_rate": 7.00,
   "source_skill": "reva-turbo-rfq-quote",
-  "pm": "ray-yeh"
+  "note": ""
 }
 ```
+
+**Note:** The `po` field is the canonical PO identifier (maps to `order_id` in legacy records). The `type` field distinguishes estimates from actuals, duties, and corrections. All amounts are in USD (`amount_usd`); store original currency and exchange rate for audit trail.
 
 ## Rules
 

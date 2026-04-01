@@ -105,12 +105,73 @@ Reference `references/communication-templates.md` for tone and structure guideli
 
 If the situation involves an issue, delay, or bad news, reference `references/escalation-language.md` for appropriate language.
 
-### Step 4: Review and Customize
+### Step 3a — Validate Placeholders
+
+Before presenting the draft for review, scan all data fields for any unfilled `{{PLACEHOLDER}}` patterns:
+
+```bash
+# Collect all fields to be written into output
+_OUTPUT_PREVIEW="{{ALL_FIELDS_CONCATENATED}}"
+_MISSING=$(echo "$_OUTPUT_PREVIEW" | grep -oE '\{\{[A-Z_]+\}\}' | sort -u 2>/dev/null)
+if [ -n "$_MISSING" ]; then
+  echo "UNFILLED FIELDS DETECTED:"
+  echo "$_MISSING"
+fi
+```
+
+If any `{{PLACEHOLDER}}` patterns are found in the data:
+
+> **Unfilled Fields Detected**
+>
+> The following fields have not been filled in:
+>
+> {{LIST_OF_MISSING_FIELDS}}
+>
+> A) Fill in the missing fields now — I'll provide the values
+> B) Proceed anyway — I acknowledge these fields are incomplete
+> C) Cancel — do not generate this document
+>
+> Do NOT proceed to output unless PM selects B, or after fields are filled via option A.
+
+### Step 4: Draft First — Write to Drafts Directory
+
+**Technical control: Communications are always written to draft first. The AI cannot call send functions directly — the send step is always PM-initiated.**
+
+Before presenting the draft for review, write it to the drafts directory:
+
+```bash
+mkdir -p ~/.reva-turbo/comms/drafts
+_DRAFT_TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)
+_DRAFT_FILE="$HOME/.reva-turbo/comms/drafts/{{PO_NUMBER}}-$_DRAFT_TIMESTAMP-draft.md"
+# Write draft content to file
+cat > "$_DRAFT_FILE" << 'DRAFTEOF'
+To: {{CONTACT_EMAIL}}
+Subject: {{EMAIL_SUBJECT}}
+From: {{PM_NAME}} <{{PM_EMAIL}}>
+Type: {{COMM_TYPE}}
+Customer: {{CUSTOMER_COMPANY}}
+PO: {{ORDER_ID}}
+Draft created: {{DRAFT_TIMESTAMP}}
+---
+{{DRAFT_CONTENT}}
+DRAFTEOF
+echo "Draft saved to: $_DRAFT_FILE"
+```
+
+Log the draft creation:
+
+```bash
+echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","event":"draft_created","type":"{{COMM_TYPE}}","customer":"{{CUSTOMER_COMPANY}}","contact":"{{CONTACT_NAME}}","subject":"{{EMAIL_SUBJECT}}","pm":"{{ASSIGNED_PM}}","draft_file":"{{DRAFT_FILE_PATH}}","order_id":"{{ORDER_ID}}"}' >> ~/.reva-turbo/comms/comms-log.jsonl 2>/dev/null || true
+```
+
+### Step 5: Review and Customize
 
 **HUMAN-IN-THE-LOOP CHECKPOINT:**
 
-Present the drafted communication to the PM:
+Present the drafted communication to the PM, showing the draft file path:
 
+> Draft saved to: `~/.reva-turbo/comms/drafts/{{PO_NUMBER}}-{{TIMESTAMP}}-draft.md`
+>
 > Here is the draft {{COMM_TYPE}} for {{CUSTOMER_COMPANY}}:
 >
 > ---
@@ -121,34 +182,50 @@ Present the drafted communication to the PM:
 > B) Make edits (tell me what to change)
 > C) Change the tone (more formal / more casual / more urgent)
 > D) Start over
-> E) Cancel
+> E) Cancel (draft is preserved in drafts directory)
 
 **Never auto-send a communication.** The PM must review and approve every customer-facing message.
 
-If B, ask for specific edits and revise. If C, adjust tone per the PM's direction and re-present.
+If B, ask for specific edits and revise. If C, adjust tone per the PM's direction and re-present. If D or E, log the cancellation and retain the draft file.
 
-### Step 5: Prepare for Sending
+### Step 6: PM-Initiated Send
 
-After PM approval, prepare the communication:
+After PM selects option A (approved), present the final send confirmation. The send step is always a separate, explicit PM-initiated action:
 
-> Approved. Here is the final communication:
+> Approved. Here is the final communication ready to send:
 >
+> **Draft file:** `~/.reva-turbo/comms/drafts/{{PO_NUMBER}}-{{TIMESTAMP}}-draft.md`
 > **To:** {{CONTACT_EMAIL}}
 > **Subject:** {{EMAIL_SUBJECT}}
-> **Body:** [approved content]
 >
-> How would you like to send this?
-> A) Copy to clipboard (I will paste into email)
-> B) Save to file for later
-> C) Draft in CRM (if integrated)
+> **Confirm send:**
+> A) **Send** — deliver this communication now
+> B) **Edit** — I want to make one more change
+> C) **Discard** — cancel this communication entirely
 
-### Step 6: Log Communication
+Log the PM's decision:
 
-Log the communication event:
+```bash
+# Log send or discard action
+echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","event":"{{SEND_OR_DISCARD}}","type":"{{COMM_TYPE}}","customer":"{{CUSTOMER_COMPANY}}","contact":"{{CONTACT_NAME}}","subject":"{{EMAIL_SUBJECT}}","pm":"{{ASSIGNED_PM}}","draft_file":"{{DRAFT_FILE_PATH}}","order_id":"{{ORDER_ID}}"}' >> ~/.reva-turbo/comms/comms-log.jsonl 2>/dev/null || true
+```
+
+If PM selects **Send**, proceed to sending via the configured email connector (reva-turbo-email-connector).
+
+If PM selects **Discard**, log the discard and delete the draft:
+
+```bash
+rm -f "{{DRAFT_FILE_PATH}}" 2>/dev/null || true
+echo "Draft discarded."
+```
+
+### Step 7 (continued): Log Communication
+
+Log the final communication send event (this is the definitive record once sent):
 
 ```bash
 mkdir -p ~/.reva-turbo/comms
-echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","type":"{{COMM_TYPE}}","customer":"{{CUSTOMER_COMPANY}}","contact":"{{CONTACT_NAME}}","subject":"{{EMAIL_SUBJECT}}","pm":"{{ASSIGNED_PM}}","rfq_id":"{{RFQ_ID}}","order_id":"{{ORDER_ID}}"}' >> ~/.reva-turbo/comms/comms-log.jsonl 2>/dev/null || true
+echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","event":"sent","type":"{{COMM_TYPE}}","customer":"{{CUSTOMER_COMPANY}}","contact":"{{CONTACT_NAME}}","subject":"{{EMAIL_SUBJECT}}","pm":"{{ASSIGNED_PM}}","rfq_id":"{{RFQ_ID}}","order_id":"{{ORDER_ID}}"}' >> ~/.reva-turbo/comms/comms-log.jsonl 2>/dev/null || true
 ```
 
 Log the workflow transition:
@@ -157,7 +234,7 @@ Log the workflow transition:
 echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","customer":"{{CUSTOMER_COMPANY}}","stage":"reva-turbo-customer-comms","status":"{{COMM_TYPE}}_sent","pm":"{{ASSIGNED_PM}}"}' >> ~/.reva-turbo/state/workflow-state.jsonl 2>/dev/null || true
 ```
 
-### Step 7: Suggest Next Step
+### Step 8: Suggest Next Step
 
 Based on the communication type, suggest the next workflow step:
 

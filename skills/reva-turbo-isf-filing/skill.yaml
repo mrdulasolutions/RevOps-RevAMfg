@@ -1,0 +1,20 @@
+name: reva-turbo-isf-filing
+version: 1.0.0
+description: Manage Importer Security Filing (ISF/CBP 10+2) for ocean freight shipments. Required at least 24 hours before vessel departure. Penalty for late filing is $5,000 per violation.
+group: compliance
+triggered_by: reva-turbo-logistics
+condition: shipping_mode == sea_fcl OR sea_lcl
+hard_gate: false
+hitl: true
+autopilot: pause
+prev: reva-turbo-logistics
+next: reva-turbo-import-compliance
+preamble-tier: 2
+compatibility:
+  - Claude Code
+  - Claude desktop
+  - Claude CoWork
+slash_command: /reva-turbo:reva-turbo-isf-filing
+state_files:
+  - ~/.reva-turbo/state/isf-log.jsonl
+  - ~/.reva-turbo/shipments/shipment-log.jsonl

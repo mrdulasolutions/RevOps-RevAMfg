@@ -198,8 +198,11 @@ When a shipping exception occurs:
 1. Log the exception with details
 2. Assess impact on delivery date
 3. Determine corrective action
-4. Notify PM and customer if delivery date is affected
-5. Trigger escalation if delay exceeds threshold
+4. Apply thresholds from `skills/revmyengine/references/escalation-thresholds.md` (Section 3: Order Delivery):
+   - >3 days impact: PM alert via reva-turbo-pulse
+   - >5 days impact: Customer notification required
+   - >7 days impact: Trigger reva-turbo-escalate
+5. Notify PM and customer if delivery date is affected
 
 ```bash
 echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","po":"{{PO_NUMBER}}","event":"shipping_exception","type":"{{EXCEPTION_TYPE}}","detail":"{{EXCEPTION_DETAIL}}","impact_days":{{IMPACT_DAYS}}}' >> ~/.reva-turbo/shipments/shipment-log.jsonl

@@ -200,6 +200,34 @@ Present the complete quote summary for PM review:
 
 If B, ask for specific adjustments and recalculate.
 
+### Step 6a — Validate Placeholders
+
+Before generating the quote document, scan all data fields for any unfilled `{{PLACEHOLDER}}` patterns:
+
+```bash
+# Collect all fields to be written into output
+_OUTPUT_PREVIEW="{{ALL_FIELDS_CONCATENATED}}"
+_MISSING=$(echo "$_OUTPUT_PREVIEW" | grep -oE '\{\{[A-Z_]+\}\}' | sort -u 2>/dev/null)
+if [ -n "$_MISSING" ]; then
+  echo "UNFILLED FIELDS DETECTED:"
+  echo "$_MISSING"
+fi
+```
+
+If any `{{PLACEHOLDER}}` patterns are found in the data:
+
+> **Unfilled Fields Detected**
+>
+> The following fields have not been filled in:
+>
+> {{LIST_OF_MISSING_FIELDS}}
+>
+> A) Fill in the missing fields now — I'll provide the values
+> B) Proceed anyway — I acknowledge these fields are incomplete
+> C) Cancel — do not generate this document
+>
+> Do NOT proceed to output unless PM selects B, or after fields are filled via option A.
+
 ### Step 7: Generate Quote Document
 
 Use `templates/Quote Package.md` to generate the customer-facing quote document. Fill all `{{PLACEHOLDER}}` variables.

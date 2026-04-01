@@ -13,53 +13,65 @@
       "group": "rfq-pipeline",
       "description": "Parse incoming RFQs from email/website/CRM",
       "path": "skills/reva-turbo-rfq-intake/SKILL.md",
-      "next": "reva-turbo-rfq-qualify"
+      "prev": null,
+      "next": "reva-turbo-rfq-qualify",
+      "autopilot": "conditional"
     },
     "reva-turbo-rfq-qualify": {
       "type": "content",
       "group": "rfq-pipeline",
       "description": "Gate checks: new/returning, capability, capacity, credit",
       "path": "skills/reva-turbo-rfq-qualify/SKILL.md",
+      "prev": "reva-turbo-rfq-intake",
       "next": "reva-turbo-export-compliance",
       "conditional_next": {
         "new_customer": "reva-turbo-customer-gate"
-      }
+      },
+      "autopilot": "pause"
     },
     "reva-turbo-rfq-quote": {
       "type": "content",
       "group": "rfq-pipeline",
       "description": "Generate customer-facing quote",
       "path": "skills/reva-turbo-rfq-quote/SKILL.md",
+      "prev": "reva-turbo-export-compliance",
       "next": "reva-turbo-customer-comms",
-      "next_after_acceptance": "reva-turbo-partner-select"
+      "next_after_acceptance": "reva-turbo-partner-select",
+      "autopilot": "pause"
     },
     "reva-turbo-customer-gate": {
       "type": "content",
       "group": "customer",
       "description": "New customer onboarding gate",
       "path": "skills/reva-turbo-customer-gate/SKILL.md",
-      "next": "reva-turbo-export-compliance"
+      "prev": "reva-turbo-rfq-qualify",
+      "next": "reva-turbo-export-compliance",
+      "autopilot": "pause"
     },
     "reva-turbo-customer-profile": {
       "type": "content",
       "group": "customer",
       "description": "Customer profile management",
-      "path": "skills/reva-turbo-customer-profile/SKILL.md"
+      "path": "skills/reva-turbo-customer-profile/SKILL.md",
+      "autopilot": "conditional"
     },
     "reva-turbo-customer-comms": {
       "type": "content",
       "group": "customer",
       "description": "Draft customer communications",
       "path": "skills/reva-turbo-customer-comms/SKILL.md",
-      "next": "reva-turbo-china-package"
+      "next": "reva-turbo-china-package",
+      "autopilot": "pause"
     },
     "reva-turbo-export-compliance": {
       "type": "content",
       "group": "compliance",
       "description": "Export compliance gate — EAR/ITAR/sanctions via ExChek engine (exchek.us)",
       "path": "skills/reva-turbo-export-compliance/SKILL.md",
+      "prev": "reva-turbo-rfq-qualify",
       "next": "reva-turbo-rfq-quote",
       "hard_gate": true,
+      "hitl": true,
       "autopilot": "pause",
       "external_engine": {
         "name": "ExChek",
@@ -73,14 +85,29 @@
       "group": "compliance",
       "description": "Import compliance gate — HTS/duties/customs via TradeInsights.ai",
       "path": "skills/reva-turbo-import-compliance/SKILL.md",
-      "next": "reva-turbo-inspect",
+      "prev": "reva-turbo-china-track",
+      "next": "reva-turbo-logistics",
       "hard_gate": true,
+      "hitl": true,
       "autopilot": "conditional",
       "external_engine": {
         "name": "TradeInsights.ai",
         "website": "tradeinsights.ai",
         "integration": "api"
       }
+    },
+    "reva-turbo-isf-filing": {
+      "name": "reva-turbo-isf-filing",
+      "type": "content",
+      "group": "compliance",
+      "description": "Importer Security Filing (ISF/CBP 10+2) for ocean freight — must file 24 hours before vessel departure; $5,000 penalty per violation",
+      "path": "skills/reva-turbo-isf-filing/SKILL.md",
+      "prev": "reva-turbo-logistics",
+      "next": "reva-turbo-import-compliance",
+      "hard_gate": false,
+      "hitl": true,
+      "autopilot": "pause",
+      "condition": "shipping_mode == sea_fcl OR sea_lcl"
     },
     "reva-turbo-partner-select": {
       "type": "content",
@@ -90,243 +117,300 @@
       "prev": "reva-turbo-rfq-quote",
       "next": "reva-turbo-china-package",
       "hard_gate": true,
-      "hitl": "required"
+      "hitl": true,
+      "autopilot": "pause"
     },
     "reva-turbo-china-package": {
       "type": "content",
       "group": "manufacturing",
       "description": "Package specs for China manufacturing partners",
       "path": "skills/reva-turbo-china-package/SKILL.md",
-      "next": "reva-turbo-china-track"
+      "prev": "reva-turbo-partner-select",
+      "next": "reva-turbo-china-track",
+      "autopilot": "conditional"
     },
     "reva-turbo-china-track": {
       "type": "content",
       "group": "manufacturing",
       "description": "Track manufacturing progress with China partners",
       "path": "skills/reva-turbo-china-track/SKILL.md",
-      "next": "reva-turbo-import-compliance"
+      "prev": "reva-turbo-china-package",
+      "next": "reva-turbo-import-compliance",
+      "autopilot": "conditional"
     },
     "reva-turbo-partner-scorecard": {
       "type": "content",
       "group": "manufacturing",
-      "description": "Evaluate partner performance (A-F)",
-      "path": "skills/reva-turbo-partner-scorecard/SKILL.md"
+      "description": "Evaluate partner performance (A-F) — 5-dimension weighted score",
+      "path": "skills/reva-turbo-partner-scorecard/SKILL.md",
+      "autopilot": "conditional"
     },
     "reva-turbo-inspect": {
       "type": "content",
       "group": "quality",
       "description": "Incoming inspection workflow",
       "path": "skills/reva-turbo-inspect/SKILL.md",
+      "prev": "reva-turbo-logistics",
       "next": "reva-turbo-quality-gate",
       "conditional_next": {
         "reject": "reva-turbo-ncr"
-      }
+      },
+      "hitl": true,
+      "autopilot": "pause"
     },
     "reva-turbo-ncr": {
       "type": "content",
       "group": "quality",
       "description": "Non-conformance report",
-      "path": "skills/reva-turbo-ncr/SKILL.md"
+      "path": "skills/reva-turbo-ncr/SKILL.md",
+      "prev": "reva-turbo-inspect",
+      "hitl": true,
+      "autopilot": "pause"
     },
     "reva-turbo-quality-gate": {
       "type": "content",
       "group": "quality",
-      "description": "Quality gate checks (G1-G4)",
+      "description": "Quality gate checks (G1-G4) — invoked 4 separate times across order lifecycle; G3 and G4 are hard gates",
       "path": "skills/reva-turbo-quality-gate/SKILL.md",
-      "next": "reva-turbo-repackage"
+      "prev": "reva-turbo-inspect",
+      "next": "reva-turbo-repackage",
+      "hard_gate": true,
+      "hitl": true,
+      "autopilot": "conditional"
     },
     "reva-turbo-order-track": {
       "type": "content",
       "group": "order",
       "description": "Full order lifecycle tracking (12 stages)",
-      "path": "skills/reva-turbo-order-track/SKILL.md"
+      "path": "skills/reva-turbo-order-track/SKILL.md",
+      "prev": "reva-turbo-customer-comms",
+      "autopilot": "conditional"
     },
     "reva-turbo-logistics": {
       "type": "content",
       "group": "order",
       "description": "Shipping and logistics coordination",
-      "path": "skills/reva-turbo-logistics/SKILL.md"
+      "path": "skills/reva-turbo-logistics/SKILL.md",
+      "prev": "reva-turbo-repackage",
+      "next": "reva-turbo-customer-comms",
+      "hitl": true,
+      "autopilot": "conditional"
     },
     "reva-turbo-repackage": {
       "type": "content",
       "group": "order",
       "description": "Repackaging workflow",
       "path": "skills/reva-turbo-repackage/SKILL.md",
-      "next": "reva-turbo-logistics"
+      "prev": "reva-turbo-quality-gate",
+      "next": "reva-turbo-logistics",
+      "autopilot": "conditional"
     },
     "reva-turbo-dashboard": {
       "type": "content",
       "group": "reporting",
       "description": "PM workload dashboard",
-      "path": "skills/reva-turbo-dashboard/SKILL.md"
+      "path": "skills/reva-turbo-dashboard/SKILL.md",
+      "autopilot": "auto"
     },
     "reva-turbo-report": {
       "type": "content",
       "group": "reporting",
       "description": "Periodic report generation",
-      "path": "skills/reva-turbo-report/SKILL.md"
+      "path": "skills/reva-turbo-report/SKILL.md",
+      "autopilot": "conditional"
     },
     "reva-turbo-audit-trail": {
       "type": "content",
       "group": "reporting",
       "description": "Decision audit trail",
-      "path": "skills/reva-turbo-audit-trail/SKILL.md"
+      "path": "skills/reva-turbo-audit-trail/SKILL.md",
+      "autopilot": "auto"
     },
     "reva-turbo-escalate": {
       "type": "system",
       "group": "system",
       "description": "Escalation workflow",
-      "path": "skills/reva-turbo-escalate/SKILL.md"
+      "path": "skills/reva-turbo-escalate/SKILL.md",
+      "hitl": true,
+      "autopilot": "pause"
     },
     "reva-turbo-docx": {
       "type": "utility",
       "group": "system",
       "description": "Markdown to DOCX converter",
-      "path": "skills/reva-turbo-docx/SKILL.md"
+      "path": "skills/reva-turbo-docx/SKILL.md",
+      "autopilot": "auto"
     },
     "reva-turbo-templates": {
       "type": "utility",
       "group": "system",
       "description": "Central template management",
-      "path": "skills/reva-turbo-templates/SKILL.md"
+      "path": "skills/reva-turbo-templates/SKILL.md",
+      "autopilot": "auto"
     },
     "reva-turbo-cron": {
       "type": "system",
       "group": "scheduling",
       "description": "Scheduled recurring tasks",
-      "path": "skills/reva-turbo-cron/SKILL.md"
+      "path": "skills/reva-turbo-cron/SKILL.md",
+      "autopilot": "auto"
     },
     "reva-turbo-reminder": {
       "type": "system",
       "group": "scheduling",
       "description": "PM reminders and follow-ups",
-      "path": "skills/reva-turbo-reminder/SKILL.md"
+      "path": "skills/reva-turbo-reminder/SKILL.md",
+      "autopilot": "auto"
     },
     "reva-turbo-email-connector": {
       "type": "connector",
       "group": "integration",
       "description": "Email integration (Hostinger/Gmail MCP)",
-      "path": "skills/reva-turbo-email-connector/SKILL.md"
+      "path": "skills/reva-turbo-email-connector/SKILL.md",
+      "autopilot": "auto"
     },
     "reva-turbo-crm-connector": {
       "type": "connector",
       "group": "integration",
       "description": "CRM integration (Power Apps/Dynamics/HubSpot)",
-      "path": "skills/reva-turbo-crm-connector/SKILL.md"
+      "path": "skills/reva-turbo-crm-connector/SKILL.md",
+      "autopilot": "auto"
     },
     "reva-turbo-erp-connector": {
       "type": "connector",
       "group": "integration",
       "description": "ERP/inventory integration",
-      "path": "skills/reva-turbo-erp-connector/SKILL.md"
+      "path": "skills/reva-turbo-erp-connector/SKILL.md",
+      "autopilot": "auto"
     },
     "reva-turbo-autopilot": {
       "type": "system",
       "group": "magic",
       "description": "Invisible workflow auto-advancement — hands-free lifecycle transitions",
-      "path": "skills/reva-turbo-autopilot/SKILL.md"
+      "path": "skills/reva-turbo-autopilot/SKILL.md",
+      "autopilot": "auto"
     },
     "reva-turbo-pulse": {
       "type": "system",
       "group": "magic",
       "description": "Real-time alert feed via Slack, iMessage, and email",
-      "path": "skills/reva-turbo-pulse/SKILL.md"
+      "path": "skills/reva-turbo-pulse/SKILL.md",
+      "autopilot": "auto"
     },
     "reva-turbo-intel": {
       "type": "system",
       "group": "magic",
       "description": "Predictive analytics — lead time forecasting, risk scoring, trend analysis",
-      "path": "skills/reva-turbo-intel/SKILL.md"
+      "path": "skills/reva-turbo-intel/SKILL.md",
+      "autopilot": "auto"
     },
     "reva-turbo-quick": {
       "type": "system",
       "group": "magic",
       "description": "One-shot natural language actions — fast PM commands",
-      "path": "skills/reva-turbo-quick/SKILL.md"
+      "path": "skills/reva-turbo-quick/SKILL.md",
+      "autopilot": "conditional"
     },
     "reva-turbo-sync": {
       "type": "connector",
       "group": "magic",
       "description": "Bidirectional auto-sync with CRM, email, and external systems",
-      "path": "skills/reva-turbo-sync/SKILL.md"
+      "path": "skills/reva-turbo-sync/SKILL.md",
+      "autopilot": "conditional"
     },
     "reva-turbo-change-order": {
       "type": "content",
       "group": "magic",
       "description": "Mid-stream change management with impact analysis",
-      "path": "skills/reva-turbo-change-order/SKILL.md"
+      "path": "skills/reva-turbo-change-order/SKILL.md",
+      "hitl": true,
+      "autopilot": "pause"
     },
     "reva-turbo-profit": {
       "type": "content",
       "group": "magic",
       "description": "Actual vs estimated cost tracking, margin analysis, profitability reports",
-      "path": "skills/reva-turbo-profit/SKILL.md"
+      "path": "skills/reva-turbo-profit/SKILL.md",
+      "autopilot": "conditional"
     },
     "reva-turbo-handoff": {
       "type": "system",
       "group": "magic",
       "description": "Multi-PM collaboration, vacation handoff, approval chains",
-      "path": "skills/reva-turbo-handoff/SKILL.md"
+      "path": "skills/reva-turbo-handoff/SKILL.md",
+      "hitl": true,
+      "autopilot": "pause"
     },
     "reva-turbo-rules": {
       "type": "system",
       "group": "magic",
       "description": "YAML-based business rules engine — pricing, quality, capacity, escalation policies",
-      "path": "skills/reva-turbo-rules/SKILL.md"
+      "path": "skills/reva-turbo-rules/SKILL.md",
+      "hitl": true,
+      "autopilot": "pause"
     },
     "reva-turbo-cost-tracking": {
       "type": "content",
       "group": "order",
-      "description": "Estimated vs actual cost ledger per order — tracks partner quote, tooling, duties, freight, and margin",
-      "path": "skills/reva-turbo-cost-tracking/SKILL.md"
+      "description": "Estimated vs actual cost ledger per order — canonical cost source (cost-ledger.jsonl)",
+      "path": "skills/reva-turbo-cost-tracking/SKILL.md",
+      "autopilot": "conditional"
     },
     "reva-turbo-partner-master": {
       "type": "utility",
       "group": "manufacturing",
       "description": "Partner master record management — capabilities, certifications, contacts, IP agreements, history",
-      "path": "skills/reva-turbo-partner-master/SKILL.md"
+      "path": "skills/reva-turbo-partner-master/SKILL.md",
+      "autopilot": "conditional"
     },
     "reva-turbo-comms-preferences": {
       "type": "system",
       "group": "personalization",
       "description": "Communication channel and frequency preferences — per PM, per customer, per alert type",
-      "path": "skills/reva-turbo-comms-preferences/SKILL.md"
+      "path": "skills/reva-turbo-comms-preferences/SKILL.md",
+      "autopilot": "auto"
     },
     "reva-turbo-setup": {
       "type": "system",
       "group": "personalization",
       "description": "Interactive onboarding wizard — 7-section config for company, workflow, connectors, partners, shipping, documents, CoWork",
-      "path": "skills/reva-turbo-setup/SKILL.md"
+      "path": "skills/reva-turbo-setup/SKILL.md",
+      "hitl": true,
+      "autopilot": "pause"
     },
     "reva-turbo-trust": {
       "type": "system",
       "group": "personalization",
       "description": "Progressive autonomy system — Level 1 LEARN (crawl), Level 2 ASSIST (walk), Level 3 OPERATE (run)",
-      "path": "skills/reva-turbo-trust/SKILL.md"
+      "path": "skills/reva-turbo-trust/SKILL.md",
+      "hitl": true,
+      "autopilot": "pause"
     },
     "reva-turbo-voice": {
       "type": "system",
       "group": "personalization",
       "description": "Per-user voice and personality tuner — captures communication style, applies to all engine output",
-      "path": "skills/reva-turbo-voice/SKILL.md"
+      "path": "skills/reva-turbo-voice/SKILL.md",
+      "autopilot": "conditional"
     }
   },
   "lifecycle": [
     "reva-turbo-rfq-intake",
     "reva-turbo-rfq-qualify",
-    "reva-turbo-customer-gate",
+    {"skill": "reva-turbo-customer-gate", "condition": "new_customer == true"},
     "reva-turbo-export-compliance",
     "reva-turbo-rfq-quote",
-    "reva-turbo-customer-comms",
+    {"skill": "reva-turbo-customer-comms", "context": "quote_delivery", "note": "Customer-facing quote delivery and acceptance comms"},
     "reva-turbo-partner-select",
     "reva-turbo-china-package",
     "reva-turbo-china-track",
     "reva-turbo-import-compliance",
+    {"skill": "reva-turbo-logistics", "note": "Shipping mode selection; triggers reva-turbo-isf-filing if ocean"},
+    {"skill": "reva-turbo-isf-filing", "condition": "shipping_mode == sea_fcl OR sea_lcl", "note": "Ocean freight only — ISF CBP 10+2 filing"},
     "reva-turbo-inspect",
     "reva-turbo-quality-gate",
     "reva-turbo-repackage",
-    "reva-turbo-logistics",
-    "reva-turbo-customer-comms",
+    {"skill": "reva-turbo-customer-comms", "context": "delivery_notification", "note": "Customer delivery notification and order completion comms"},
     "reva-turbo-order-track"
   ],
   "groups": {

@@ -236,15 +236,62 @@ All fields from Transition 9, plus:
 
 ## State File Summary
 
-| State File | Contains |
-|-----------|---------|
-| `~/.reva-turbo/state/workflow-state.jsonl` | One entry per stage transition; carries all carryover fields forward |
-| `~/.reva-turbo/state/audit-trail.jsonl` | Compliance, quality, override, and escalation decisions |
-| `~/.reva-turbo/state/cost-ledger.jsonl` | Estimated vs actual costs per order per category |
-| `~/.reva-turbo/state/inspection-log.jsonl` | Inspection events and dispositions |
-| `~/.reva-turbo/state/partner-history.jsonl` | Partner events — orders, score changes, NCRs |
-| `~/.reva-turbo/shipments/shipment-log.jsonl` | Shipment events — booking, tracking, exceptions |
-| `~/.reva-turbo/config/partners.yaml` | Authoritative partner master record |
-| `~/.reva-turbo/state/customers/{{slug}}.yaml` | Customer profiles (one file per customer) |
-| `~/.reva-turbo/state/packages/{{rfq_id}}/` | Manufacturing package contents per order |
-| `~/.reva-turbo/shipments/customs/{{rfq_id}}/` | Customs documentation per shipment |
+| State File | Contains | Canonical For |
+|-----------|---------|--------------|
+| `~/.reva-turbo/state/workflow-state.jsonl` | One entry per stage transition; carries all carryover fields forward | Order lifecycle state |
+| `~/.reva-turbo/state/audit-trail.jsonl` | Compliance, quality, override, and escalation decisions | Decision audit |
+| `~/.reva-turbo/state/cost-ledger.jsonl` | **CANONICAL COST SOURCE** — Estimated vs actual costs per order per category (see below) | All cost data |
+| `~/.reva-turbo/state/inspection-log.jsonl` | Inspection events and dispositions | Inspection records |
+| `~/.reva-turbo/state/partner-history.jsonl` | Partner events — orders, score changes, NCRs | Partner event log |
+| `~/.reva-turbo/shipments/shipment-log.jsonl` | Shipment events — booking, tracking, exceptions | Shipping records |
+| `~/.reva-turbo/config/partners.yaml` | Authoritative partner master record | Partner master data |
+| `~/.reva-turbo/state/customers/{{slug}}.yaml` | Customer profiles (one file per customer) | Customer profiles |
+| `~/.reva-turbo/state/packages/{{rfq_id}}/` | Manufacturing package contents per order | Manufacturing packages |
+| `~/.reva-turbo/shipments/customs/{{rfq_id}}/` | Customs documentation per shipment | Customs docs |
+| `~/.reva-turbo/state/isf-log.jsonl` | ISF filing records — confirmation numbers, vessel ETD, filing timestamps | ISF compliance |
+
+---
+
+## Canonical Cost Source: cost-ledger.jsonl
+
+**`~/.reva-turbo/state/cost-ledger.jsonl`** is the single source of truth for all order cost data. Every skill that touches cost data must read from and write to this file.
+
+### Cost Data Flow
+
+```
+reva-turbo-rfq-quote    → writes estimates (type: estimate)
+reva-turbo-change-order → writes revised estimates (type: estimate, note: revision)
+reva-turbo-import-compliance → writes duty actuals (type: duty)
+reva-turbo-logistics    → writes freight actuals (type: actual)
+reva-turbo-repackage    → writes repackage actuals (type: actual)
+reva-turbo-inspect      → writes inspection cost actuals (type: actual)
+reva-turbo-cost-tracking → reads all + writes corrections (type: correction)
+reva-turbo-profit       → reads all for margin analysis (read-only)
+reva-turbo-report       → reads for cost roll-up in weekly report (read-only)
+```
+
+### Record Schema
+
+```json
+{
+  "ts": "ISO8601",
+  "po": "PO_NUMBER",
+  "type": "estimate|actual|duty|variance|correction",
+  "category": "material|manufacturing|tooling|shipping|duty|freight|overhead|other",
+  "amount_usd": 0.00,
+  "currency_orig": "CNY",
+  "amount_orig": 0.00,
+  "exchange_rate": 0.00,
+  "source_skill": "reva-turbo-rfq-quote",
+  "note": ""
+}
+```
+
+### Rules
+
+1. **Append-only.** Records are never modified or deleted. Corrections are new entries with `"type": "correction"` referencing the original entry.
+2. **USD canonical.** All `amount_usd` values are in USD. Store original currency and exchange rate for auditability.
+3. **One record per cost event.** Each cost category change gets its own record.
+4. **Source skill logged.** Every record includes `source_skill` for traceability.
+5. **reva-turbo-cost-tracking is the write coordinator.** Other skills call reva-turbo-cost-tracking to write to the ledger — they do not write directly (except for their own native cost logging).
+6. **reva-turbo-profit reads only.** The profit skill reads from cost-ledger.jsonl but does not write cost records — it writes profitability analysis to workflow-state.jsonl.

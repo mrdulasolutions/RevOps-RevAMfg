@@ -244,15 +244,29 @@ reva-turbo-rfq-intake
           -> [customer accepts]
           -> reva-turbo-china-package (build mfg package for China)
             -> reva-turbo-china-track (track manufacturing progress)
-              -> [goods shipped from China]
+              -> [goods ready to ship from China]
               -> IMPORT COMPLIANCE (HARD GATE — HTS/duties/customs before entry)
-                -> reva-turbo-inspect (incoming inspection at Rev A)
-                  -> reva-turbo-quality-gate (quality check)
-                    -> reva-turbo-repackage (if inspect-and-forward)
-                      -> reva-turbo-logistics (ship to customer)
-                        -> reva-turbo-customer-comms (shipment notification)
-                          -> reva-turbo-order-track (close order)
+                -> reva-turbo-logistics (routing decision — default: Direct)
+                  |
+                  |── A) DIRECT CHINA→CUSTOMER ✓ DEFAULT
+                  |     (qualified vendor + returning customer)
+                  |     -> Partner ships directly to customer
+                  |     -> Rev A = Importer of Record, remote customs coordination
+                  |     -> reva-turbo-inspect → 3rd-party pre-ship inspection at factory (if needed)
+                  |     -> reva-turbo-customer-comms (direct ship notification + tracking)
+                  |     -> reva-turbo-order-track (close order)
+                  |
+                  └── B) INSPECT & FORWARD
+                        (new customer / C-rated vendor / first run / ITAR / contract requires)
+                        -> reva-turbo-inspect (goods arrive at Rev A)
+                          -> reva-turbo-quality-gate (G1-G4)
+                            -> reva-turbo-repackage
+                              -> reva-turbo-logistics (domestic ship)
+                                -> reva-turbo-customer-comms (shipment notification)
+                                  -> reva-turbo-order-track (close order)
 ```
+
+**Direct China→Customer is the default.** Eliminates double-handling, cuts transit time, lowers landed cost. Rev A stays in control as Importer of Record — we coordinate compliance and customs remotely without physically touching the goods. Inspect & Forward is reserved for new relationships, quality risk, or contractual requirements.
 
 **Why export compliance comes before the quote:** You must know if an item can legally be exported before investing time in quoting it. If the item is ITAR-controlled, sanctioned, or requires a license that won't be granted, quoting is wasted effort. The compliance gate screens the RFQ specs against EAR/ITAR/sanctions BEFORE the PM generates pricing.
 

@@ -231,52 +231,102 @@ Collect details based on context:
 
 ## Step 2 — Route to ExChek Engine
 
-Based on the ExChek tier detected in Step 0, route the screening:
+**CRITICAL: Do NOT replicate ExChek compliance logic internally. Always invoke the ExChek skills directly and let them drive the process. ExChek owns the HITL gates, report structures, and audit trail for compliance. Bypassing ExChek's own flow voids defensibility.**
 
-### Enterprise Tier
-
-Read the ExChek classify skill and invoke it with the collected data:
+Detect which ExChek installation path is available:
 
 ```bash
-# Find the ExChek classify skill
-_EXCHEK_CLASSIFY=$(find "$HOME/.claude/skills/exchek" -name "SKILL.md" -path "*/exchek-classify/*" 2>/dev/null | head -1)
-if [ -z "$_EXCHEK_CLASSIFY" ]; then
-  _EXCHEK_CLASSIFY=$(find "$HOME/.claude/skills/exchek" -name "SKILL.md" -path "*/classify/*" 2>/dev/null | head -1)
+# Check for ExChek as an installed plugin (anthropic-skills namespace)
+_EXCHEK_SKILL_PATH="no"
+if [ -d "$HOME/.claude/skills/anthropic-skills" ]; then
+  _EXCHEK_SKILL=$(find "$HOME/.claude/skills/anthropic-skills" -name "SKILL.md" -path "*/exchek-classify/*" 2>/dev/null | head -1)
+  [ -n "$_EXCHEK_SKILL" ] && _EXCHEK_SKILL_PATH="anthropic-skills"
 fi
-echo "EXCHEK_CLASSIFY: $_EXCHEK_CLASSIFY"
+
+# Check for standalone ExChek installation
+if [ "$_EXCHEK_SKILL_PATH" = "no" ]; then
+  for _DIR in "$HOME/.claude/skills/exchek" "$HOME/.claude/skills/exchekinc" "$HOME/.claude/skills/ExChek"; do
+    if [ -d "$_DIR" ]; then
+      _EXCHEK_SKILL_PATH="standalone"
+      break
+    fi
+  done
+fi
+
+echo "EXCHEK_SKILL_PATH: $_EXCHEK_SKILL_PATH"
 ```
 
-Read the ExChek SKILL.md and follow its classification flow. Pass the collected data from Step 1 as input. ExChek will:
+### Invoke ExChek Skills Directly
 
-1. Classify the item under EAR (ECCN) or ITAR (USML category)
-2. Screen against sanctions lists (SDN, Entity List, DPL, Unverified List)
-3. Determine license requirements (NLR, License Exception, License Required)
-4. Generate compliance documentation
+Route to ExChek skills in sequence. Each skill runs its own HITL checkpoints — **do not skip or summarize them**. Let ExChek complete each step before continuing.
 
-Capture the ExChek result:
-- **Classification:** ECCN or USML category
-- **Sanctions result:** CLEAR / MATCH / REVIEW
-- **License determination:** NLR / License Exception (which one) / License Required
-- **Recommendation:** PROCEED / HOLD / BLOCK
+**Step 2a — Jurisdiction Determination**
 
-### Community Tier
+Invoke `/anthropic-skills:exchek-jurisdiction` (or the standalone equivalent) with:
+- Item description and part number
+- Intended destination country and end-user
+- Known technical specifications
+- Application / end-use
 
-Same flow as Enterprise but with community engine capabilities. The community engine covers:
-- EAR/CCL classification (basic)
-- Country-based sanctions screening
-- License requirement determination
-- Basic compliance documentation
+ExChek will determine: ITAR (USML) vs EAR (CCL) vs EAR99. Wait for ExChek's jurisdiction determination before proceeding.
 
-Limitations of community tier (note to PM):
-- No real-time SDN/Entity List screening (uses static reference data)
-- No ITAR/USML classification (EAR only)
-- No deemed export analysis
-- Updates require manual git pull
+**Step 2b — Classification**
 
-### Manual Fallback (ExChek unavailable)
+Invoke `/anthropic-skills:exchek-classify` with the jurisdiction result and item details.
 
-If ExChek could not be installed or is broken, run a manual compliance checklist.
-Reference: `references/manual-compliance-checklist.md`
+ExChek will assign:
+- ECCN (if EAR) or USML Category (if ITAR)
+- Control reasons (NS, AT, MT, CB, etc.)
+- Classification confidence and rationale
+
+**Step 2c — Screening (Sanctions / Denied Parties / Red Flags)**
+
+Invoke `/anthropic-skills:exchek-csl` with destination, end-user, and end-use details.
+
+ExChek screens against: OFAC SDN, BIS Entity List, Denied Persons List, Unverified List, Debarred Parties.
+
+Also invoke `/anthropic-skills:exchek-red-flag-assessment` — ExChek's Know Your Customer red-flag checks. **Do not skip this step.** Red flag review is a legal requirement under EAR Part 732.
+
+**Step 2d — License Determination**
+
+Invoke `/anthropic-skills:exchek-license` with ECCN/USML result, destination, and end-use.
+
+ExChek will determine: NLR / License Exception (specify which) / License Required.
+
+**Step 2e — Deemed Export (if applicable)**
+
+If screening context is Deemed Export (C from Step 1):
+Invoke `/anthropic-skills:exchek-deemed-export` with the technology type and recipient nationality.
+
+**Step 2f — Compliance Report**
+
+Invoke `/anthropic-skills:exchek-compliance-report` to generate the formal compliance record in ExChek's standard format. **Use ExChek's report structure — do not substitute a custom format.** ExChek's report is the audit artifact.
+
+### If ExChek is Standalone (not anthropic-skills namespace)
+
+Same sequence as above, but find and read each SKILL.md from the standalone installation path. Invoke them with the same inputs. Follow each skill's own HITL flow completely.
+
+### Community Tier Limitations (note to PM before proceeding)
+
+If `_EXCHEK_TIER` is `community`:
+> **Note:** You are running ExChek Community (open-source). Limitations:
+> - No real-time OFAC SDN / Entity List screening (uses static data — verify manually at ofac.treas.gov)
+> - No ITAR/USML classification (EAR only)
+> - No deemed export analysis
+> - Manual updates required (`git pull` in ~/.claude/skills/exchek)
+>
+> For ITAR items or high-value exports, ExChek Enterprise is strongly recommended.
+
+### Manual Fallback (ExChek unavailable after install attempt)
+
+Only use if ExChek cannot be installed after all attempts. Run the manual compliance checklist at `references/manual-compliance-checklist.md`.
+
+**Log the manual fallback:**
+```bash
+echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","type":"compliance_manual_fallback","gate":"export","reason":"exchek_unavailable","pm":"{{PM_NAME}}"}' >> ~/.reva-turbo/state/workflow-state.jsonl
+```
+
+Notify PM: "ExChek is unavailable. Manual checklist used. This screening has reduced confidence. Recommend re-running with ExChek before final approval."
 
 ---
 

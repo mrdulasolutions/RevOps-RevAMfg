@@ -4,9 +4,9 @@ preamble-tier: 2
 version: 1.0.0
 description: |
   Interactive onboarding wizard for REVA-TURBO engine configuration.
-  7 sections: company profile, workflow, connectors, manufacturing partners,
-  shipping, documents, CoWork space. Creates 6 YAML config files.
-  Supports skip, resume, and per-section reconfiguration.
+  8 sections: company profile, workflow, connectors, manufacturing partners,
+  shipping, documents, CoWork space, voice profile. Creates 6 YAML config
+  files + voice profile yaml. Supports skip, resume, and per-section reconfiguration.
 compatibility: Claude Code, Claude desktop, Claude CoWork
 allowed-tools:
   - Bash
@@ -71,7 +71,7 @@ Always display the progress indicator at the start of each section:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  REVA-TURBO Setup — Section X of 7: [Name]
+  REVA-TURBO Setup — Section X of 8: [Name]
   ██████░░░░░░░░ X/7 complete
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -426,9 +426,41 @@ Display summary, confirm, update `workflow-config.yaml` with CoWork settings.
 
 ---
 
+### Section 8 of 8: Voice & Communication Profile
+
+**Delegates to:** `reva-turbo-voice` skill
+**Writes:** `~/.reva-turbo/users/<pm-slug>/voice-profile.yaml`
+
+Explain to the PM:
+
+> **Voice Profile** is how REVA-TURBO learns your communication style. Once set,
+> every email draft, customer communication, partner message, and report generated
+> by the engine will match your tone, length preference, formality level, and
+> personal style — automatically.
+>
+> This takes about 3 minutes and makes every output feel like it came from you,
+> not a template.
+
+Ask:
+- A) Set up my voice profile now (recommended)
+- B) Skip for now — I'll configure it later with `/reva-turbo:reva-turbo-voice`
+
+**If A:** Invoke `reva-turbo-voice` by reading `~/.claude/skills/reva-turbo/skills/reva-turbo-voice/SKILL.md` and running its setup flow with `mode: setup`. The voice skill handles all questions — do not duplicate its prompts. Let it complete fully, including saving the profile yaml.
+
+After voice setup completes, return to the setup wizard completion flow.
+
+**If B:** Log the skip and remind the PM at completion:
+```bash
+~/.claude/skills/reva-turbo/bin/reva-turbo-config set section_8_skipped true 2>/dev/null || true
+```
+
+Display summary, confirm voice profile path if created.
+
+---
+
 ## Completion
 
-After all 7 sections (or all non-skipped sections):
+After all 8 sections (or all non-skipped sections):
 
 1. **Set setup flag**:
 ```bash
@@ -450,7 +482,7 @@ done
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   REVA-TURBO Setup Complete!
-  ██████████████ 7/7 sections configured
+  ████████████████ 8/8 sections configured
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   Config Files Created:
@@ -460,13 +492,15 @@ done
   ✓ ~/.reva-turbo/config/partners.yaml
   ✓ ~/.reva-turbo/config/shipping-config.yaml
   ✓ ~/.reva-turbo/config/document-config.yaml
+  ✓ ~/.reva-turbo/users/<pm-slug>/voice-profile.yaml
 
   Skipped Sections: [list any skipped]
 
   Next Steps:
-  1. Run /reva-turbo-dashboard to see your engine status
-  2. Run /reva-turbo-rfq-intake to process your first RFQ
-  3. Run /reva-turbo-setup section:N to reconfigure any section
+  1. Run /reva-turbo:reva-turbo-dashboard to see your engine status
+  2. Run /reva-turbo:reva-turbo-rfq-intake to process your first RFQ
+  3. Run /reva-turbo:reva-turbo-setup section:N to reconfigure any section
+  4. Run /reva-turbo:reva-turbo-voice to update your communication profile
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 

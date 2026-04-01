@@ -122,6 +122,41 @@ echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","type":"compliance_skip","gate":"
 
 ---
 
+## Step 0b — Determine Import Flow
+
+Before collecting shipment details, identify the physical routing:
+
+> **How is this shipment moving?**
+>
+> A) **Direct China→Customer** — Vendor ships directly to customer. Rev A is Importer of Record
+>    but goods do not physically arrive at Rev A. Rev A handles customs remotely.
+>
+> B) **Inspect & Forward** — Goods ship to Rev A facility first for inspection,
+>    then Rev A ships to customer.
+>
+> C) **Rev A Stock** — Goods ship to Rev A and enter inventory (not tied to a specific customer order).
+>
+> Select A-C: ___
+
+**If Direct China→Customer (A):**
+
+Rev A's role is remote importer of record. Key differences in this flow:
+- **Entry filing:** Rev A's customs broker files CBP entry on Rev A's behalf (Rev A's IOR/EIN)
+- **Delivery address on CBP entry:** Customer address (ultimate consignee)
+- **Rev A address:** Listed as notify party and importer of record
+- **Inspection:** Pre-shipment inspection (if required) must be arranged at origin — flag for `reva-turbo-inspect` to coordinate 3rd-party inspection in China
+- **Duty payment:** Rev A pays duties (factor into landed cost / customer invoice)
+- **No physical custody:** Rev A never touches the goods — compliance is entirely paperwork
+
+Note this routing in state:
+```bash
+echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","type":"import_flow","po":"{{PO}}","routing":"direct_to_customer","ior":"Rev A Manufacturing","customer":"{{CUSTOMER}}"}' >> ~/.reva-turbo/state/workflow-state.jsonl
+```
+
+After flow identification, proceed to Step 1 with the appropriate context.
+
+---
+
 ## Step 1 — Collect Shipment Details
 
 > **Import Compliance Screening**

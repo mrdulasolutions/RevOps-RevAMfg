@@ -3,10 +3,11 @@ name: reva-turbo-logistics
 preamble-tier: 2
 version: 1.0.0
 description: |
-  Shipping and logistics coordination for Rev A Manufacturing. Manages
-  international shipping (China to Rev A) and domestic shipping (Rev A to customer).
-  Handles routing decisions (direct-to-customer vs inspect-and-forward),
-  carrier selection, customs documentation, and shipment tracking.
+  Shipping and logistics coordination for Rev A Manufacturing. Supports two
+  primary flows: (1) Direct China→Customer — vendor ships directly to customer,
+  Rev A handles import compliance and documentation remotely; (2) Inspect &
+  Forward — goods route through Rev A for inspection before customer delivery.
+  Direct flow is the default for qualified vendors and returning customers.
 compatibility: Claude Code, Claude desktop, Claude CoWork
 allowed-tools:
   - Bash
@@ -44,30 +45,60 @@ Determine which order requires logistics coordination:
 
 ### Step 2: Routing Decision
 
-Reference `references/routing-logic.md` for the decision matrix. For new orders, evaluate:
+**Default flow is Direct China→Customer.** This is the preferred model — faster delivery, lower landed cost, no double-handling. Inspect-and-forward is the exception, not the rule.
 
-1. **Order value** — High-value orders (>$25K) default to inspect-and-forward
-2. **Customer relationship** — New customers default to inspect-and-forward
-3. **Product complexity** — Custom/tight-tolerance parts default to inspect-and-forward
-4. **Partner score** — Partners rated B or below default to inspect-and-forward
-5. **Customer request** — Customer may specify direct ship preference
-6. **Regulatory** — Certain products require Rev A inspection for compliance
+Reference `references/routing-logic.md` for the decision matrix. Evaluate:
+
+**Direct China→Customer qualifiers (recommend direct if ALL apply):**
+1. Partner score is A or B (trusted vendor)
+2. Returning customer (prior successful orders on record)
+3. Pre-shipment inspection completed at factory (G1/G2 passed in China)
+4. Product is non-ITAR, non-controlled
+5. Customer has not requested Rev A inspection
+
+**Inspect-and-forward triggers (override to I&F if ANY apply):**
+1. New customer (no prior order history)
+2. Partner score C or below
+3. First production run of a new part or new vendor
+4. Quality gate requires physical inspection at Rev A
+5. Customer contract requires Rev A CoC (Certificate of Conformance)
+6. Order value >$50K with no prior precedent
+7. ITAR/controlled product requiring Rev A handling documentation
 
 **HUMAN-IN-THE-LOOP CHECKPOINT:**
 
-> **Routing Recommendation for {{PO_NUMBER}}:**
+> **Routing Decision for {{PO_NUMBER}}**
 >
-> Based on the decision matrix:
-> - Order Value: {{ORDER_VALUE}} ({{VALUE_THRESHOLD}})
-> - Customer Type: {{CUSTOMER_TYPE}} ({{CUSTOMER_THRESHOLD}})
-> - Product Complexity: {{COMPLEXITY}} ({{COMPLEXITY_THRESHOLD}})
-> - Partner Score: {{PARTNER_SCORE}} ({{PARTNER_THRESHOLD}})
+> | Factor | Value | Signal |
+> |--------|-------|--------|
+> | Partner Score | {{PARTNER_SCORE}} | {{PARTNER_SIGNAL}} |
+> | Customer Type | {{CUSTOMER_TYPE}} | {{CUSTOMER_SIGNAL}} |
+> | Pre-ship Inspection | {{PSI_STATUS}} | {{PSI_SIGNAL}} |
+> | Product Controls | {{CONTROL_STATUS}} | {{CONTROL_SIGNAL}} |
+> | Order Value | {{ORDER_VALUE}} | {{VALUE_SIGNAL}} |
 >
 > **Recommended Routing: {{RECOMMENDED_ROUTING}}**
+> {{ROUTING_RATIONALE}}
 >
-> A) Accept recommendation
-> B) Override to direct-to-customer
-> C) Override to inspect-and-forward
+> A) **Direct China→Customer** — Vendor ships to customer. Rev A handles import docs remotely.
+> B) **Inspect & Forward** — Goods route through Rev A before customer delivery.
+> C) **Direct with Pre-Ship Inspection** — Rev A inspector (or 3rd party) inspects at factory, then direct ship.
+
+### Direct China→Customer Flow
+
+When routing is Direct:
+
+1. **Consignee on shipment** = Customer name and address (not Rev A)
+2. **Notify party** = Rev A Manufacturing (for import visibility)
+3. **Importer of Record** = Rev A Manufacturing (Rev A remains responsible for import compliance)
+4. **Rev A role** = Remote coordination — customs docs, duty payment, ISF filing, compliance clearance
+5. **Partner instruction** = Generate `templates/Direct Ship Instructions.md` for the China vendor
+6. **Customer notification** = Notify customer of direct ship with tracking details via `reva-turbo-customer-comms`
+
+Log direct ship decision:
+```bash
+echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","po":"{{PO_NUMBER}}","routing":"direct_to_customer","customer":"{{CUSTOMER}}","partner":"{{PARTNER}}","rationale":"{{RATIONALE}}","pm":"{{PM_NAME}}"}' >> ~/.reva-turbo/shipments/shipment-log.jsonl
+```
 
 ### Step 3: Shipping Mode Selection
 

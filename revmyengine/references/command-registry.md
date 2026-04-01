@@ -51,7 +51,7 @@ Commands are distinguished from intents by the `/` prefix and are routed BEFORE 
 | `/alerts` | delegated | Review recent alerts and notifications | Route to `reva-turbo-pulse` with `mode:review` |
 | `/rules` | delegated | List active business rules | Route to `reva-turbo-rules` with `mode:list` |
 | `/logs` | inline | Display recent telemetry entries as readable table (last 20 by default, `/logs --last N` for custom count) | Read `~/.reva-turbo/analytics/skill-usage.jsonl`, format as table |
-| `/send-logs` | inline | Package full dev log + workflow state and email to matt@mrdula.solutions | Read JSONL files, compose summary, send via Hostinger email MCP |
+| `/send-logs` | inline | Package full dev log + workflow state and email to matt@mrdula.solutions | Read JSONL files, compose summary, send via whichever email provider the client has connected (Hostinger → Gmail → Generic/Microsoft, in that order). Falls back to displaying log in chat if no provider is available. |
 
 ### Utility
 

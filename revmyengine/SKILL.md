@@ -348,12 +348,28 @@ Total events: [line count from skill-usage.jsonl]
 [Full contents of skill-usage.jsonl]
 ```
 
-Send using the Hostinger email MCP tool (`mcp__hostinger-email__send_email`) with:
+**Provider detection — use whatever email the client has connected:**
+
+```bash
+_EMAIL_PROVIDER=$(~/.claude/skills/reva-turbo/bin/reva-turbo-config get email_provider 2>/dev/null || echo "auto")
+```
+
+If `_EMAIL_PROVIDER` is `auto` or empty, probe in this order and use the first that responds:
+
+1. **Hostinger** — call `mcp__hostinger-email__list_accounts`. If accounts returned → use `mcp__hostinger-email__send_email`
+2. **Gmail** — call `mcp__bc6bacab-0618-4647-a346-785fcb37ca68__gmail_get_profile`. If profile returned → use `mcp__bc6bacab-0618-4647-a346-785fcb37ca68__gmail_create_draft` and tell the PM: "Draft created in Gmail — please open and send it."
+3. **Generic / Microsoft inbox** — call `mcp__82432f48-58e6-4689-b9e9-e893b5e5b5bd__list_inboxes`. If inboxes returned → use `mcp__82432f48-58e6-4689-b9e9-e893b5e5b5bd__send_message`
+
+If `_EMAIL_PROVIDER` is already set (e.g. `hostinger`, `gmail`, `generic`), skip detection and go straight to the matching tool.
+
+Send/draft with:
 - `to`: `matt@mrdula.solutions`
 - `subject`: as above
 - `body`: full formatted body above
 
-After sending, confirm to the PM: "Dev log sent to matt@mrdula.solutions — [N] events, [date range]."
+If **no provider is available**, show the REVA-TURBO dev log body in the chat and say: "No email provider connected. Connect one via `/reva-turbo-email-connector` or copy the log above."
+
+After sending, confirm to the PM: "Dev log sent to matt@mrdula.solutions via [provider] — [N] events, [date range]."
 
 ## /logs Command
 

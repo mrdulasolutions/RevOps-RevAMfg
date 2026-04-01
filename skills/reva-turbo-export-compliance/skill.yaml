@@ -1,0 +1,14 @@
+name: reva-turbo-export-compliance
+version: 1.0.0
+description: Export compliance gate — EAR/ITAR/sanctions screening via ExChek engine
+type: content
+group: compliance
+triggers:
+  - /reva-turbo:reva-turbo-export-compliance
+  - export compliance
+  - export check
+  - ITAR
+  - EAR
+  - sanctions check
+  - can we export this
+  - export license

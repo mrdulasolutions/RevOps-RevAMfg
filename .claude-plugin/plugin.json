@@ -1,0 +1,9 @@
+{
+  "name": "reva-turbo",
+  "version": "1.2.0",
+  "description": "REVA-TURBO Skills Engine — Rev A Manufacturing PM workflow from RFQ intake through customer delivery",
+  "author": "Rev A Manufacturing / MrDula Solutions",
+  "repository": "https://github.com/mrdulasolutions/RevOps-RevAMfg",
+  "license": "proprietary",
+  "compatibility": ["claude-code", "claude-desktop", "claude-cowork"]
+}

@@ -138,7 +138,7 @@ A production web application at `portal.revamfg.com` that customers bookmark and
 
 #### Option B: REVA-TURBO Skill + Generated Portal
 
-A REVA-TURBO skill (`reva-turbo-customer-portal`) that generates per-customer status pages. The PM runs `/reva-turbo-customer-portal` and gets a shareable link or HTML file for that customer.
+A REVA-TURBO skill (`reva-turbo-customer-portal`) that generates per-customer status pages. The PM runs `/reva-turbo:reva-turbo-customer-portal` and gets a shareable link or HTML file for that customer.
 
 **What customers get:**
 - A unique URL to their order dashboard (read-only)

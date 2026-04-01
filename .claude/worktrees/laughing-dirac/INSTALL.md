@@ -73,7 +73,7 @@ ls -la ~/.claude/skills/reva-turbo
 
 # Launch REVA-TURBO in Claude Code
 claude
-# Then type: /revmyengine
+# Then type: /reva-turbo:revmyengine
 ```
 
 ---
@@ -91,7 +91,7 @@ Claude will:
 1. Clone the repo to a local directory
 2. Run `./setup` to create runtime directories and symlink skills
 3. Confirm the installation
-4. You can immediately use `/revmyengine`
+4. You can immediately use `/reva-turbo:revmyengine`
 
 **Alternative — install from within an existing Claude Code session:**
 
@@ -191,7 +191,7 @@ chmod +x ~/.claude/skills/reva-turbo/bin/*
 chmod +x ~/.claude/skills/reva-turbo/setup
 
 # Install docx dependencies (if package.json exists)
-cd ~/.claude/skills/reva-turbo/reva-turbo-docx/scripts && npm install --silent 2>/dev/null || true
+cd ~/.claude/skills/reva-turbo/skills/reva-turbo-docx/scripts && npm install --silent 2>/dev/null || true
 
 # Create default config
 cat > ~/.reva-turbo/config.yaml << 'EOF'
@@ -228,23 +228,23 @@ reva-turbo-config set proactive true       # auto-suggest skills based on contex
 If using Microsoft Dynamics 365 or Power Apps:
 1. Set `crm_type` to `dynamics` or `powerapps`
 2. Configure CRM MCP tools in your Claude Code settings
-3. Test with `/reva-turbo-crm-connector`
+3. Test with `/reva-turbo:reva-turbo-crm-connector`
 
 If using HubSpot:
 1. Set `crm_type` to `hubspot`
 2. Ensure HubSpot MCP tools are available
-3. Test with `/reva-turbo-crm-connector`
+3. Test with `/reva-turbo:reva-turbo-crm-connector`
 
 ### Email Integration
 
 1. Configure Hostinger or Gmail MCP tools in Claude Code
-2. Test with `/reva-turbo-email-connector`
+2. Test with `/reva-turbo:reva-turbo-email-connector`
 3. Set up RFQ detection patterns for automatic intake
 
 ### Slack Integration (for Pulse alerts)
 
 1. Configure Slack MCP tools in Claude Code
-2. Test with `/reva-turbo-pulse`
+2. Test with `/reva-turbo:reva-turbo-pulse`
 3. Set channel preferences for alert routing
 
 ---
@@ -254,7 +254,7 @@ If using HubSpot:
 After installation, start REVA-TURBO:
 
 ```
-/revmyengine
+/reva-turbo:revmyengine
 ```
 
 The engine will:

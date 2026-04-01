@@ -66,7 +66,7 @@ The `{{PLACEHOLDER}}` template system ensures consistency. The DOCX converter en
 
 Every feature in REVA-TURBO exists to save PM time or prevent PM error. If a feature does neither, it doesn't belong.
 
-- **Quick** exists because typing `/reva-turbo-rfq-intake` and filling 15 fields takes 10 minutes. Typing "quote Acme 500 aluminum brackets" takes 5 seconds.
+- **Quick** exists because typing `/reva-turbo:reva-turbo-rfq-intake` and filling 15 fields takes 10 minutes. Typing "quote Acme 500 aluminum brackets" takes 5 seconds.
 - **Autopilot** exists because manually invoking the next skill in the lifecycle after every step is tedious when the answer is always "yes, proceed."
 - **Pulse** exists because checking 6 different places for alerts (email, CRM, order tracker, quality log, partner updates, customer messages) takes 30 minutes. A morning digest takes 30 seconds.
 - **Sync** exists because entering the same data in REVA-TURBO and CRM and email is triple-entry. The system should do that.
@@ -108,9 +108,9 @@ Silent failures are how manufacturing companies lose money, customers, and reput
 Every skill is independent. Every skill can run alone. Every skill can run as part of the lifecycle chain.
 
 This means:
-- A PM can use just `/reva-turbo-rfq-quote` without the rest of the engine
-- A PM can use just `/reva-turbo-inspect` for receiving
-- A PM can run the full lifecycle through `/revmyengine`
+- A PM can use just `/reva-turbo:reva-turbo-rfq-quote` without the rest of the engine
+- A PM can use just `/reva-turbo:reva-turbo-inspect` for receiving
+- A PM can run the full lifecycle through `/reva-turbo:revmyengine`
 - New skills can be added without modifying existing skills
 - Skills can be updated independently
 

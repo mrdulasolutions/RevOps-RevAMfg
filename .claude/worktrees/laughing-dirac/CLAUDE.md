@@ -5,9 +5,9 @@ This is the **REVA-TURBO Skills Engine** for Rev A Manufacturing. It is a Claude
 ## Architecture
 
 - Each skill lives in its own directory with `SKILL.md`, `skill.yaml`, `README.md`, and supporting files
-- The master orchestrator is `revmyengine/SKILL.md`
+- The master orchestrator is `skills/revmyengine/SKILL.md`
 - Runtime state is stored at `~/.reva-turbo/` (config, sessions, analytics, workflow state)
-- All reports use `{{PLACEHOLDER}}` templates and are converted to `.docx` via `reva-turbo-docx/scripts/report-to-docx.mjs`
+- All reports use `{{PLACEHOLDER}}` templates and are converted to `.docx` via `skills/reva-turbo-docx/scripts/report-to-docx.mjs`
 
 ## Key Rules
 
@@ -24,7 +24,7 @@ Skills are invoked via `/reva-turbo-*` slash commands. The `revmyengine` orchest
 ## File Structure
 
 - `bin/` — Engine utilities (reva-turbo-config, reva-turbo-telemetry-log, etc.)
-- `reva-turbo-docx/scripts/` — DOCX conversion script (report-to-docx.mjs)
-- `reva-turbo-*/` — Individual skill directories
+- `skills/reva-turbo-docx/scripts/` — DOCX conversion script (report-to-docx.mjs)
+- `skills/reva-turbo-*/` — Individual skill directories
 - `CLIENT.md` — Rev A Mfg company profile
 - `conductor.json` — Skill routing configuration

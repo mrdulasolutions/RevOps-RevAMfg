@@ -45,97 +45,97 @@ Every decision is logged. Every communication is drafted. Every report is genera
 
 | Skill | Command | What It Does |
 |-------|---------|-------------|
-| **RFQ Intake** | `/reva-turbo-rfq-intake` | Parse incoming RFQs from email, website, or CRM. Extract customer, part specs, quantities, material, finish, tolerances, timeline. Create structured RFQ record. |
-| **RFQ Qualify** | `/reva-turbo-rfq-qualify` | Gate checks: new vs returning customer, capability match (machining/molding/sheet metal), complexity score (1-5), capacity check, credit readiness. Decision: PROCEED / CONDITIONAL / DECLINE. |
-| **RFQ Quote** | `/reva-turbo-rfq-quote` | Cost estimation across material, labor, tooling, finishing, assembly, overhead, and margin. Lead time calculation. Tooling amortization. Output: customer-facing quote `.docx`. |
+| **RFQ Intake** | `/reva-turbo:reva-turbo-rfq-intake` | Parse incoming RFQs from email, website, or CRM. Extract customer, part specs, quantities, material, finish, tolerances, timeline. Create structured RFQ record. |
+| **RFQ Qualify** | `/reva-turbo:reva-turbo-rfq-qualify` | Gate checks: new vs returning customer, capability match (machining/molding/sheet metal), complexity score (1-5), capacity check, credit readiness. Decision: PROCEED / CONDITIONAL / DECLINE. |
+| **RFQ Quote** | `/reva-turbo:reva-turbo-rfq-quote` | Cost estimation across material, labor, tooling, finishing, assembly, overhead, and margin. Lead time calculation. Tooling amortization. Output: customer-facing quote `.docx`. |
 
 ### Customer Management
 
 | Skill | Command | What It Does |
 |-------|---------|-------------|
-| **Customer Gate** | `/reva-turbo-customer-gate` | New customer onboarding: company verification, CRM setup, PM assignment (by region and load), initial credit terms, NDA tracking. |
-| **Customer Profile** | `/reva-turbo-customer-profile` | Build and maintain customer profiles: order history, preferences, quality requirements, payment terms, communication preferences. |
-| **Customer Comms** | `/reva-turbo-customer-comms` | Draft emails in Rev A voice: RFQ acknowledgment, quote submission, order confirmation, status update, shipment notification. 5 templates. |
+| **Customer Gate** | `/reva-turbo:reva-turbo-customer-gate` | New customer onboarding: company verification, CRM setup, PM assignment (by region and load), initial credit terms, NDA tracking. |
+| **Customer Profile** | `/reva-turbo:reva-turbo-customer-profile` | Build and maintain customer profiles: order history, preferences, quality requirements, payment terms, communication preferences. |
+| **Customer Comms** | `/reva-turbo:reva-turbo-customer-comms` | Draft emails in Rev A voice: RFQ acknowledgment, quote submission, order confirmation, status update, shipment notification. 5 templates. |
 
 ### Manufacturing Partner
 
 | Skill | Command | What It Does |
 |-------|---------|-------------|
-| **China Package** | `/reva-turbo-china-package` | Standardize specs for China partners: metric conversion, drawing requirements, translation notes, IP protection measures, material equivalency mapping. |
-| **China Track** | `/reva-turbo-china-track` | 10-milestone tracking: specs confirmed, tooling started, tooling complete, first article, first article approved, production started, production complete, QC, packed, shipped. Delay detection and quality checkpoint scheduling. |
-| **Partner Scorecard** | `/reva-turbo-partner-scorecard` | Evaluate partners on quality, delivery, cost, and communication. Weighted scoring. Letter grade (A-F) with trend analysis. |
+| **China Package** | `/reva-turbo:reva-turbo-china-package` | Standardize specs for China partners: metric conversion, drawing requirements, translation notes, IP protection measures, material equivalency mapping. |
+| **China Track** | `/reva-turbo:reva-turbo-china-track` | 10-milestone tracking: specs confirmed, tooling started, tooling complete, first article, first article approved, production started, production complete, QC, packed, shipped. Delay detection and quality checkpoint scheduling. |
+| **Partner Scorecard** | `/reva-turbo:reva-turbo-partner-scorecard` | Evaluate partners on quality, delivery, cost, and communication. Weighted scoring. Letter grade (A-F) with trend analysis. |
 
 ### Quality
 
 | Skill | Command | What It Does |
 |-------|---------|-------------|
-| **Inspect** | `/reva-turbo-inspect` | Incoming inspection: spec-based checklist, dimensional checks, material verification, finish inspection, documentation review. Disposition: ACCEPT / REJECT / HOLD. |
-| **NCR** | `/reva-turbo-ncr` | Non-conformance reports: document defect, 5-Why root cause analysis, fishbone diagram, disposition (rework/scrap/use-as-is/RTV), CAPA corrective action plan. |
-| **Quality Gate** | `/reva-turbo-quality-gate` | 4 stage gates: G1 (incoming), G2 (in-process), G3 (final), G4 (pre-ship). Each gate has specific criteria. Decision: PASS / CONDITIONAL PASS / FAIL. |
+| **Inspect** | `/reva-turbo:reva-turbo-inspect` | Incoming inspection: spec-based checklist, dimensional checks, material verification, finish inspection, documentation review. Disposition: ACCEPT / REJECT / HOLD. |
+| **NCR** | `/reva-turbo:reva-turbo-ncr` | Non-conformance reports: document defect, 5-Why root cause analysis, fishbone diagram, disposition (rework/scrap/use-as-is/RTV), CAPA corrective action plan. |
+| **Quality Gate** | `/reva-turbo:reva-turbo-quality-gate` | 4 stage gates: G1 (incoming), G2 (in-process), G3 (final), G4 (pre-ship). Each gate has specific criteria. Decision: PASS / CONDITIONAL PASS / FAIL. |
 
 ### Order & Logistics
 
 | Skill | Command | What It Does |
 |-------|---------|-------------|
-| **Order Track** | `/reva-turbo-order-track` | 12-stage lifecycle: PO received, acknowledged, specs to China, manufacturing, shipped from China, received at Rev A, inspected, repackaged, shipped to customer, delivered, invoiced, closed. |
-| **Logistics** | `/reva-turbo-logistics` | Shipping coordination: air/sea/ground routing, customs documentation, broker coordination, insurance requirements, tracking. Direct-to-customer vs inspect-and-forward routing logic. |
-| **Repackage** | `/reva-turbo-repackage` | Receiving, inspection verification, repackaging to customer spec, labeling, kitting, outbound shipping preparation. Work order generation. |
+| **Order Track** | `/reva-turbo:reva-turbo-order-track` | 12-stage lifecycle: PO received, acknowledged, specs to China, manufacturing, shipped from China, received at Rev A, inspected, repackaged, shipped to customer, delivered, invoiced, closed. |
+| **Logistics** | `/reva-turbo:reva-turbo-logistics` | Shipping coordination: air/sea/ground routing, customs documentation, broker coordination, insurance requirements, tracking. Direct-to-customer vs inspect-and-forward routing logic. |
+| **Repackage** | `/reva-turbo:reva-turbo-repackage` | Receiving, inspection verification, repackaging to customer spec, labeling, kitting, outbound shipping preparation. Work order generation. |
 
 ### Reporting & Analytics
 
 | Skill | Command | What It Does |
 |-------|---------|-------------|
-| **Dashboard** | `/reva-turbo-dashboard` | PM workload dashboard: open RFQs, active orders, quality issues, upcoming deliveries, partner performance, capacity utilization. |
-| **Report** | `/reva-turbo-report` | Periodic reports: weekly PM summary, monthly performance, quarterly leadership review, customer-specific reports. All output as `.docx`. |
-| **Audit Trail** | `/reva-turbo-audit-trail` | Append-only decision log: gate decisions, approvals, quality dispositions, escalations, overrides. Immutable audit record. |
+| **Dashboard** | `/reva-turbo:reva-turbo-dashboard` | PM workload dashboard: open RFQs, active orders, quality issues, upcoming deliveries, partner performance, capacity utilization. |
+| **Report** | `/reva-turbo:reva-turbo-report` | Periodic reports: weekly PM summary, monthly performance, quarterly leadership review, customer-specific reports. All output as `.docx`. |
+| **Audit Trail** | `/reva-turbo:reva-turbo-audit-trail` | Append-only decision log: gate decisions, approvals, quality dispositions, escalations, overrides. Immutable audit record. |
 
 ### System
 
 | Skill | Command | What It Does |
 |-------|---------|-------------|
-| **Engine** | `/revmyengine` | Master orchestrator: intent routing, lifecycle chaining, workflow state management. The brain of REVA-TURBO. |
-| **Escalate** | `/reva-turbo-escalate` | Escalation workflow with 3-level matrix. Auto-detects escalation triggers (quality, delay, customer complaint). Routes to Senior PM then Donovan Weber. |
-| **DOCX** | `/reva-turbo-docx` | Markdown-to-Word converter. Handles `{{PLACEHOLDER}}` template filling. Consistent Rev A branding. |
-| **Templates** | `/reva-turbo-templates` | Central template inventory: quotes, reports, emails, inspection forms, NCRs. Version tracking and management. |
-| **Cron** | `/reva-turbo-cron` | Scheduled recurring tasks: daily order checks, weekly partner follow-ups, monthly scorecards, quarterly reviews. |
-| **Reminder** | `/reva-turbo-reminder` | Business-rule reminders: quote no-response (3 days), quote expiration (T-5), delivery approaching (T-7/3/1), post-delivery satisfaction (T+3). |
+| **Engine** | `/reva-turbo:revmyengine` | Master orchestrator: intent routing, lifecycle chaining, workflow state management. The brain of REVA-TURBO. |
+| **Escalate** | `/reva-turbo:reva-turbo-escalate` | Escalation workflow with 3-level matrix. Auto-detects escalation triggers (quality, delay, customer complaint). Routes to Senior PM then Donovan Weber. |
+| **DOCX** | `/reva-turbo:reva-turbo-docx` | Markdown-to-Word converter. Handles `{{PLACEHOLDER}}` template filling. Consistent Rev A branding. |
+| **Templates** | `/reva-turbo:reva-turbo-templates` | Central template inventory: quotes, reports, emails, inspection forms, NCRs. Version tracking and management. |
+| **Cron** | `/reva-turbo:reva-turbo-cron` | Scheduled recurring tasks: daily order checks, weekly partner follow-ups, monthly scorecards, quarterly reviews. |
+| **Reminder** | `/reva-turbo:reva-turbo-reminder` | Business-rule reminders: quote no-response (3 days), quote expiration (T-5), delivery approaching (T-7/3/1), post-delivery satisfaction (T+3). |
 
 ### Connectors
 
 | Skill | Command | What It Does |
 |-------|---------|-------------|
-| **Email** | `/reva-turbo-email-connector` | Universal email connector. Native Claude M365 (primary, read-only, Team/Enterprise plan), Hostinger MCP (send/receive), Gmail MCP (drafts), Generic Inbox MCP (Microsoft send/reply/forward). Auto-detects providers, classifies inbound emails, routes to skills. |
-| **CRM** | `/reva-turbo-crm-connector` | CRM integration for Microsoft Power Apps (Dataverse), Dynamics 365, and HubSpot. Adapter pattern supports all three. Field mapping: RFQ->Opportunity, Customer->Account, Order->Sales Order. |
-| **ERP** | `/reva-turbo-erp-connector` | ERP/inventory integration for capacity and cost data. Flexible adapter — Rev A's ERP tooling is evolving. |
+| **Email** | `/reva-turbo:reva-turbo-email-connector` | Universal email connector. Native Claude M365 (primary, read-only, Team/Enterprise plan), Hostinger MCP (send/receive), Gmail MCP (drafts), Generic Inbox MCP (Microsoft send/reply/forward). Auto-detects providers, classifies inbound emails, routes to skills. |
+| **CRM** | `/reva-turbo:reva-turbo-crm-connector` | CRM integration for Microsoft Power Apps (Dataverse), Dynamics 365, and HubSpot. Adapter pattern supports all three. Field mapping: RFQ->Opportunity, Customer->Account, Order->Sales Order. |
+| **ERP** | `/reva-turbo:reva-turbo-erp-connector` | ERP/inventory integration for capacity and cost data. Flexible adapter — Rev A's ERP tooling is evolving. |
 
 ### Compliance
 
 | Skill | Command | What It Does |
 |-------|---------|-------------|
-| **Export Compliance** | `/reva-turbo-export-compliance` | EAR/ITAR/sanctions screening via ExChek engine (exchek.us). Auto-detects installation, offers Enterprise or installs free Community engine from GitHub. Hard gate before sending technical data to China or shipping internationally. |
-| **Import Compliance** | `/reva-turbo-import-compliance` | HTS classification, duty calculation (MFN + Section 301 + AD/CVD), customs documentation via TradeInsights.ai API. Hard gate before customs entry on inbound China shipments. |
+| **Export Compliance** | `/reva-turbo:reva-turbo-export-compliance` | EAR/ITAR/sanctions screening via ExChek engine (exchek.us). Auto-detects installation, offers Enterprise or installs free Community engine from GitHub. Hard gate before sending technical data to China or shipping internationally. |
+| **Import Compliance** | `/reva-turbo:reva-turbo-import-compliance` | HTS classification, duty calculation (MFN + Section 301 + AD/CVD), customs documentation via TradeInsights.ai API. Hard gate before customs entry on inbound China shipments. |
 
 ### Magic Layer
 
 | Skill | Command | What It Does |
 |-------|---------|-------------|
-| **Autopilot** | `/reva-turbo-autopilot` | Invisible workflow auto-advancement. Three modes: FULL AUTO (hands-free lifecycle transitions), SEMI AUTO (advance with confirmation), MANUAL (explicit only). 21-transition rule matrix. |
-| **Pulse** | `/reva-turbo-pulse` | Real-time alert feed via Slack, iMessage, and email. 14 alert types across CRITICAL/WARNING/INFO. Daily digest. Weekly pulse report. Dedup, snooze, off-hours suppression. |
-| **Intel** | `/reva-turbo-intel` | Predictive analytics engine: lead time forecasting, risk scoring, trend analysis. 22 KPIs across sales, delivery, quality, financial, operational. 7 analysis methods. 20 pre-built insight patterns. |
-| **Quick** | `/reva-turbo-quick` | One-shot natural language actions: "quote Acme 500 units aluminum bracket" -> pre-fills and routes to the right skill. 23 quick actions. NLP intent detection with confidence scoring. |
-| **Sync** | `/reva-turbo-sync` | Bidirectional auto-sync with CRM and email. 9-stage outbound sync mapping. Inbound email matching (sender, reference number, content classification). Conflict resolution with system-of-record rules. |
-| **Change Order** | `/reva-turbo-change-order` | Mid-stream change management: 6-dimension impact analysis (cost, time, tooling, quality, partner, logistics). Cascading updates to 8 downstream skills. Change fee policy. Revision control. |
-| **Profit** | `/reva-turbo-profit` | Actual vs estimated cost tracking across 12 cost categories. Variance analysis with 4-tier flag system. Customer lifetime profitability. Margin alerts. Improvement lever identification. |
-| **Handoff** | `/reva-turbo-handoff` | Multi-PM collaboration: vacation handoff (with auto-revert), permanent transfer, shared ownership, approval routing, workload balancing. Briefing and return-briefing generation. |
-| **Rules** | `/reva-turbo-rules` | YAML-based business rules engine: 7 rule types (pricing, approval, alert, routing, quality, workflow, customer). 31 pre-built rules. Conflict resolution. Rule chaining (3-level limit). Override logging. |
+| **Autopilot** | `/reva-turbo:reva-turbo-autopilot` | Invisible workflow auto-advancement. Three modes: FULL AUTO (hands-free lifecycle transitions), SEMI AUTO (advance with confirmation), MANUAL (explicit only). 21-transition rule matrix. |
+| **Pulse** | `/reva-turbo:reva-turbo-pulse` | Real-time alert feed via Slack, iMessage, and email. 14 alert types across CRITICAL/WARNING/INFO. Daily digest. Weekly pulse report. Dedup, snooze, off-hours suppression. |
+| **Intel** | `/reva-turbo:reva-turbo-intel` | Predictive analytics engine: lead time forecasting, risk scoring, trend analysis. 22 KPIs across sales, delivery, quality, financial, operational. 7 analysis methods. 20 pre-built insight patterns. |
+| **Quick** | `/reva-turbo:reva-turbo-quick` | One-shot natural language actions: "quote Acme 500 units aluminum bracket" -> pre-fills and routes to the right skill. 23 quick actions. NLP intent detection with confidence scoring. |
+| **Sync** | `/reva-turbo:reva-turbo-sync` | Bidirectional auto-sync with CRM and email. 9-stage outbound sync mapping. Inbound email matching (sender, reference number, content classification). Conflict resolution with system-of-record rules. |
+| **Change Order** | `/reva-turbo:reva-turbo-change-order` | Mid-stream change management: 6-dimension impact analysis (cost, time, tooling, quality, partner, logistics). Cascading updates to 8 downstream skills. Change fee policy. Revision control. |
+| **Profit** | `/reva-turbo:reva-turbo-profit` | Actual vs estimated cost tracking across 12 cost categories. Variance analysis with 4-tier flag system. Customer lifetime profitability. Margin alerts. Improvement lever identification. |
+| **Handoff** | `/reva-turbo:reva-turbo-handoff` | Multi-PM collaboration: vacation handoff (with auto-revert), permanent transfer, shared ownership, approval routing, workload balancing. Briefing and return-briefing generation. |
+| **Rules** | `/reva-turbo:reva-turbo-rules` | YAML-based business rules engine: 7 rule types (pricing, approval, alert, routing, quality, workflow, customer). 31 pre-built rules. Conflict resolution. Rule chaining (3-level limit). Override logging. |
 
 ### Personalization
 
 | Skill | Command | What It Does |
 |-------|---------|-------------|
-| **Setup** | `/reva-turbo-setup` | Interactive 7-section onboarding wizard: company profile, workflow configuration, connectors (CRM/email/ERP/Slack), manufacturing partners, shipping & logistics, document formatting, CoWork space. Creates 6 YAML config files. Supports skip, resume, per-section reconfiguration. |
-| **Trust** | `/reva-turbo-trust` | Progressive autonomy system with 3 trust levels: Level 1 LEARN (crawl — explain everything, PM decides all), Level 2 ASSIST (walk — pre-fill and draft, PM reviews), Level 3 OPERATE (run — handle routine autonomously, PM audits exceptions). Per-user, per-skill, and per-entity overrides. |
-| **Voice** | `/reva-turbo-voice` | Per-user voice and personality tuner. 3-phase onboarding: sample analysis (paste emails), structured interview (15+ dimensions), preference capture. Customizes ALL engine output: tone, greeting style, email length, technical depth, formality, banned phrases. Continuous learning from PM edits. |
+| **Setup** | `/reva-turbo:reva-turbo-setup` | Interactive 7-section onboarding wizard: company profile, workflow configuration, connectors (CRM/email/ERP/Slack), manufacturing partners, shipping & logistics, document formatting, CoWork space. Creates 6 YAML config files. Supports skip, resume, per-section reconfiguration. |
+| **Trust** | `/reva-turbo:reva-turbo-trust` | Progressive autonomy system with 3 trust levels: Level 1 LEARN (crawl — explain everything, PM decides all), Level 2 ASSIST (walk — pre-fill and draft, PM reviews), Level 3 OPERATE (run — handle routine autonomously, PM audits exceptions). Per-user, per-skill, and per-entity overrides. |
+| **Voice** | `/reva-turbo:reva-turbo-voice` | Per-user voice and personality tuner. 3-phase onboarding: sample analysis (paste emails), structured interview (15+ dimensions), preference capture. Customizes ALL engine output: tone, greeting style, email length, technical depth, formality, banned phrases. Continuous learning from PM edits. |
 
 ### In-Engine Commands (20)
 
@@ -376,7 +376,7 @@ cd reva-turbo
 
 Then in Claude Code:
 ```
-/revmyengine
+/reva-turbo:revmyengine
 ```
 
 ---

@@ -56,16 +56,20 @@ RevOps-RevAMfg/
 
 ## For end users (Rev A PMs)
 
-Your admin deploys the backend once. Then you run one command on your machine:
+Your admin deploys the backend once and shares the router URL + a one-time signup token. Then you run:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mrdulasolutions/RevOps-RevAMfg/main/plugin/install.sh \
-  | REVA_MCP_URL=https://<router>.up.railway.app/mcp \
-    REVA_API_KEY=nk_... \
-    bash
+  | REVA_MCP_URL=https://<router>.up.railway.app/mcp bash
 ```
 
-Restart Claude Code, then `/reva-turbo:revmyengine`. The engine is now connected to the shared CRM and memory — everything you log is available to the whole team.
+The installer drops into a short wizard that prompts for your name, email, a password (12+ chars — you'll only need it to reset your key), and the signup token. Under the hood it calls the router's `/signup` endpoint, which mints a personal `nk_...` API key scoped to your user and writes it into `~/.claude/mcp.json`.
+
+Prefer the browser? Visit `https://<router>.up.railway.app/signup` instead and you'll get the same key + an exact install command to paste.
+
+Restart Claude Code, then `/reva-turbo:revmyengine`. The engine is now connected to the shared CRM and memory — everything you log is available to the whole team, and every action is attributed to your user on the Nakatomi timeline.
+
+See [`docs/AUTH.md`](./docs/AUTH.md) for the full auth flow and rotation story.
 
 ## For admins (MrDula Solutions)
 

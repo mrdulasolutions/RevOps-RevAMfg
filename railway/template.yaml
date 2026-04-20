@@ -52,6 +52,11 @@ services:
       AUTOMEM_API_TOKEN: ${{ shared.AUTOMEM_API_TOKEN }}
       CRM_TOOL_PREFIX: crm
       MEM_TOOL_PREFIX: mem
+      # Self-service signup (PM onboarding via /signup)
+      REVA_SIGNUP_TOKEN: ${{ shared.REVA_SIGNUP_TOKEN }}
+      NAKATOMI_ADMIN_TOKEN: ${{ shared.NAKATOMI_ADMIN_TOKEN }}
+      REVA_WORKSPACE_SLUG: reva
+      PUBLIC_MCP_URL: https://${{ RAILWAY_PUBLIC_DOMAIN }}/mcp
 
   # 2. Nakatomi (CRM) — internal only.
   - name: nakatomi-backend
@@ -99,4 +104,10 @@ sharedVariables:
     generator: "hex:32"
   - name: OPENAI_API_KEY
     description: "Optional — enables real embeddings."
+    required: false
+  - name: REVA_SIGNUP_TOKEN
+    description: "Shared signup gate PMs need to mint a key. Rotate by redeploying."
+    generator: "hex:16"
+  - name: NAKATOMI_ADMIN_TOKEN
+    description: "Admin nk_... key for the Rev A workspace. Set by deploy.sh after the admin user is seeded."
     required: false

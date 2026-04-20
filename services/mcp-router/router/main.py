@@ -12,6 +12,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 
 from .config import settings
+from .signup import router as signup_router
 from .tools import crm, cross, memory
 
 
@@ -42,6 +43,9 @@ def create_app() -> FastAPI:
     mcp = build_mcp()
     app.mount("/mcp", mcp.streamable_http_app())
 
+    # Self-service signup (GET /signup HTML, POST /signup JSON)
+    app.include_router(signup_router)
+
     @app.get("/health")
     async def health() -> JSONResponse:
         return JSONResponse({"ok": True, "service": "reva-mcp-router"})
@@ -52,6 +56,7 @@ def create_app() -> FastAPI:
             {
                 "service": "reva-mcp-router",
                 "mcp_endpoint": "/mcp/",
+                "signup_page": "/signup",
                 "tool_prefixes": {
                     "crm": settings.crm_tool_prefix,
                     "memory": settings.mem_tool_prefix,

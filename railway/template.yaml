@@ -1,0 +1,102 @@
+# REVA-OPS Railway template.
+#
+# Describes a single project with three application services + three
+# infrastructure plugins. All app services share one private network;
+# only `mcp-router` gets a public domain.
+
+name: reva-ops
+description: |
+  Headless AI-CRM + memory + MCP router for Rev A Manufacturing.
+  Single public /mcp endpoint, internally routed to Nakatomi (CRM)
+  and AutoMem (memory).
+
+# ---------------------------------------------------------------------------
+# Plugins (managed databases)
+# ---------------------------------------------------------------------------
+plugins:
+  - name: postgres
+    type: postgresql
+    # exposes $DATABASE_URL to any service that references it
+  - name: falkordb
+    type: redis          # FalkorDB is a Redis module; Railway's redis plugin fits
+    image: falkordb/falkordb:latest
+    variables:
+      FALKORDB_ARGS: "--loadmodule /var/lib/falkordb/bin/falkordb.so"
+  - name: qdrant
+    type: custom
+    image: qdrant/qdrant:latest
+    volumes:
+      - mountPath: /qdrant/storage
+        name: qdrant-storage
+
+# ---------------------------------------------------------------------------
+# Services
+# ---------------------------------------------------------------------------
+services:
+
+  # 1. Public MCP router — the only service with a public domain.
+  - name: mcp-router
+    source:
+      repo: mrdulasolutions/RevOps-RevAMfg
+      branch: main
+      rootDirectory: services/mcp-router
+    domains:
+      - generateRailwayDomain: true
+    healthcheckPath: /health
+    variables:
+      PORT: "8080"
+      LOG_LEVEL: INFO
+      NAKATOMI_INTERNAL_URL: http://nakatomi-backend.railway.internal:8000
+      AUTOMEM_INTERNAL_URL: http://automem-backend.railway.internal:8001
+      AUTH_MODE: passthrough
+      AUTOMEM_API_TOKEN: ${{ shared.AUTOMEM_API_TOKEN }}
+      CRM_TOOL_PREFIX: crm
+      MEM_TOOL_PREFIX: mem
+
+  # 2. Nakatomi (CRM) — internal only.
+  - name: nakatomi-backend
+    source:
+      repo: mrdulasolutions/NakatomiCRM
+      branch: main
+    variables:
+      PORT: "8000"
+      DATABASE_URL: ${{ postgres.DATABASE_URL }}
+      SECRET_KEY: ${{ shared.NAKATOMI_SECRET_KEY }}
+      STORAGE_BACKEND: local
+      MEMORY_CONNECTORS: automem
+      AUTOMEM_URL: http://automem-backend.railway.internal:8001
+      AUTOMEM_API_KEY: ${{ shared.AUTOMEM_API_TOKEN }}
+    # Migrations run on boot via the upstream Dockerfile's entrypoint
+    # (alembic upgrade head && uvicorn app.main:app).
+
+  # 3. AutoMem (memory) — internal only.
+  - name: automem-backend
+    source:
+      repo: mrdulasolutions/automem
+      branch: main
+    variables:
+      PORT: "8001"
+      FALKORDB_HOST: ${{ falkordb.RAILWAY_PRIVATE_DOMAIN }}
+      FALKORDB_PORT: "6379"
+      QDRANT_URL: ${{ qdrant.RAILWAY_PRIVATE_URL }}
+      API_TOKEN: ${{ shared.AUTOMEM_API_TOKEN }}
+      ADMIN_TOKEN: ${{ shared.AUTOMEM_ADMIN_TOKEN }}
+      EMBEDDING_MODEL: text-embedding-3-small
+      # OPENAI_API_KEY is optional — if unset AutoMem uses placeholder embeddings.
+
+# ---------------------------------------------------------------------------
+# Shared variables prompted once at deploy time.
+# ---------------------------------------------------------------------------
+sharedVariables:
+  - name: NAKATOMI_SECRET_KEY
+    description: "64 hex chars — openssl rand -hex 32"
+    generator: "hex:32"
+  - name: AUTOMEM_API_TOKEN
+    description: "Service token both router and AutoMem use."
+    generator: "hex:32"
+  - name: AUTOMEM_ADMIN_TOKEN
+    description: "Admin token for AutoMem schema ops."
+    generator: "hex:32"
+  - name: OPENAI_API_KEY
+    description: "Optional — enables real embeddings."
+    required: false

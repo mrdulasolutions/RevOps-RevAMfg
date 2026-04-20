@@ -85,26 +85,45 @@ load_state
 save_state
 
 # ── Phase: init ───────────────────────────────────────────────────────────
+have_service() {
+  # Check whether a service by exact name exists on the linked project.
+  ( cd "$REPO_ROOT" && railway status --json 2>/dev/null ) \
+    | jq -e --arg n "$1" '.services.edges[].node.name | select(. == $n)' >/dev/null 2>&1
+}
+
 phase_init() {
   bold "[1/4] init — project + databases"
 
-  if [ -f "$REPO_ROOT/.railway/config.json" ]; then
-    say "project already linked (.railway/config.json exists) — skipping init"
+  if ( cd "$REPO_ROOT" && railway status >/dev/null 2>&1 ); then
+    say "project already linked — skipping init"
   else
     say "creating Railway project: $PROJECT_NAME"
     ( cd "$REPO_ROOT" && railway init --name "$PROJECT_NAME" )
   fi
 
-  say "adding Postgres"
-  ( cd "$REPO_ROOT" && railway add --database postgres ) || warn "Postgres may already exist"
+  # Idempotent: `railway add` silently creates duplicates on re-run, so we
+  # gate each add on a name check. If a service with the target name exists,
+  # we skip.
+  if have_service "Postgres"; then
+    say "Postgres already exists — skipping"
+  else
+    say "adding Postgres"
+    ( cd "$REPO_ROOT" && railway add --database postgres )
+  fi
 
-  say "adding FalkorDB (custom image)"
-  ( cd "$REPO_ROOT" && railway add --service falkordb --image falkordb/falkordb:latest ) \
-    || warn "FalkorDB may already exist"
+  if have_service "falkordb"; then
+    say "falkordb already exists — skipping"
+  else
+    say "adding FalkorDB (custom image)"
+    ( cd "$REPO_ROOT" && railway add --service falkordb --image falkordb/falkordb:latest )
+  fi
 
-  say "adding Qdrant (custom image)"
-  ( cd "$REPO_ROOT" && railway add --service qdrant --image qdrant/qdrant:latest ) \
-    || warn "Qdrant may already exist"
+  if have_service "qdrant"; then
+    say "qdrant already exists — skipping"
+  else
+    say "adding Qdrant (custom image)"
+    ( cd "$REPO_ROOT" && railway add --service qdrant --image qdrant/qdrant:latest )
+  fi
 
   say "init complete — check: railway status"
 }
@@ -113,9 +132,20 @@ phase_init() {
 phase_services() {
   bold "[2/4] services — automem, nakatomi, mcp-router"
 
-  say "adding automem-backend (repo: $AUTOMEM_REPO)"
-  ( cd "$REPO_ROOT" && railway add --service automem-backend --repo "$AUTOMEM_REPO" ) \
-    || warn "automem-backend may already exist"
+  # Pre-flight: GitHub integration must be authorized. Without it, `railway
+  # add --repo` returns Unauthorized silently.
+  warn "If this phase returns 'Unauthorized', authorize Railway's GitHub App"
+  warn "at https://railway.com/account → Integrations → GitHub (grant access"
+  warn "to mrdulasolutions/NakatomiCRM and mrdulasolutions/automem), then"
+  warn "re-run: ./railway/deploy.sh services"
+  echo
+
+  if have_service "automem-backend"; then
+    say "automem-backend already exists — skipping add"
+  else
+    say "adding automem-backend (repo: $AUTOMEM_REPO)"
+    ( cd "$REPO_ROOT" && railway add --service automem-backend --repo "$AUTOMEM_REPO" )
+  fi
 
   say "setting automem-backend env vars"
   railway variable set "PORT=8001" --service automem-backend --skip-deploys
@@ -127,9 +157,12 @@ phase_services() {
   # Qdrant URL must be set once the qdrant service has its internal domain published.
   railway variable set 'QDRANT_URL=http://qdrant.railway.internal:6333' --service automem-backend --skip-deploys
 
-  say "adding nakatomi-backend (repo: $NAKATOMI_REPO)"
-  ( cd "$REPO_ROOT" && railway add --service nakatomi-backend --repo "$NAKATOMI_REPO" ) \
-    || warn "nakatomi-backend may already exist"
+  if have_service "nakatomi-backend"; then
+    say "nakatomi-backend already exists — skipping add"
+  else
+    say "adding nakatomi-backend (repo: $NAKATOMI_REPO)"
+    ( cd "$REPO_ROOT" && railway add --service nakatomi-backend --repo "$NAKATOMI_REPO" )
+  fi
 
   say "setting nakatomi-backend env vars"
   railway variable set "PORT=8000" --service nakatomi-backend --skip-deploys
@@ -142,9 +175,12 @@ phase_services() {
 
   # mcp-router deploys from local subdir — Railway CLI's `add --repo`
   # has no rootDirectory flag, so we create the service empty then `up` into it.
-  say "adding mcp-router service (empty shell)"
-  ( cd "$REPO_ROOT" && railway add --service mcp-router ) \
-    || warn "mcp-router may already exist"
+  if have_service "mcp-router"; then
+    say "mcp-router already exists — skipping add"
+  else
+    say "adding mcp-router service (empty shell)"
+    ( cd "$REPO_ROOT" && railway add --service mcp-router )
+  fi
 
   say "setting mcp-router env vars"
   railway variable set "PORT=8080" --service mcp-router --skip-deploys

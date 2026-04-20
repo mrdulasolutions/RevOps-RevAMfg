@@ -46,6 +46,16 @@ railway whoami                               # sanity check
 brew install jq openssl
 ```
 
+**Authorize Railway's GitHub App for the `mrdulasolutions` org.** This is
+a one-time per-workspace step and is required for the `services` phase
+to deploy Nakatomi + AutoMem from their repos. Without it, `railway add
+--repo` returns `Unauthorized`.
+
+1. Open https://railway.com/account → **Integrations** → **GitHub**
+2. Click **Configure** and grant the Railway app access to `NakatomiCRM`
+   and `automem` (or the whole `mrdulasolutions` org)
+3. Re-run the `services` phase
+
 ## Deploy (phased)
 
 `deploy.sh` is broken into phases so you can inspect Railway's state

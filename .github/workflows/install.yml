@@ -26,7 +26,7 @@ jobs:
         env:
           REVA_TURBO_DIR: ${{ github.workspace }}
           REVA_TURBO_SKIP_GIT: "1"
-        run: bash install.sh
+        run: bash plugin/install.sh
 
       - name: Verify install artifacts
         shell: bash
@@ -45,7 +45,7 @@ jobs:
         env:
           REVA_TURBO_DIR: ${{ github.workspace }}
           REVA_TURBO_SKIP_GIT: "1"
-        run: bash install.sh
+        run: bash plugin/install.sh
 
   lint-shell:
     name: shellcheck (install.sh + bin/)
@@ -56,8 +56,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y shellcheck
       - name: Run shellcheck
         run: |
-          shellcheck install.sh setup bin/reva-turbo-* \
-            skills/*/bin/*.sh 2>&1 | tee shellcheck.log || true
+          shellcheck plugin/install.sh plugin/setup plugin/bin/reva-turbo-* \
+            plugin/skills/*/bin/*.sh 2>&1 | tee shellcheck.log || true
           # Fail on SC2000-series errors only (real bugs, not style):
           if grep -E "error:" shellcheck.log; then
             echo "shellcheck found errors"

@@ -128,6 +128,57 @@ if [ -n "${REVA_API_KEY:-}" ] && [ -x "$CONFIG_CMD" ]; then
   say "Saved reva_api_key to config.yaml"
 fi
 
+# ── Step 6a: interactive signup wizard ──────────────────────────────────
+# If REVA_MCP_URL is set but REVA_API_KEY is not, offer to mint one. The
+# router hosts /signup that takes {name, email, password, signup_token}
+# and returns an API key. We POST directly so the whole flow happens in
+# the terminal.
+if [ -n "${REVA_MCP_URL:-}" ] && [ -z "${REVA_API_KEY:-}" ] && [ -t 0 ]; then
+  # Derive the signup URL from the MCP URL (strip trailing /mcp* suffix).
+  SIGNUP_URL="${REVA_MCP_URL%/mcp*}/signup"
+  say "No REVA_API_KEY provided — running signup wizard."
+  say "  Signup endpoint: $SIGNUP_URL"
+
+  printf "Your name            : "; read -r REVA_NAME
+  printf "Work email           : "; read -r REVA_EMAIL
+  printf "Password (12+ chars) : "; stty -echo 2>/dev/null; read -r REVA_PASSWORD; stty echo 2>/dev/null; printf "\n"
+  printf "Signup token         : "; read -r REVA_TOKEN
+
+  if [ -z "${REVA_NAME}" ] || [ -z "${REVA_EMAIL}" ] || [ -z "${REVA_PASSWORD}" ] || [ -z "${REVA_TOKEN}" ]; then
+    say "Signup skipped — one or more fields empty. Re-run with REVA_API_KEY=... to finish."
+  elif command -v python3 >/dev/null 2>&1; then
+    REVA_API_KEY="$(python3 - "$SIGNUP_URL" "$REVA_NAME" "$REVA_EMAIL" "$REVA_PASSWORD" "$REVA_TOKEN" <<'PY'
+import json, sys, urllib.request, urllib.error
+url, name, email, password, token = sys.argv[1:]
+body = json.dumps({
+    "display_name": name, "email": email,
+    "password": password, "signup_token": token,
+}).encode()
+req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST")
+try:
+    with urllib.request.urlopen(req, timeout=30) as r:
+        data = json.loads(r.read())
+        print(data["api_key"])
+except urllib.error.HTTPError as e:
+    body = e.read().decode(errors="replace")
+    sys.stderr.write(f"signup failed: {e.code} {body}\n")
+    sys.exit(1)
+except Exception as e:
+    sys.stderr.write(f"signup failed: {e}\n")
+    sys.exit(1)
+PY
+)"
+    if [ -n "$REVA_API_KEY" ]; then
+      say "✓ API key minted and will be saved to ~/.claude/mcp.json"
+      [ -x "$CONFIG_CMD" ] && "$CONFIG_CMD" set reva_api_key "$REVA_API_KEY"
+    else
+      say "Signup failed — see error above. Retry later with REVA_API_KEY=... set."
+    fi
+  else
+    say "python3 not found — cannot run signup wizard. Visit $SIGNUP_URL in your browser instead."
+  fi
+fi
+
 # ── Step 7: register REVA MCP in Claude Code's mcp.json ─────────────────
 # Only when both URL and key are set. We write JSON by hand (no jq
 # dependency) using a tiny Python one-liner if Python is available, else

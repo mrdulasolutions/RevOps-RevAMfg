@@ -56,18 +56,25 @@ RevOps-RevAMfg/
 
 ## For end users (Rev A PMs)
 
-Your admin deploys the backend once and shares the router URL + a one-time signup token. Then you run:
+Your admin deploys the backend once and shares two things with you: the **router URL** (e.g. `https://reva-ops.up.railway.app/mcp`) and a one-time **signup token**. From there it's three steps — no terminal needed.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/mrdulasolutions/RevOps-RevAMfg/main/plugin/install.sh \
-  | REVA_MCP_URL=https://<router>.up.railway.app/mcp bash
-```
+**1. Get your personal API key.** Visit `https://<router>.up.railway.app/signup` in your browser. Enter your name, work email, a password (12+ chars — only used for future key resets), and the signup token. The page shows your `nk_...` key once. Copy it.
 
-The installer drops into a short wizard that prompts for your name, email, a password (12+ chars — you'll only need it to reset your key), and the signup token. Under the hood it calls the router's `/signup` endpoint, which mints a personal `nk_...` API key scoped to your user and writes it into `~/.claude/mcp.json`.
+**2. Download the plugin bundle.** Grab the latest `reva-turbo-<version>.zip` from the project's [GitHub Releases](https://github.com/mrdulasolutions/RevOps-RevAMfg/releases) page.
 
-Prefer the browser? Visit `https://<router>.up.railway.app/signup` instead and you'll get the same key + an exact install command to paste.
+**3. Upload it into Claude.** In Claude Desktop, open **Plugins → Personal → Local uploads → `+`** and drop in the zip. On enable, Claude prompts for two values:
 
-Restart Claude Code, then `/reva-turbo:revmyengine`. The engine is now connected to the shared CRM and memory — everything you log is available to the whole team, and every action is attributed to your user on the Nakatomi timeline.
+- **`mcp_url`** — paste the router URL your admin shared (the full `/mcp` form)
+- **`api_key`** — paste the `nk_...` key from step 1 (stored in your OS keychain — not a plaintext file)
+
+That's it. Run `/reva-turbo:revmyengine` and the engine is connected to the shared CRM and memory. Everything you log is available to the whole team, and every action is attributed to your user on the Nakatomi timeline.
+
+> Prefer the terminal? The legacy `install.sh` path still works:
+> ```bash
+> curl -fsSL https://raw.githubusercontent.com/mrdulasolutions/RevOps-RevAMfg/main/plugin/install.sh \
+>   | REVA_MCP_URL=https://<router>.up.railway.app/mcp bash
+> ```
+> It drops into the same signup wizard and writes `~/.claude/mcp.json` directly. Useful for Claude Code CLI users or CI.
 
 See [`docs/AUTH.md`](./docs/AUTH.md) for the full auth flow and rotation story.
 

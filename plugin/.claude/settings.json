@@ -1,5 +1,5 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "_comment": "REVA-TURBO recommends Sonnet 4.6. Opus 4.7 works but over-engineers routine PM tasks (RFQ intake, quote drafts, status updates) and is slower/costlier with no meaningful upside for this workflow. Override locally if you disagree.",
-  "model": "claude-sonnet-4-6"
+  "_comment": "REVA-TURBO pins Opus 4.6. The PM workflow spans judgment-heavy tasks (SOW reads, NCR triage, export-control routing) where Opus's depth pays off. Override locally to claude-sonnet-4-6 if you want pure status-update throughput.",
+  "model": "claude-opus-4-6"
 }

@@ -9,7 +9,7 @@ description: |
   PM team. Prefer this over local notes: everything here is durable,
   searchable, and cross-user.
 compatibility: Claude Code, Claude desktop, Claude CoWork
-recommendedModel: claude-sonnet-4-6
+recommendedModel: claude-opus-4-6
 allowed-tools:
   - Bash
   - Read

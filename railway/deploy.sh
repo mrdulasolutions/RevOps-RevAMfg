@@ -1,22 +1,54 @@
 #!/usr/bin/env bash
-# REVA-OPS Railway deploy — one Railway project, router + nakatomi + automem.
+# REVA-OPS Railway deploy — one project, three services + three managed DBs.
 #
-# Requires: railway CLI (>=4.0) logged in, jq, openssl.
+# The deploy is phased so you can inspect Railway's state between steps.
+# Run without arguments to execute every phase in order; pass a phase name
+# to run just that phase.
 #
-# Usage:
-#   ./railway/deploy.sh --project-name reva-ops --admin-email you@reva.com
+#   ./railway/deploy.sh init       # project + Postgres/FalkorDB/Qdrant
+#   ./railway/deploy.sh services   # nakatomi-backend, automem-backend, mcp-router
+#   ./railway/deploy.sh seed       # Nakatomi admin + Rev A pipeline/fields
+#   ./railway/deploy.sh finalize   # print public URL, API key, signup token
+#   ./railway/deploy.sh            # all phases, in order
 #
-# On success, prints the public MCP URL and the seeded admin API key.
+# Required:
+#   railway CLI >= 4.40 (https://docs.railway.com/guides/cli), logged in
+#   openssl, jq
+#
+# The first phase calls `railway init`, which links this directory to the
+# new project via .railway/ — every subsequent phase auto-discovers the
+# project from that link.
 
 set -euo pipefail
 
-PROJECT_NAME="reva-ops"
-ADMIN_EMAIL=""
-ADMIN_PASSWORD=""
-WORKSPACE_SLUG="reva"
-WORKSPACE_NAME="Rev A Manufacturing"
-REGION="us-east4-eqdc4a"
+# ── Config ────────────────────────────────────────────────────────────────
+PROJECT_NAME="${PROJECT_NAME:-reva-ops}"
+ADMIN_EMAIL="${ADMIN_EMAIL:-}"
+ADMIN_PASSWORD="${ADMIN_PASSWORD:-}"
+WORKSPACE_SLUG="${WORKSPACE_SLUG:-reva}"
+WORKSPACE_NAME="${WORKSPACE_NAME:-Rev A Manufacturing}"
 
+NAKATOMI_REPO="${NAKATOMI_REPO:-mrdulasolutions/NakatomiCRM}"
+AUTOMEM_REPO="${AUTOMEM_REPO:-mrdulasolutions/automem}"
+
+ROUTER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../services/mcp-router" && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# ── Pretty output ─────────────────────────────────────────────────────────
+bold()  { printf "\033[1m%s\033[0m\n" "$*"; }
+say()   { printf "\033[1;36m[reva-ops]\033[0m %s\n" "$*"; }
+warn()  { printf "\033[1;33m[reva-ops]\033[0m %s\n" "$*" >&2; }
+die()   { printf "\033[1;31m[reva-ops]\033[0m %s\n" "$*" >&2; exit 1; }
+
+# ── Pre-flight ────────────────────────────────────────────────────────────
+need() { command -v "$1" >/dev/null 2>&1 || die "$1 is required"; }
+need railway; need openssl; need jq
+
+railway whoami >/dev/null 2>&1 || die "Not logged in. Run: railway login"
+
+# ── Argument parsing ──────────────────────────────────────────────────────
+# Accept flags before positional phase name.
+PHASE=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --project-name)    PROJECT_NAME="$2"; shift 2 ;;
@@ -24,81 +56,209 @@ while [[ $# -gt 0 ]]; do
     --admin-password)  ADMIN_PASSWORD="$2"; shift 2 ;;
     --workspace-slug)  WORKSPACE_SLUG="$2"; shift 2 ;;
     --workspace-name)  WORKSPACE_NAME="$2"; shift 2 ;;
-    --region)          REGION="$2"; shift 2 ;;
-    -h|--help)
-      sed -n '1,20p' "$0"; exit 0 ;;
-    *)
-      echo "unknown flag: $1" >&2; exit 2 ;;
+    -h|--help)         sed -n '1,25p' "$0"; exit 0 ;;
+    init|services|seed|finalize|all) PHASE="$1"; shift ;;
+    *)                 die "unknown arg: $1" ;;
   esac
 done
 
-if [[ -z "$ADMIN_EMAIL" ]]; then
-  echo "--admin-email required" >&2; exit 2
-fi
-if [[ -z "$ADMIN_PASSWORD" ]]; then
-  ADMIN_PASSWORD=$(openssl rand -hex 12)
-  echo "→ generated admin password: $ADMIN_PASSWORD"
-fi
+# ── Shared secrets (generated once, reused across phases via .railway.env) ─
+STATE_FILE="$REPO_ROOT/railway/.deploy-state"
+load_state() { [ -f "$STATE_FILE" ] && # shellcheck disable=SC1090
+               . "$STATE_FILE" || true; }
+save_state() {
+  umask 077
+  cat >"$STATE_FILE" <<EOF
+NAKATOMI_SECRET_KEY='${NAKATOMI_SECRET_KEY:-}'
+AUTOMEM_API_TOKEN='${AUTOMEM_API_TOKEN:-}'
+AUTOMEM_ADMIN_TOKEN='${AUTOMEM_ADMIN_TOKEN:-}'
+REVA_SIGNUP_TOKEN='${REVA_SIGNUP_TOKEN:-}'
+NAKATOMI_ADMIN_TOKEN='${NAKATOMI_ADMIN_TOKEN:-}'
+ROUTER_PUBLIC_URL='${ROUTER_PUBLIC_URL:-}'
+EOF
+}
+load_state
+: "${NAKATOMI_SECRET_KEY:=$(openssl rand -hex 32)}"
+: "${AUTOMEM_API_TOKEN:=$(openssl rand -hex 32)}"
+: "${AUTOMEM_ADMIN_TOKEN:=$(openssl rand -hex 32)}"
+: "${REVA_SIGNUP_TOKEN:=$(openssl rand -hex 16)}"
+save_state
 
-command -v railway >/dev/null || { echo "railway CLI not installed" >&2; exit 1; }
-command -v jq       >/dev/null || { echo "jq not installed" >&2; exit 1; }
-command -v openssl  >/dev/null || { echo "openssl not installed" >&2; exit 1; }
+# ── Phase: init ───────────────────────────────────────────────────────────
+phase_init() {
+  bold "[1/4] init — project + databases"
 
-echo "→ creating project: $PROJECT_NAME"
-railway init --name "$PROJECT_NAME"
-
-echo "→ provisioning plugins (Postgres, FalkorDB, Qdrant)"
-railway add --database postgres
-# FalkorDB + Qdrant are custom images — provisioned via the template import.
-# If your Railway version of the CLI lacks template import, run:
-#   railway up --service falkordb --docker-image falkordb/falkordb:latest
-#   railway up --service qdrant   --docker-image qdrant/qdrant:latest
-
-echo "→ deploying services from railway/template.yaml"
-railway up --config railway/template.yaml
-
-echo "→ waiting for nakatomi-backend to report healthy"
-for _ in $(seq 1 30); do
-  if railway status --service nakatomi-backend --json 2>/dev/null | jq -e '.status == "SUCCESS"' >/dev/null; then
-    break
+  if [ -f "$REPO_ROOT/.railway/config.json" ]; then
+    say "project already linked (.railway/config.json exists) — skipping init"
+  else
+    say "creating Railway project: $PROJECT_NAME"
+    ( cd "$REPO_ROOT" && railway init --name "$PROJECT_NAME" )
   fi
-  sleep 5
-done
 
-echo "→ seeding admin user + Rev A pipeline/custom fields"
-NAKATOMI_INTERNAL="http://nakatomi-backend.railway.internal:8000"
-railway run --service nakatomi-backend -- \
-  python -m scripts.seed \
-    --email "$ADMIN_EMAIL" --password "$ADMIN_PASSWORD" \
-    --workspace-name "$WORKSPACE_NAME" --workspace-slug "$WORKSPACE_SLUG"
+  say "adding Postgres"
+  ( cd "$REPO_ROOT" && railway add --database postgres ) || warn "Postgres may already exist"
 
-# Capture the API key that the seed script prints (stdout).
-API_KEY=$(railway logs --service nakatomi-backend --lines 100 \
-  | grep -oE 'nk_[A-Za-z0-9_-]+' | tail -n1 || true)
+  say "adding FalkorDB (custom image)"
+  ( cd "$REPO_ROOT" && railway add --service falkordb --image falkordb/falkordb:latest ) \
+    || warn "FalkorDB may already exist"
 
-# Apply Rev A schema overlay
-railway run --service nakatomi-backend -- \
-  python -c "import httpx, json; import subprocess" >/dev/null 2>&1 || true
+  say "adding Qdrant (custom image)"
+  ( cd "$REPO_ROOT" && railway add --service qdrant --image qdrant/qdrant:latest ) \
+    || warn "Qdrant may already exist"
 
-railway run --service mcp-router -- \
-  sh -c "pip install httpx >/dev/null && python /app/../nakatomi-backend/seed/reva.py \
-    --api-url $NAKATOMI_INTERNAL --token $API_KEY" || \
-  echo "⚠ seed/reva.py apply failed — run manually after deploy"
+  say "init complete — check: railway status"
+}
 
-PUBLIC_URL=$(railway domain --service mcp-router --json 2>/dev/null | jq -r '.[0].domain' || echo "unknown")
+# ── Phase: services ───────────────────────────────────────────────────────
+phase_services() {
+  bold "[2/4] services — automem, nakatomi, mcp-router"
 
-cat <<EOF
+  say "adding automem-backend (repo: $AUTOMEM_REPO)"
+  ( cd "$REPO_ROOT" && railway add --service automem-backend --repo "$AUTOMEM_REPO" ) \
+    || warn "automem-backend may already exist"
 
-✓ REVA-OPS deployed
+  say "setting automem-backend env vars"
+  railway variable set "PORT=8001" --service automem-backend --skip-deploys
+  railway variable set "FALKORDB_HOST=falkordb.railway.internal" --service automem-backend --skip-deploys
+  railway variable set "FALKORDB_PORT=6379" --service automem-backend --skip-deploys
+  railway variable set "API_TOKEN=$AUTOMEM_API_TOKEN" --service automem-backend --skip-deploys
+  railway variable set "ADMIN_TOKEN=$AUTOMEM_ADMIN_TOKEN" --service automem-backend --skip-deploys
+  railway variable set "EMBEDDING_MODEL=text-embedding-3-small" --service automem-backend --skip-deploys
+  # Qdrant URL must be set once the qdrant service has its internal domain published.
+  railway variable set 'QDRANT_URL=http://qdrant.railway.internal:6333' --service automem-backend --skip-deploys
 
-   Public MCP URL:   https://$PUBLIC_URL/mcp
-   Admin email:      $ADMIN_EMAIL
-   Admin password:   $ADMIN_PASSWORD
-   API key:          ${API_KEY:-<check 'railway logs --service nakatomi-backend'>}
+  say "adding nakatomi-backend (repo: $NAKATOMI_REPO)"
+  ( cd "$REPO_ROOT" && railway add --service nakatomi-backend --repo "$NAKATOMI_REPO" ) \
+    || warn "nakatomi-backend may already exist"
 
-Point the REVA-TURBO plugin at the new stack:
+  say "setting nakatomi-backend env vars"
+  railway variable set "PORT=8000" --service nakatomi-backend --skip-deploys
+  railway variable set 'DATABASE_URL=${{Postgres.DATABASE_URL}}' --service nakatomi-backend --skip-deploys
+  railway variable set "SECRET_KEY=$NAKATOMI_SECRET_KEY" --service nakatomi-backend --skip-deploys
+  railway variable set "STORAGE_BACKEND=local" --service nakatomi-backend --skip-deploys
+  railway variable set "MEMORY_CONNECTORS=automem" --service nakatomi-backend --skip-deploys
+  railway variable set 'AUTOMEM_URL=http://automem-backend.railway.internal:8001' --service nakatomi-backend --skip-deploys
+  railway variable set "AUTOMEM_API_KEY=$AUTOMEM_API_TOKEN" --service nakatomi-backend --skip-deploys
 
-   curl -fsSL https://raw.githubusercontent.com/mrdulasolutions/RevOps-RevAMfg/main/plugin/install.sh \\
-     | REVA_MCP_URL=https://$PUBLIC_URL/mcp REVA_API_KEY=$API_KEY bash
+  # mcp-router deploys from local subdir — Railway CLI's `add --repo`
+  # has no rootDirectory flag, so we create the service empty then `up` into it.
+  say "adding mcp-router service (empty shell)"
+  ( cd "$REPO_ROOT" && railway add --service mcp-router ) \
+    || warn "mcp-router may already exist"
+
+  say "setting mcp-router env vars"
+  railway variable set "PORT=8080" --service mcp-router --skip-deploys
+  railway variable set "LOG_LEVEL=INFO" --service mcp-router --skip-deploys
+  railway variable set 'NAKATOMI_INTERNAL_URL=http://nakatomi-backend.railway.internal:8000' --service mcp-router --skip-deploys
+  railway variable set 'AUTOMEM_INTERNAL_URL=http://automem-backend.railway.internal:8001' --service mcp-router --skip-deploys
+  railway variable set "AUTH_MODE=passthrough" --service mcp-router --skip-deploys
+  railway variable set "AUTOMEM_API_TOKEN=$AUTOMEM_API_TOKEN" --service mcp-router --skip-deploys
+  railway variable set "CRM_TOOL_PREFIX=crm" --service mcp-router --skip-deploys
+  railway variable set "MEM_TOOL_PREFIX=mem" --service mcp-router --skip-deploys
+  railway variable set "REVA_SIGNUP_TOKEN=$REVA_SIGNUP_TOKEN" --service mcp-router --skip-deploys
+  railway variable set "REVA_WORKSPACE_SLUG=$WORKSPACE_SLUG" --service mcp-router --skip-deploys
+  # NAKATOMI_ADMIN_TOKEN set in phase_seed once we have it.
+
+  say "generating public domain for mcp-router"
+  ( cd "$REPO_ROOT" && railway domain --service mcp-router ) || true
+  ROUTER_PUBLIC_URL="$(railway domain --service mcp-router --json 2>/dev/null \
+    | jq -r '.[0].domain // empty')"
+  if [ -n "$ROUTER_PUBLIC_URL" ]; then
+    railway variable set "PUBLIC_MCP_URL=https://$ROUTER_PUBLIC_URL/mcp" --service mcp-router --skip-deploys
+    save_state
+  else
+    warn "could not capture router public URL — set PUBLIC_MCP_URL manually after deploy"
+  fi
+
+  say "deploying mcp-router from $ROUTER_DIR"
+  ( cd "$ROUTER_DIR" && railway service mcp-router && railway up --ci )
+
+  say "services phase complete — watch builds: railway logs --service nakatomi-backend"
+}
+
+# ── Phase: seed ───────────────────────────────────────────────────────────
+phase_seed() {
+  bold "[3/4] seed — admin user + Rev A schema"
+
+  [ -n "$ADMIN_EMAIL" ] || die "--admin-email required for seed phase (or ADMIN_EMAIL env)"
+  [ -n "$ADMIN_PASSWORD" ] || { ADMIN_PASSWORD="$(openssl rand -hex 12)"; say "generated admin password: $ADMIN_PASSWORD"; }
+
+  say "waiting for nakatomi-backend to be healthy (up to 4 min)"
+  local ok=0
+  for _ in $(seq 1 48); do
+    if railway logs --service nakatomi-backend 2>/dev/null | grep -q "Uvicorn running\|application startup complete"; then
+      ok=1; break
+    fi
+    sleep 5
+  done
+  [ "$ok" -eq 1 ] || warn "nakatomi-backend not yet healthy — seed may fail; retry with: ./railway/deploy.sh seed"
+
+  say "seeding workspace + admin user"
+  # Use the upstream seed script. If it doesn't exist upstream, fall back
+  # to a direct HTTP POST against /auth/signup.
+  local seed_out
+  seed_out="$(railway run --service nakatomi-backend -- \
+    python -m scripts.seed \
+      --email "$ADMIN_EMAIL" \
+      --password "$ADMIN_PASSWORD" \
+      --workspace-name "$WORKSPACE_NAME" \
+      --workspace-slug "$WORKSPACE_SLUG" 2>&1 || true)"
+  echo "$seed_out"
+
+  NAKATOMI_ADMIN_TOKEN="$(printf '%s' "$seed_out" | grep -oE 'nk_[A-Za-z0-9_-]+' | tail -n1 || true)"
+  if [ -z "$NAKATOMI_ADMIN_TOKEN" ]; then
+    warn "could not auto-extract admin API key from seed output — copy manually from logs above"
+  else
+    save_state
+    say "captured admin API key"
+    railway variable set "NAKATOMI_ADMIN_TOKEN=$NAKATOMI_ADMIN_TOKEN" --service mcp-router
+  fi
+
+  say "applying Rev A pipeline + custom-field overlay"
+  railway run --service nakatomi-backend -- \
+    python /app/seed/reva.py \
+      --api-url "http://nakatomi-backend.railway.internal:8000" \
+      --token "${NAKATOMI_ADMIN_TOKEN:-SET_MANUALLY}" \
+    || warn "reva.py overlay failed — re-run after fixing"
+}
+
+# ── Phase: finalize ───────────────────────────────────────────────────────
+phase_finalize() {
+  bold "[4/4] finalize — print credentials"
+  load_state
+  ROUTER_PUBLIC_URL="${ROUTER_PUBLIC_URL:-$(railway domain --service mcp-router --json 2>/dev/null | jq -r '.[0].domain // empty')}"
+
+  cat <<EOF
+
+$(bold "✓ REVA-OPS deployed")
+
+   Public MCP URL:      https://${ROUTER_PUBLIC_URL:-<unknown>}/mcp
+   Signup page:         https://${ROUTER_PUBLIC_URL:-<unknown>}/signup
+   Admin email:         ${ADMIN_EMAIL:-<not set>}
+   Admin password:      ${ADMIN_PASSWORD:-<not set — check .deploy-state>}
+   Admin API key:       ${NAKATOMI_ADMIN_TOKEN:-<not set — see nakatomi logs>}
+   Signup token (PMs):  ${REVA_SIGNUP_TOKEN}
+
+$(bold "Share with PMs:")
+   1. Signup page URL above
+   2. Signup token above
+   (No other credentials. PMs mint their own nk_... key via /signup.)
+
+$(bold "Rotation:")
+   Signup token:  railway variable set REVA_SIGNUP_TOKEN=\$(openssl rand -hex 16) --service mcp-router
+   Admin token:   mint new via Nakatomi, then update NAKATOMI_ADMIN_TOKEN
+
+$(bold "State file:") railway/.deploy-state  (gitignored — contains secrets)
 
 EOF
+}
+
+# ── Run ───────────────────────────────────────────────────────────────────
+case "${PHASE:-all}" in
+  init)     phase_init ;;
+  services) phase_services ;;
+  seed)     phase_seed ;;
+  finalize) phase_finalize ;;
+  all)      phase_init; phase_services; phase_seed; phase_finalize ;;
+  *)        die "unknown phase: $PHASE" ;;
+esac

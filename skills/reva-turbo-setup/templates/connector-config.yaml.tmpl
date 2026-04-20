@@ -25,7 +25,7 @@ email:
     host: "{{SMTP_HOST}}"
     port: {{SMTP_PORT}}
     username: "{{SMTP_USERNAME}}"
-    # Password: use environment variable REVA-TURBO_SMTP_PASSWORD
+    # Password: use environment variable REVA_TURBO_SMTP_PASSWORD
     tls: true
   signature: |
     {{EMAIL_SIGNATURE}}
@@ -39,7 +39,7 @@ erp:
 slack:
   enabled: {{SLACK_ENABLED}}                 # true | false
   workspace_url: "{{SLACK_WORKSPACE_URL}}"
-  # Bot token: use environment variable REVA-TURBO_SLACK_TOKEN
+  # Bot token: use environment variable REVA_TURBO_SLACK_TOKEN
   channels:
     alerts: "{{SLACK_CHANNEL_ALERTS}}"       # e.g., #reva-turbo-alerts
     orders: "{{SLACK_CHANNEL_ORDERS}}"       # e.g., #orders

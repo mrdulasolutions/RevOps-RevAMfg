@@ -241,7 +241,7 @@ For each connector type, ask if the PM wants to configure it:
 
 Display summary of configured connectors, confirm, write `connector-config.yaml`.
 
-**Security note:** Never write API keys, tokens, or passwords directly to config files. Instead, write environment variable references like `${REVA-TURBO_HUBSPOT_API_KEY}`. Instruct the PM to set these in their shell profile.
+**Security note:** Never write API keys, tokens, or passwords directly to config files. Instead, write environment variable references like `${REVA_TURBO_HUBSPOT_API_KEY}`. Instruct the PM to set these in their shell profile.
 
 ---
 

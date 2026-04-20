@@ -4,7 +4,7 @@
 # Output: JSON with profile_exists, pm_slug, key voice dimensions
 set -euo pipefail
 
-REVA-TURBO_CONFIG="${HOME}/.claude/skills/reva-turbo/bin/reva-turbo-config"
+REVA_TURBO_CONFIG="${HOME}/.claude/skills/reva-turbo/bin/reva-turbo-config"
 PM_SLUG=""
 
 # Parse arguments
@@ -22,8 +22,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 # If no PM specified, try to get default from config
-if [ -z "$PM_SLUG" ] && [ -x "$REVA-TURBO_CONFIG" ]; then
-  DEFAULT_PM=$("$REVA-TURBO_CONFIG" get default_pm 2>/dev/null || echo "")
+if [ -z "$PM_SLUG" ] && [ -x "$REVA_TURBO_CONFIG" ]; then
+  DEFAULT_PM=$("$REVA_TURBO_CONFIG" get default_pm 2>/dev/null || echo "")
   if [ -n "$DEFAULT_PM" ]; then
     # Convert name to slug: lowercase, replace spaces with hyphens
     PM_SLUG=$(echo "$DEFAULT_PM" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd 'a-z0-9-')

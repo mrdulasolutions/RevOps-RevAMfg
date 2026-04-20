@@ -3,7 +3,7 @@
 # Usage: bash rules-evaluate.sh [category]
 set -euo pipefail
 
-STATE_DIR="${REVA-TURBO_STATE_DIR:-$HOME/.reva-turbo}"
+STATE_DIR="${REVA_TURBO_STATE_DIR:-$HOME/.reva-turbo}"
 RULES_FILE="$STATE_DIR/state/rules.yaml"
 
 CATEGORY="${1:-all}"

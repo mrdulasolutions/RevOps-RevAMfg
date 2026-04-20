@@ -19,7 +19,7 @@ FILE_PATH="$(echo "$INPUT" | grep -o '"file_path":"[^"]*"' | head -1 | awk -F'"'
 [ -z "$FILE_PATH" ] && echo '{}' && exit 0
 
 # Check if writing to a sensitive location
-STATE_DIR="${REVA-TURBO_STATE_DIR:-$HOME/.reva-turbo}"
+STATE_DIR="${REVA_TURBO_STATE_DIR:-$HOME/.reva-turbo}"
 REPORT_DIR="$(grep -E "^default_report_folder:" "$STATE_DIR/config.yaml" 2>/dev/null | awk '{print $2}' || echo "")"
 
 # Allow writes to ~/.reva-turbo/ state directory

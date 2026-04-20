@@ -15,7 +15,7 @@ Detailed instructions for configuring each external system connector. Use this r
 2. If no key exists, click "Generate API Key"
 3. Copy the key and set it as an environment variable:
    ```bash
-   export REVA-TURBO_HUBSPOT_API_KEY="pat-na1-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+   export REVA_TURBO_HUBSPOT_API_KEY="pat-na1-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
    ```
 4. Add to your shell profile (`~/.zshrc` or `~/.bashrc`) for persistence
 
@@ -57,9 +57,9 @@ REVA-TURBO maps to HubSpot deal properties:
 5. Create a client secret: Certificates & Secrets -> New Client Secret
 6. Set environment variables:
    ```bash
-   export REVA-TURBO_AZURE_TENANT_ID="your-tenant-id"
-   export REVA-TURBO_DYNAMICS_CLIENT_ID="your-client-id"
-   export REVA-TURBO_DYNAMICS_CLIENT_SECRET="your-client-secret"
+   export REVA_TURBO_AZURE_TENANT_ID="your-tenant-id"
+   export REVA_TURBO_DYNAMICS_CLIENT_ID="your-client-id"
+   export REVA_TURBO_DYNAMICS_CLIENT_SECRET="your-client-secret"
    ```
 
 ### API Permissions
@@ -79,8 +79,8 @@ Add these Dynamics CRM permissions:
 2. Use the same Azure AD app registration as Dynamics 365
 3. Set environment variables:
    ```bash
-   export REVA-TURBO_DATAVERSE_CLIENT_ID="your-client-id"
-   export REVA-TURBO_DATAVERSE_CLIENT_SECRET="your-client-secret"
+   export REVA_TURBO_DATAVERSE_CLIENT_ID="your-client-id"
+   export REVA_TURBO_DATAVERSE_CLIENT_SECRET="your-client-secret"
    ```
 
 ### Table Prefix
@@ -130,7 +130,7 @@ REVA-TURBO creates Dataverse tables with a configurable prefix (default: `reva-t
 
 ### Environment Variable
 ```bash
-export REVA-TURBO_EMAIL_PASSWORD="your-email-password"
+export REVA_TURBO_EMAIL_PASSWORD="your-email-password"
 ```
 
 ### Hostinger Email MCP
@@ -151,8 +151,8 @@ If available, the Hostinger Email MCP server handles authentication. Check:
 2. Add Mail.Send and Mail.Read permissions
 3. Set environment variables:
    ```bash
-   export REVA-TURBO_MS_TENANT_ID="your-tenant-id"
-   export REVA-TURBO_MS_CLIENT_ID="your-client-id"
+   export REVA_TURBO_MS_TENANT_ID="your-tenant-id"
+   export REVA_TURBO_MS_CLIENT_ID="your-client-id"
    ```
 
 ---
@@ -178,7 +178,7 @@ If available, the Hostinger Email MCP server handles authentication. Check:
 7. Copy the Bot User OAuth Token
 8. Set environment variable:
    ```bash
-   export REVA-TURBO_SLACK_BOT_TOKEN="xoxb-xxxxxxxxxxxx-xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxx"
+   export REVA_TURBO_SLACK_BOT_TOKEN="xoxb-xxxxxxxxxxxx-xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxx"
    ```
 
 ### Recommended Channels
@@ -197,8 +197,8 @@ Create these channels in your Slack workspace:
 
 ### Connection
 ```bash
-export REVA-TURBO_SAP_USER="your-sap-username"
-export REVA-TURBO_SAP_PASSWORD="your-sap-password"
+export REVA_TURBO_SAP_USER="your-sap-username"
+export REVA_TURBO_SAP_PASSWORD="your-sap-password"
 ```
 
 ### Sync Capabilities
@@ -221,9 +221,9 @@ export REVA-TURBO_SAP_PASSWORD="your-sap-password"
 3. Create Token ID and Token Secret
 4. Set environment variables:
    ```bash
-   export REVA-TURBO_NETSUITE_ACCOUNT_ID="your-account-id"
-   export REVA-TURBO_NETSUITE_TOKEN_ID="your-token-id"
-   export REVA-TURBO_NETSUITE_TOKEN_SECRET="your-token-secret"
+   export REVA_TURBO_NETSUITE_ACCOUNT_ID="your-account-id"
+   export REVA_TURBO_NETSUITE_TOKEN_ID="your-token-id"
+   export REVA_TURBO_NETSUITE_TOKEN_SECRET="your-token-secret"
    ```
 
 ---
@@ -241,10 +241,10 @@ export REVA-TURBO_SAP_PASSWORD="your-sap-password"
 4. Complete OAuth flow to get refresh token
 5. Set environment variables:
    ```bash
-   export REVA-TURBO_QB_CLIENT_ID="your-client-id"
-   export REVA-TURBO_QB_CLIENT_SECRET="your-client-secret"
-   export REVA-TURBO_QB_REFRESH_TOKEN="your-refresh-token"
-   export REVA-TURBO_QB_COMPANY_ID="your-company-id"
+   export REVA_TURBO_QB_CLIENT_ID="your-client-id"
+   export REVA_TURBO_QB_CLIENT_SECRET="your-client-secret"
+   export REVA_TURBO_QB_REFRESH_TOKEN="your-refresh-token"
+   export REVA_TURBO_QB_COMPANY_ID="your-company-id"
    ```
 
 ---

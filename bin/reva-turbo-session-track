@@ -7,7 +7,7 @@
 #   reva-turbo-session-track cleanup — remove stale session files
 set -euo pipefail
 
-STATE_DIR="${REVA-TURBO_STATE_DIR:-$HOME/.reva-turbo}"
+STATE_DIR="${REVA_TURBO_STATE_DIR:-$HOME/.reva-turbo}"
 SESSIONS_DIR="$STATE_DIR/sessions"
 
 case "${1:-}" in

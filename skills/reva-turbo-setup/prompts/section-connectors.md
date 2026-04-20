@@ -20,23 +20,23 @@ Configure integrations with external systems — CRM, email, ERP, Slack, iMessag
 **If A (Power Apps):**
 - Environment URL: (e.g., `https://org.crm.dynamics.com`)
 - Dataverse table prefix: (default: `reva-turbo_`)
-- Auth: "Set `REVA-TURBO_DATAVERSE_CLIENT_ID` and `REVA-TURBO_DATAVERSE_CLIENT_SECRET` in your shell profile"
+- Auth: "Set `REVA_TURBO_DATAVERSE_CLIENT_ID` and `REVA_TURBO_DATAVERSE_CLIENT_SECRET` in your shell profile"
 
 **If B (Dynamics 365):**
 - Organization URL
-- Azure AD Tenant ID reference: `${REVA-TURBO_AZURE_TENANT_ID}`
-- Client ID reference: `${REVA-TURBO_DYNAMICS_CLIENT_ID}`
-- Client Secret reference: `${REVA-TURBO_DYNAMICS_CLIENT_SECRET}`
+- Azure AD Tenant ID reference: `${REVA_TURBO_AZURE_TENANT_ID}`
+- Client ID reference: `${REVA_TURBO_DYNAMICS_CLIENT_ID}`
+- Client Secret reference: `${REVA_TURBO_DYNAMICS_CLIENT_SECRET}`
 
 **If C (HubSpot):**
 - Portal ID
-- API key reference: `${REVA-TURBO_HUBSPOT_API_KEY}`
+- API key reference: `${REVA_TURBO_HUBSPOT_API_KEY}`
 - Pipeline ID for deals (or "default")
 - See `references/connector-guide.md` for required scopes
 
 **If D (Salesforce):**
 - Instance URL (e.g., `https://company.my.salesforce.com`)
-- Auth: `${REVA-TURBO_SALESFORCE_TOKEN}`
+- Auth: `${REVA_TURBO_SALESFORCE_TOKEN}`
 - Opportunity record type for RFQs
 
 **If E:** Record `crm_type: none` and skip CRM config.
@@ -54,7 +54,7 @@ Configure integrations with external systems — CRM, email, ERP, Slack, iMessag
 - SMTP host: (default: `smtp.hostinger.com`)
 - SMTP port: (default: 465)
 - IMAP host: (default: `imap.hostinger.com`)
-- Password reference: `${REVA-TURBO_EMAIL_PASSWORD}`
+- Password reference: `${REVA_TURBO_EMAIL_PASSWORD}`
 - Signature: free text or "use company name as signature"
 
 **If B (Gmail):**
@@ -64,8 +64,8 @@ Configure integrations with external systems — CRM, email, ERP, Slack, iMessag
 
 **If C (Outlook):**
 - Email address
-- Tenant ID reference: `${REVA-TURBO_MS_TENANT_ID}`
-- Client ID reference: `${REVA-TURBO_MS_CLIENT_ID}`
+- Tenant ID reference: `${REVA_TURBO_MS_TENANT_ID}`
+- Client ID reference: `${REVA_TURBO_MS_CLIENT_ID}`
 - Signature text
 
 **If D:** Record `email_provider: none`.
@@ -81,7 +81,7 @@ Configure integrations with external systems — CRM, email, ERP, Slack, iMessag
 **If A (SAP):**
 - Service layer URL
 - Company DB name
-- Auth: `${REVA-TURBO_SAP_USER}` / `${REVA-TURBO_SAP_PASSWORD}`
+- Auth: `${REVA_TURBO_SAP_USER}` / `${REVA_TURBO_SAP_PASSWORD}`
 - Sync frequency: A) Real-time, B) Hourly, C) Daily, D) Manual
 
 **If B (NetSuite):**
@@ -91,7 +91,7 @@ Configure integrations with external systems — CRM, email, ERP, Slack, iMessag
 
 **If C (QuickBooks):**
 - Company ID
-- OAuth reference: `${REVA-TURBO_QB_REFRESH_TOKEN}`
+- OAuth reference: `${REVA_TURBO_QB_REFRESH_TOKEN}`
 - Sync frequency
 
 **If D:** Record `erp_type: none`.
@@ -107,7 +107,7 @@ Configure integrations with external systems — CRM, email, ERP, Slack, iMessag
 - Alert channel name (e.g., `#reva-turbo-alerts`)
 - Orders channel name (e.g., `#orders`)
 - Escalation channel name (e.g., `#escalation`)
-- Bot token reference: `${REVA-TURBO_SLACK_BOT_TOKEN}`
+- Bot token reference: `${REVA_TURBO_SLACK_BOT_TOKEN}`
 - Note: "See `references/connector-guide.md` for Slack app setup instructions"
 
 ### Q5: iMessage Alerts
@@ -151,9 +151,9 @@ Collect contacts in a loop:
 │  Webhooks        │  [N] endpoints configured        │
 ├──────────────────┴──────────────────────────────────┤
 │  ENV VARS TO SET:                                   │
-│  - REVA-TURBO_HUBSPOT_API_KEY (if HubSpot)              │
-│  - REVA-TURBO_EMAIL_PASSWORD (if Hostinger)             │
-│  - REVA-TURBO_SLACK_BOT_TOKEN (if Slack)                │
+│  - REVA_TURBO_HUBSPOT_API_KEY (if HubSpot)              │
+│  - REVA_TURBO_EMAIL_PASSWORD (if Hostinger)             │
+│  - REVA_TURBO_SLACK_BOT_TOKEN (if Slack)                │
 │  [... list all required env vars]                   │
 └─────────────────────────────────────────────────────┘
 ```

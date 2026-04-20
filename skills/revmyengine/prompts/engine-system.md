@@ -59,7 +59,7 @@ If a voice profile exists, read `~/.reva-turbo/users/<pm-slug>/voice-profile.yam
 In the preamble, check if setup has been completed:
 
 ```bash
-_SETUP_DONE=$("$REVA-TURBO_CONFIG" get setup_completed 2>/dev/null || echo "false")
+_SETUP_DONE=$("$REVA_TURBO_CONFIG" get setup_completed 2>/dev/null || echo "false")
 ```
 
 If `_SETUP_DONE` is `"false"` or empty, prompt the PM:

@@ -5,9 +5,9 @@
 # Silent on success (no update) or error (network issues).
 set -uo pipefail
 
-REVA-TURBO_DIR="${REVA-TURBO_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
-STATE_DIR="${REVA-TURBO_STATE_DIR:-$HOME/.reva-turbo}"
-VERSION_FILE="$REVA-TURBO_DIR/VERSION"
+REVA_TURBO_DIR="${REVA_TURBO_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
+STATE_DIR="${REVA_TURBO_STATE_DIR:-$HOME/.reva-turbo}"
+VERSION_FILE="$REVA_TURBO_DIR/VERSION"
 SNOOZE_FILE="$STATE_DIR/.update-snoozed"
 
 # Skip if snoozed (within last 24h)

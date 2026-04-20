@@ -132,12 +132,19 @@ phase_init() {
 phase_services() {
   bold "[2/4] services — automem, nakatomi, mcp-router"
 
-  # Pre-flight: GitHub integration must be authorized. Without it, `railway
-  # add --repo` returns Unauthorized silently.
-  warn "If this phase returns 'Unauthorized', authorize Railway's GitHub App"
-  warn "at https://railway.com/account → Integrations → GitHub (grant access"
-  warn "to mrdulasolutions/NakatomiCRM and mrdulasolutions/automem), then"
-  warn "re-run: ./railway/deploy.sh services"
+  # Pre-flight: Railway's GitHub App must be installed on the mrdulasolutions
+  # org. Railway installs it inline the first time you add a repo-sourced
+  # service from the web UI — there's no standalone Integrations page. Until
+  # that install exists, `railway add --repo` returns Unauthorized.
+  warn "If this phase returns 'Unauthorized', the Railway GitHub App isn't"
+  warn "installed for mrdulasolutions. Fix (one-time):"
+  warn "  1. Open the reva-ops project → + Create → GitHub Repo"
+  warn "  2. Pick mrdulasolutions/NakatomiCRM (click 'Configure GitHub App'"
+  warn "     if the repo isn't in the picker; grant access to NakatomiCRM"
+  warn "     and automem)"
+  warn "  3. Name the first service 'nakatomi-backend'; it's safe to let"
+  warn "     the script re-run — the idempotency check will skip the add."
+  warn "  4. Re-run: ./railway/deploy.sh services"
   echo
 
   if have_service "automem-backend"; then

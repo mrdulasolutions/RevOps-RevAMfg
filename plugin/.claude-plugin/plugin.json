@@ -1,6 +1,6 @@
 {
   "name": "reva-turbo",
-  "version": "1.3.0",
+  "version": "2.0.0",
   "description": "REVA-TURBO Skills Engine — Rev A Manufacturing PM workflow from RFQ intake through customer delivery. 46 skills covering quoting, China sourcing, compliance, quality, and fulfillment.",
   "author": {
     "name": "Rev A Manufacturing / MrDula Solutions",
@@ -34,8 +34,8 @@
     "primaryCommand": "reva-turbo:revmyengine",
     "skillsDir": "skills"
   },
-  "recommendedModel": "claude-sonnet-4-6",
-  "modelRationale": "Sonnet 4.6 handles the 46 PM skills cleanly. Opus 4.7 over-engineers routine RFQ intake, quote drafts, and status updates with no workflow upside.",
+  "recommendedModel": "claude-opus-4-6",
+  "modelRationale": "Opus 4.6 — the 46 PM skills span RFQ intake, China sourcing, compliance routing, and quality gates; Opus's depth earns its keep on the judgment calls (scope of work reads, NCR triage, export-control checks). Sonnet 4.6 is a viable fallback for pure status-update work.",
   "postInstall": {
     "description": "Install docx converter dependencies for Word report generation.",
     "command": "cd skills/reva-turbo-docx/scripts && npm install --silent --no-fund --no-audit",
@@ -57,6 +57,25 @@
     "shell": "bash >= 4",
     "optional": {
       "node": ">= 18 (for docx report generation)"
+    }
+  },
+  "userConfig": {
+    "mcp_url": {
+      "description": "REVA MCP router URL (from your admin). Example: https://reva-ops.up.railway.app/mcp",
+      "sensitive": false
+    },
+    "api_key": {
+      "description": "Your personal REVA API key (nk_...). Get one at <mcp_url minus /mcp>/signup using the signup token your admin shared.",
+      "sensitive": true
+    }
+  },
+  "mcpServers": {
+    "reva": {
+      "type": "http",
+      "url": "${user_config.mcp_url}",
+      "headers": {
+        "Authorization": "Bearer ${user_config.api_key}"
+      }
     }
   }
 }

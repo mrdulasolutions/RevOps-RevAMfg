@@ -9,7 +9,7 @@ description: |
   Nakatomi's structured model tuned for Rev A: RFQ → Quoted → Accepted →
   Manufacturing → Inspection → Shipped → Delivered → Invoiced → Paid.
 compatibility: Claude Code, Claude desktop, Claude CoWork
-recommendedModel: claude-sonnet-4-6
+recommendedModel: claude-opus-4-6
 allowed-tools:
   - Bash
   - Read

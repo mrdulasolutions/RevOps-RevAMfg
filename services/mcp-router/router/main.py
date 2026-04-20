@@ -1,0 +1,72 @@
+"""Entry point — mounts the FastMCP streamable-HTTP app under ``/mcp`` and
+exposes a ``/health`` probe for Railway.
+"""
+
+from __future__ import annotations
+
+import logging
+
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
+
+from .config import settings
+from .tools import crm, cross, memory
+
+
+def build_mcp() -> FastMCP:
+    mcp = FastMCP(
+        "REVA Router",
+        instructions=(
+            "Unified MCP for Rev A Manufacturing. Tool namespaces: "
+            f"`{settings.crm_tool_prefix}_*` (Nakatomi CRM), "
+            f"`{settings.mem_tool_prefix}_*` (AutoMem memory), "
+            "`reva_*` (cross-system flows)."
+        ),
+        streamable_http_path="/",
+        transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
+    )
+    crm.register(mcp)
+    memory.register(mcp)
+    cross.register(mcp)
+    return mcp
+
+
+def create_app() -> FastAPI:
+    logging.basicConfig(level=settings.log_level.upper())
+    log = logging.getLogger("reva.router")
+
+    app = FastAPI(title="REVA MCP Router", version="0.1.0")
+
+    mcp = build_mcp()
+    app.mount("/mcp", mcp.streamable_http_app())
+
+    @app.get("/health")
+    async def health() -> JSONResponse:
+        return JSONResponse({"ok": True, "service": "reva-mcp-router"})
+
+    @app.get("/")
+    async def index() -> JSONResponse:
+        return JSONResponse(
+            {
+                "service": "reva-mcp-router",
+                "mcp_endpoint": "/mcp/",
+                "tool_prefixes": {
+                    "crm": settings.crm_tool_prefix,
+                    "memory": settings.mem_tool_prefix,
+                    "cross": "reva",
+                },
+            }
+        )
+
+    log.info(
+        "reva mcp router ready nakatomi=%s automem=%s auth_mode=%s",
+        settings.nakatomi_internal_url,
+        settings.automem_internal_url,
+        settings.auth_mode,
+    )
+    return app
+
+
+app = create_app()

@@ -1,0 +1,8 @@
+name: reva-turbo-reva-crm
+version: 1.0.0
+preamble-tier: 1
+description: CRM operations against the REVA MCP router (Nakatomi-backed).
+mcp:
+  endpoint-env: REVA_MCP_URL
+  auth-env: REVA_API_KEY
+  tool-prefix: crm

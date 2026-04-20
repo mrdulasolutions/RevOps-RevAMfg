@@ -1,0 +1,65 @@
+name: install
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  install-matrix:
+    name: install.sh (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run install.sh against this checkout (PR-safe)
+        shell: bash
+        env:
+          REVA_TURBO_DIR: ${{ github.workspace }}
+          REVA_TURBO_SKIP_GIT: "1"
+        run: bash install.sh
+
+      - name: Verify install artifacts
+        shell: bash
+        run: |
+          set -e
+          test -L "$HOME/.claude/skills/reva-turbo" || (echo "symlink missing"; exit 1)
+          test -f "$HOME/.reva-turbo/config.yaml"   || (echo "config.yaml missing"; exit 1)
+          test -x "$HOME/.claude/skills/reva-turbo/bin/reva-turbo-config" || (echo "reva-turbo-config not executable"; exit 1)
+          # Smoke-test the config binary that broke in 1.2.0
+          "$HOME/.claude/skills/reva-turbo/bin/reva-turbo-config" set ci_smoke_test passing
+          grep -q "^ci_smoke_test: passing$" "$HOME/.reva-turbo/config.yaml"
+          echo "Install verified on ${{ matrix.os }}"
+
+      - name: Re-run installer (idempotency check)
+        shell: bash
+        env:
+          REVA_TURBO_DIR: ${{ github.workspace }}
+          REVA_TURBO_SKIP_GIT: "1"
+        run: bash install.sh
+
+  lint-shell:
+    name: shellcheck (install.sh + bin/)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Run shellcheck
+        run: |
+          shellcheck install.sh setup bin/reva-turbo-* \
+            skills/*/bin/*.sh 2>&1 | tee shellcheck.log || true
+          # Fail on SC2000-series errors only (real bugs, not style):
+          if grep -E "error:" shellcheck.log; then
+            echo "shellcheck found errors"
+            exit 1
+          fi

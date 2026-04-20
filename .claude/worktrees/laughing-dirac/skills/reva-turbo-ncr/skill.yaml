@@ -1,8 +1,0 @@
-name: reva-turbo-ncr
-description: Non-Conformance Report workflow. Document defects, root cause analysis (5-Why, fishbone, 8D), corrective action (CAPA), and disposition (rework, scrap, use-as-is, RTV).
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

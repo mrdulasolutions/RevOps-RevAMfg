@@ -1,8 +1,0 @@
-name: reva-turbo-rfq-quote
-description: Generate customer-facing quote packages with cost estimation, margin calculation, lead time, tooling, and shipping estimates.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

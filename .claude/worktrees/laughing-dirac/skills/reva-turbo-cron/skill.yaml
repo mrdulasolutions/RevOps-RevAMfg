@@ -1,8 +1,0 @@
-name: reva-turbo-cron
-description: Scheduled task management. Daily order checks, weekly partner follow-ups and PM summaries, monthly scorecards, quarterly reviews.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

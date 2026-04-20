@@ -1,8 +1,0 @@
-name: reva-turbo-customer-gate
-description: New customer onboarding gate. Collects information, verifies legitimacy, sets up CRM, assigns PM, and establishes credit terms.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

@@ -1,8 +1,0 @@
-name: reva-turbo-reminder
-description: Time-based PM reminder system. Triggers for quote follow-ups, delivery approaching, inspection due, NCR deadlines, and post-delivery satisfaction checks.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

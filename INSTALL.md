@@ -11,27 +11,55 @@ Four ways to install REVA-TURBO into your Claude Code environment. Pick the one 
 | **Claude Code** | REVA-TURBO runs as a Claude Code skills engine | `claude --version` |
 | **Node.js 18+** | Required for `.docx` report generation | `node --version` |
 | **npm** | Installs docx converter dependencies | `npm --version` |
-| **Git** (optional) | For Method 1 and Method 2 | `git --version` |
-| **macOS or Windows** | Auto-detected by setup script | — |
+| **Git** | Required for install.sh, optional for plugin install | `git --version` |
+| **macOS or Linux** | Auto-detected by install.sh. Windows users: run inside WSL. | — |
 
 ---
 
-## Method 1: Git Clone (Recommended)
+## Method 1: One-liner (Recommended — works in Cowork)
 
-Clone the repository and run the setup script.
+```bash
+curl -fsSL https://raw.githubusercontent.com/mrdulasolutions/RevOps-RevAMfg/main/install.sh | bash
+```
+
+That's the whole install. The script clones the repo to `~/reva-turbo`, creates state dirs at `~/.reva-turbo/`, symlinks into `~/.claude/skills/reva-turbo`, chmods bin scripts, runs `npm install` for the docx converter, and writes a default config. Idempotent — safe to re-run for updates.
+
+**Env overrides:**
+
+| Var | Default | Effect |
+|-----|---------|--------|
+| `REVA_TURBO_DIR` | `~/reva-turbo` | Where to clone the repo |
+| `REVA_TURBO_REF` | `main` | Branch or tag to install |
+| `REVA_TURBO_REPO` | upstream URL | For forks |
+| `REVA_TURBO_NO_NPM` | unset | Skip docx deps install |
+| `REVA_TURBO_SKIP_GIT` | unset | Use existing checkout; skip clone/pull (for CI) |
+
+---
+
+## Method 2: Claude Code Plugin
+
+```
+/plugin marketplace add mrdulasolutions/RevOps-RevAMfg
+/plugin install reva-turbo@mrdulasolutions/RevOps-RevAMfg
+```
+
+Plugin config persists across Claude Code and Cowork sessions — no per-session install needed.
+
+---
+
+## Method 3: Manual Git Clone
+
+Clone the repository and run install.sh locally.
 
 ```bash
 # Clone the repo
-git clone https://github.com/mrdulasolutions/RevOps-RevAMfg.git reva-turbo
+git clone https://github.com/mrdulasolutions/RevOps-RevAMfg.git ~/reva-turbo
 
-# Enter the directory
-cd reva-turbo
-
-# Run setup
-./setup
+# Run installer
+cd ~/reva-turbo && ./install.sh
 ```
 
-**What `./setup` does:**
+**What `./install.sh` does:**
 
 1. Creates `~/.reva-turbo/` runtime directory structure:
    ```
@@ -89,7 +117,7 @@ and run the setup script. Install it as a Claude Code skills engine at ~/.claude
 
 Claude will:
 1. Clone the repo to a local directory
-2. Run `./setup` to create runtime directories and symlink skills
+2. Run `./install.sh` to create runtime directories and symlink skills
 3. Confirm the installation
 4. You can immediately use `/reva-turbo:revmyengine`
 
@@ -289,7 +317,7 @@ git pull origin main
 
 1. Download the latest `.zip`
 2. Extract over the existing directory
-3. Re-run `./setup`
+3. Re-run `./install.sh`
 
 Your runtime data at `~/.reva-turbo/` (config, state, reports) is preserved across updates. Only the skill files are updated.
 

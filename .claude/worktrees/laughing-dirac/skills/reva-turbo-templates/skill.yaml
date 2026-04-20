@@ -1,8 +1,0 @@
-name: reva-turbo-templates
-description: Central template management and inventory for all REVA-TURBO skills. Catalog, lookup, versioning, and usage tracking.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

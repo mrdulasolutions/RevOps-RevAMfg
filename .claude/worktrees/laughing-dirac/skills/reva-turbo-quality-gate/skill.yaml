@@ -1,8 +1,0 @@
-name: reva-turbo-quality-gate
-description: Quality gate checks at each stage. Four gates (G1 incoming, G2 in-process, G3 final, G4 pre-ship) with PASS / CONDITIONAL PASS / FAIL decisions.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

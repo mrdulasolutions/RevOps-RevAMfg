@@ -1,8 +1,0 @@
-name: reva-turbo-quick
-description: One-shot speed commands with natural language parsing, context pre-fill, and one-click confirmation. Eliminates multi-step wizards for common PM actions.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

@@ -1,8 +1,0 @@
-name: reva-turbo-audit-trail
-description: Maintain an append-only audit trail for all PM decisions. Log, query, and report on the complete history of actions across all REVA-TURBO skills.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

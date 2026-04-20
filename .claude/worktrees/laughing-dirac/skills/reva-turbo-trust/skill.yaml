@@ -1,8 +1,0 @@
-name: reva-turbo-trust
-description: Progressive autonomy system — three trust levels (LEARN/ASSIST/OPERATE) that control how every skill behaves, from full teaching mode to autonomous operation.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

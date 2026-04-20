@@ -2,9 +2,43 @@
 
 **The PM Workflow Engine for Rev A Manufacturing**
 
-REVA-TURBO is an AI-powered skills engine that runs inside Claude Code. It digitizes the entire Product Manager lifecycle at Rev A Manufacturing — from the moment an RFQ hits the inbox to the day the customer signs for delivery. 41 skills. 20 in-engine commands. Zero tribal knowledge.
+REVA-TURBO is an AI-powered skills engine that runs inside Claude Code. It digitizes the entire Product Manager lifecycle at Rev A Manufacturing — from the moment an RFQ hits the inbox to the day the customer signs for delivery. 46 skills. 20 in-engine commands. Zero tribal knowledge.
 
 Built on the Claude Code skills architecture. Powered by Anthropic Claude. Designed for contract manufacturing.
+
+---
+
+## Install (10 seconds)
+
+**One-liner** — works on macOS, Linux, and inside Claude Cowork:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mrdulasolutions/RevOps-RevAMfg/main/install.sh | bash
+```
+
+Then restart Claude Code and run `/reva-turbo:revmyengine`. Done.
+
+### Alternative: Claude Code plugin
+
+```
+/plugin marketplace add mrdulasolutions/RevOps-RevAMfg
+/plugin install reva-turbo@mrdulasolutions/RevOps-RevAMfg
+```
+
+Plugin config persists across Cowork sessions.
+
+### Alternative: manual clone
+
+```bash
+git clone https://github.com/mrdulasolutions/RevOps-RevAMfg.git ~/reva-turbo
+cd ~/reva-turbo && ./install.sh
+```
+
+See [INSTALL.md](INSTALL.md) for the full install reference (env var overrides, offline installs, troubleshooting).
+
+### Model recommendation
+
+REVA-TURBO ships with `.claude/settings.json` pinning **Sonnet 4.6**. Opus 4.7 works but over-engineers routine PM tasks (RFQ intake, quote drafts, status updates) and runs slower/costlier with no meaningful upside here. Override locally if you disagree.
 
 ---
 

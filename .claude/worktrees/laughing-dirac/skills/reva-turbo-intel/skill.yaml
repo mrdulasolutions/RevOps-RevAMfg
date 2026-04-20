@@ -1,8 +1,0 @@
-name: reva-turbo-intel
-description: Predictive analytics and business intelligence. Learns from REVA-TURBO historical data to predict, recommend, optimize, detect anomalies, and benchmark KPIs. Turns REVA-TURBO from a logger into an advisor.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

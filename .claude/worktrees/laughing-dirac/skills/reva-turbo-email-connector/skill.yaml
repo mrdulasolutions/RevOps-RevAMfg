@@ -1,8 +1,0 @@
-name: reva-turbo-email-connector
-description: Universal email connector — auto-detects and connects to Hostinger, Gmail, Microsoft 365/Outlook, or any MCP-connected inbox. Reads, sends, replies, searches, classifies, and routes emails to REVA-TURBO skills.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.2.0"
-main: SKILL.md

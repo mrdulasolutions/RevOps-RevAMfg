@@ -1,8 +1,0 @@
-name: reva-turbo-escalate
-description: Escalation workflow with defined triggers and routing matrix (PM -> Senior PM -> Donovan Weber). Tracks escalations from initiation through resolution.
-compatibility:
-  - Claude Code
-  - Claude desktop
-  - Claude CoWork
-version: "1.0.0"
-main: SKILL.md

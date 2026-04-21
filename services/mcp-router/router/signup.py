@@ -47,7 +47,31 @@ REVA_WORKSPACE_SLUG = os.environ.get("REVA_WORKSPACE_SLUG", "reva")
 NAKATOMI_ADMIN_TOKEN = os.environ.get("NAKATOMI_ADMIN_TOKEN", "")
 PUBLIC_MCP_URL = os.environ.get("PUBLIC_MCP_URL", "")  # optional hint for the UI
 
+# Email domains allowed to self-serve a key. A valid signup_token alone isn't
+# enough — the signup token is shared in a group chat, and we don't want a
+# leaked token to hand out keys to random gmail accounts. Comma-separated,
+# case-insensitive, no leading `@`. Override via env to re-use this router
+# for a different tenant.
+_DEFAULT_ALLOWED_DOMAINS = "revamfg.com,mrdula.solutions"
+ALLOWED_EMAIL_DOMAINS: frozenset[str] = frozenset(
+    d.strip().lower().lstrip("@")
+    for d in os.environ.get("REVA_ALLOWED_EMAIL_DOMAINS", _DEFAULT_ALLOWED_DOMAINS).split(",")
+    if d.strip()
+)
+
 SIGNUP_ENABLED = bool(REVA_SIGNUP_TOKEN and NAKATOMI_ADMIN_TOKEN)
+
+
+def _email_domain_allowed(email: str) -> bool:
+    """True if the email's domain (case-insensitive) is in the allowlist.
+
+    Empty allowlist => deny everything (fail-closed). Returning True on an
+    empty set would turn a misconfigured env var into an open signup.
+    """
+    if not ALLOWED_EMAIL_DOMAINS:
+        return False
+    _, _, domain = email.rpartition("@")
+    return domain.lower() in ALLOWED_EMAIL_DOMAINS
 
 
 class SignupRequest(BaseModel):
@@ -80,6 +104,17 @@ async def signup(req: SignupRequest) -> SignupResponse:
         )
     if not secrets.compare_digest(req.signup_token, REVA_SIGNUP_TOKEN):
         raise HTTPException(status_code=403, detail="invalid signup token")
+
+    # Domain allowlist. Checked AFTER the signup-token check so rejection
+    # here also implies the caller already knew the (shared) token — we
+    # just won't hand them a key unless their mailbox matches.
+    if not _email_domain_allowed(req.email):
+        allowed = ", ".join(f"@{d}" for d in sorted(ALLOWED_EMAIL_DOMAINS))
+        log.info("signup blocked: email domain not allowed (email=%s)", req.email)
+        raise HTTPException(
+            status_code=403,
+            detail=f"email domain not allowed — use one of: {allowed}",
+        )
 
     # Throwaway personal workspace for the new user — Nakatomi requires one
     # at signup time. Uses a random slug so re-runs don't collide.
@@ -253,8 +288,8 @@ SIGNUP_HTML = """<!doctype html>
     <label for="name">Your name</label>
     <input id="name" required autocomplete="name" placeholder="Jane Doe" />
 
-    <label for="email">Work email</label>
-    <input id="email" required type="email" autocomplete="email" placeholder="jane@reva-mfg.com" />
+    <label for="email">Work email <span class="muted">(must be __ALLOWED_DOMAINS_TEXT__)</span></label>
+    <input id="email" required type="email" autocomplete="email" placeholder="jane@revamfg.com" />
 
     <label for="password">Password <span class="muted">(12+ chars — only for future key resets)</span></label>
     <input id="password" required type="password" autocomplete="new-password" minlength="12" />
@@ -328,8 +363,21 @@ const s1 = document.getElementById('s1');
 const s2 = document.getElementById('s2');
 const mcpUrl = new URL('/mcp', location.href).toString();
 
+// Case-insensitive regex matching the server's ALLOWED_EMAIL_DOMAINS. If
+// the server set no allowlist, this regex is `IMPOSSIBLE\.DOMAIN` — any
+// submission will fail client-side before the POST, which matches the
+// fail-closed behavior of `_email_domain_allowed()` on the server.
+const ALLOWED_DOMAIN_RE = new RegExp('@(?:__ALLOWED_DOMAINS_REGEX__)$', 'i');
+
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
+  const emailVal = document.getElementById('email').value.trim();
+  if (!ALLOWED_DOMAIN_RE.test(emailVal)) {
+    out.classList.add('err'); out.style.display = 'block';
+    out.innerHTML = '<strong>Email not allowed:</strong> use __ALLOWED_DOMAINS_TEXT__. ' +
+      'Contact your admin if you need access under a different domain.';
+    return;
+  }
   btn.disabled = true; btn.textContent = 'Minting…';
   out.className = 'result'; out.style.display = 'none'; out.innerHTML = '';
   post.className = 'post';
@@ -339,7 +387,7 @@ form.addEventListener('submit', async (e) => {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         display_name: document.getElementById('name').value,
-        email: document.getElementById('email').value,
+        email: emailVal,
         password: document.getElementById('password').value,
         signup_token: document.getElementById('token').value,
       })
@@ -383,4 +431,19 @@ async def signup_page() -> HTMLResponse:
             "on the mcp-router service.</p>",
             status_code=503,
         )
-    return HTMLResponse(SIGNUP_HTML)
+    # Inject the domain allowlist so the form can show it inline and
+    # provide an HTML5 pattern for the email field — catches typos
+    # client-side before the POST round-trip.
+    domains = sorted(ALLOWED_EMAIL_DOMAINS)
+    domains_text = " or ".join(f"@{d}" for d in domains) if domains else ""
+    # Build a regex that matches any of the allowed domains (case-insensitive
+    # via the JS flag below). Each domain is escape-safe — only letters, dots,
+    # hyphens expected, but we belt-and-suspenders with re.escape.
+    import re as _re
+    domain_alt = "|".join(_re.escape(d) for d in domains) if domains else "IMPOSSIBLE\\.DOMAIN"
+    html = (
+        SIGNUP_HTML
+        .replace("__ALLOWED_DOMAINS_TEXT__", domains_text)
+        .replace("__ALLOWED_DOMAINS_REGEX__", domain_alt)
+    )
+    return HTMLResponse(html)

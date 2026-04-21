@@ -178,6 +178,64 @@ REVA_MEMORY_TAXONOMY: list[dict[str, str]] = [
     {"tag": "reva/itar",              "purpose": "ITAR-specific findings (maximum scrutiny)"},
 ]
 
+# Connector registry — which external CRMs can be set as the team's
+# primary system of record via `reva_set_primary_crm` / `/integrate`.
+# Each entry describes how skills can *detect* whether the PM already
+# has that connector wired into Claude Desktop (by looking for tools
+# whose names start with `mcp_tool_prefix`). Adding an entry here
+# unlocks /integrate <slug>; it does NOT install anything — the PM
+# still has to add the connector in Desktop → Settings → Connectors.
+#
+# `bundled: true` means the router ships this connector natively (no
+# external Desktop setup needed). `primary_compatible` is a belt-and-
+# suspenders flag for future read-only/observer integrations — today
+# all entries can be primary.
+REVA_CONNECTOR_REGISTRY: list[dict[str, Any]] = [
+    {
+        "slug": "nakatomi",
+        "display": "Nakatomi (bundled)",
+        "mcp_tool_prefix": "crm_",
+        "bundled": True,
+        "primary_compatible": True,
+        "notes": "Default. Shipped with the router — every PM has this.",
+    },
+    {
+        "slug": "hubspot",
+        "display": "HubSpot",
+        "mcp_tool_prefix": "hubspot_",
+        "primary_compatible": True,
+        "notes": "Install HubSpot connector in Desktop → Settings → Connectors first.",
+    },
+    {
+        "slug": "salesforce",
+        "display": "Salesforce",
+        "mcp_tool_prefix": "sf_",
+        "primary_compatible": True,
+        "notes": "Install Salesforce connector in Desktop → Settings → Connectors first.",
+    },
+    {
+        "slug": "attio",
+        "display": "Attio",
+        "mcp_tool_prefix": "attio_",
+        "primary_compatible": True,
+        "notes": "Install Attio connector in Desktop → Settings → Connectors first.",
+    },
+    {
+        "slug": "pipedrive",
+        "display": "Pipedrive",
+        "mcp_tool_prefix": "pipedrive_",
+        "primary_compatible": True,
+        "notes": "Install Pipedrive connector in Desktop → Settings → Connectors first.",
+    },
+]
+
+# Which connector is the team's system of record. Reads prefer the
+# primary CRM when available; writes go to the primary first, then
+# shadow-write to Nakatomi + AutoMem so the shared Rev A timeline
+# still sees everything. Per-workspace, not per-user — the team needs
+# to agree on one system of truth.
+REVA_DEFAULT_PRIMARY_CRM: str = "nakatomi"
+
 
 def _slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
@@ -259,14 +317,19 @@ class NakatomiSeeder:
         data["escalation_matrix"] = REVA_ESCALATION_MATRIX
         data["role_skill_map"] = REVA_ROLE_SKILL_MAP
         data["memory_taxonomy"] = REVA_MEMORY_TAXONOMY
+        data["connector_registry"] = REVA_CONNECTOR_REGISTRY
         # Leave partners alone if already populated — they're PM-editable.
         data.setdefault("partners", [])
+        # Only set primary_crm if not already chosen — don't clobber an
+        # admin's /integrate decision on re-seed.
+        data.setdefault("primary_crm", REVA_DEFAULT_PRIMARY_CRM)
         self._req("PATCH", "/workspace", json={"data": data})
         print(
             f"+ workspace.data published: company_profile, escalation_matrix "
             f"({len(REVA_ESCALATION_MATRIX)}), role_skill_map "
             f"({len(REVA_ROLE_SKILL_MAP)} roles), memory_taxonomy "
-            f"({len(REVA_MEMORY_TAXONOMY)} tags)"
+            f"({len(REVA_MEMORY_TAXONOMY)} tags), connector_registry "
+            f"({len(REVA_CONNECTOR_REGISTRY)} options, primary={data['primary_crm']})"
         )
 
     def run(self) -> None:

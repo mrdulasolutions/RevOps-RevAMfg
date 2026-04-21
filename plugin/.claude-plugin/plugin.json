@@ -1,7 +1,7 @@
 {
   "name": "reva-turbo",
-  "version": "2.0.2",
-  "description": "REVA-TURBO Skills Engine — Rev A Manufacturing PM workflow from RFQ intake through customer delivery. 48 skills covering quoting, China sourcing, compliance, quality, and fulfillment.",
+  "version": "2.1.0",
+  "description": "REVA-TURBO Skills Engine — Rev A Manufacturing PM workflow from RFQ intake through customer delivery. 48 skills + server-driven onboarding (role-only first-run, all company/partners/workflow config pulled from the MCP router). Covers quoting, China sourcing, compliance, quality, and fulfillment.",
   "author": {
     "name": "Rev A Manufacturing / MrDula Solutions",
     "url": "https://github.com/mrdulasolutions"

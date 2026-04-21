@@ -166,68 +166,168 @@ SIGNUP_HTML = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>REVA-OPS · Get your API key</title>
+<title>REVA-OPS · Join the team</title>
 <style>
-  :root { --bg:#0b1020; --fg:#e6ecf3; --accent:#4ea3ff; --muted:#8593a8; --card:#121a33; --err:#ff6b6b; }
+  :root {
+    --bg:#0b1020; --fg:#e6ecf3; --accent:#4ea3ff; --accent-dim:#2d75cc;
+    --muted:#8593a8; --card:#121a33; --card-2:#0f1630;
+    --ok:#16a06b; --err:#ff6b6b; --warn-bg:#2b230f; --warn-fg:#ffd479;
+    --border:#1f2b4a;
+  }
+  *,*::before,*::after { box-sizing:border-box; }
   html,body { margin:0; padding:0; background:var(--bg); color:var(--fg);
-    font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-  main { max-width:520px; margin:6vh auto; padding:24px; }
-  h1 { font-size:28px; margin:0 0 4px; letter-spacing:-0.01em; }
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+  main { max-width:620px; margin:5vh auto; padding:24px; }
+  header { display:flex; align-items:baseline; gap:10px; margin-bottom:4px; }
+  header h1 { font-size:28px; margin:0; letter-spacing:-0.01em; }
+  header .tag { font-size:11px; color:var(--muted); text-transform:uppercase;
+    letter-spacing:0.08em; background:var(--card); padding:3px 7px; border-radius:4px; }
   p.sub { color:var(--muted); margin:0 0 24px; }
-  form { background:var(--card); padding:20px; border-radius:10px; }
-  label { display:block; font-size:13px; color:var(--muted); margin:12px 0 4px; }
-  input { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #1f2b4a;
-    background:#0f1630; color:var(--fg); border-radius:6px; font:inherit; }
+
+  .steps { display:flex; gap:6px; margin:12px 0 20px; }
+  .step { flex:1; padding:8px 10px; background:var(--card); border-radius:6px;
+    font-size:12px; color:var(--muted); border:1px solid transparent;
+    display:flex; align-items:center; gap:8px; }
+  .step .n { width:18px; height:18px; border-radius:50%; background:var(--card-2);
+    color:var(--muted); font-weight:600; font-size:11px;
+    display:inline-flex; align-items:center; justify-content:center; }
+  .step.active { color:var(--fg); border-color:var(--accent-dim); }
+  .step.active .n { background:var(--accent); color:#001126; }
+  .step.done .n { background:var(--ok); color:#fff; }
+  .step.done { color:var(--fg); }
+
+  form, .panel { background:var(--card); padding:22px; border-radius:10px; border:1px solid var(--border); }
+  label { display:block; font-size:13px; color:var(--muted); margin:14px 0 4px; font-weight:500; }
+  label:first-of-type { margin-top:0; }
+  input { width:100%; padding:11px 13px; border:1px solid var(--border);
+    background:var(--card-2); color:var(--fg); border-radius:6px; font:inherit; }
   input:focus { outline:none; border-color:var(--accent); }
-  button { margin-top:18px; width:100%; padding:12px; background:var(--accent); color:#001126;
-    border:0; border-radius:6px; font-weight:600; font-size:15px; cursor:pointer; }
+  button { margin-top:20px; width:100%; padding:12px; background:var(--accent); color:#001126;
+    border:0; border-radius:6px; font-weight:600; font-size:15px; cursor:pointer;
+    transition:background 0.15s; }
+  button:hover:not(:disabled) { background:#69b4ff; }
   button:disabled { opacity:0.6; cursor:progress; }
-  .result { margin-top:20px; padding:16px; border-radius:8px; background:#0f2a1c; display:none; }
-  .result.err { background:#2a0f16; }
-  code { background:#0a1229; padding:2px 6px; border-radius:4px; user-select:all; }
-  pre { background:#0a1229; padding:12px; border-radius:6px; overflow-x:auto; }
+
+  .result { margin-top:20px; padding:18px; border-radius:8px;
+    background:#0d2b1e; border:1px solid #184d37; display:none; }
+  .result.err { background:#2a0f16; border-color:#4a1820; }
+  .result h3 { margin:0 0 10px; font-size:16px; }
+  code { background:var(--card-2); padding:2px 6px; border-radius:4px; user-select:all;
+    font-family:"SF Mono",ui-monospace,monospace; font-size:13px; word-break:break-all; }
+  pre { background:var(--card-2); padding:12px; border-radius:6px; overflow-x:auto;
+    margin:8px 0; font-size:13px; user-select:all; font-family:"SF Mono",ui-monospace,monospace; }
   .muted { color:var(--muted); font-size:13px; }
+  .pill { display:inline-block; background:var(--card-2); padding:3px 8px; border-radius:999px;
+    font-size:11px; color:var(--muted); margin-right:6px; }
+
+  .hygiene { margin-top:12px; padding:14px 16px; border-radius:8px;
+    background:var(--warn-bg); border:1px solid #55421a; color:var(--warn-fg); font-size:13px; }
+  .hygiene strong { color:#ffe29a; }
+
+  .post { display:none; }
+  .post.on { display:block; }
+  .post ol { padding-left:20px; margin:8px 0; }
+  .post li { margin:10px 0; }
+  .post li strong { color:var(--fg); }
+
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
 </style>
 </head>
 <body>
 <main>
-  <h1>REVA-OPS</h1>
-  <p class="sub">Get your personal API key. This key connects Claude Code (and any MCP client) to the Rev&nbsp;A CRM + memory.</p>
+  <header>
+    <h1>REVA-OPS</h1>
+    <span class="tag">Rev&nbsp;A Manufacturing</span>
+  </header>
+  <p class="sub">You're one minute from having the full PM engine — CRM,
+  memory, and 48 skills — connected to Claude Desktop.</p>
+
+  <div class="steps">
+    <div class="step active" id="s1"><span class="n">1</span> Mint API key</div>
+    <div class="step" id="s2"><span class="n">2</span> Install plugin</div>
+    <div class="step" id="s3"><span class="n">3</span> Run engine</div>
+  </div>
 
   <form id="f">
     <label for="name">Your name</label>
-    <input id="name" name="name" required autocomplete="name" placeholder="Jane Doe" />
+    <input id="name" required autocomplete="name" placeholder="Jane Doe" />
 
     <label for="email">Work email</label>
-    <input id="email" name="email" required type="email" autocomplete="email" placeholder="jane@reva-mfg.com" />
+    <input id="email" required type="email" autocomplete="email" placeholder="jane@reva-mfg.com" />
 
-    <label for="password">Password <span class="muted">(12+ chars — you'll only use it to reset your key)</span></label>
-    <input id="password" name="password" required type="password" autocomplete="new-password" minlength="12" />
+    <label for="password">Password <span class="muted">(12+ chars — only for future key resets)</span></label>
+    <input id="password" required type="password" autocomplete="new-password" minlength="12" />
 
-    <label for="token">Signup token <span class="muted">(ask your admin)</span></label>
-    <input id="token" name="token" required autocomplete="off" />
+    <label for="token">Signup token <span class="muted">(one-time code from your admin)</span></label>
+    <input id="token" required autocomplete="off" placeholder="e.g. 4f2a…" />
 
-    <button type="submit" id="btn">Mint my API key</button>
+    <button type="submit" id="btn">Mint my API key →</button>
   </form>
 
   <div id="result" class="result"></div>
 
-  <p class="muted" style="margin-top:32px">
-    Already have a key? Point your MCP client at <code id="mcpurl">/mcp</code>
-    with header <code>Authorization: Bearer &lt;your key&gt;</code>.
-  </p>
+  <div id="post" class="post">
+    <h3 style="margin-top:28px;">Step 2 — Install the plugin</h3>
+    <div class="panel">
+      <ol>
+        <li><strong>Download the latest plugin zip</strong> from
+          <a href="https://github.com/mrdulasolutions/RevOps-RevAMfg/releases/latest"
+             target="_blank" rel="noopener">GitHub Releases</a>
+          — look for <code>reva-turbo-&lt;version&gt;.zip</code>.
+          Don't unzip it.</li>
+        <li><strong>Open Claude Desktop → Plugins → Personal → Local uploads → +</strong>
+          and drop in the zip.</li>
+        <li>On enable, Claude prompts for two values:
+          <pre>mcp_url  =  <span id="mcpurlp"></span>
+api_key  =  (your nk_... key above)</pre>
+        </li>
+      </ol>
+
+      <div class="hygiene">
+        <strong>Important — remove any legacy connectors.</strong>
+        If you previously added a standalone <em>Nakatomi</em> or
+        <em>AutoMem</em> MCP connector in Claude Desktop → Settings →
+        Connectors, <strong>remove it now</strong>. This plugin wraps
+        both behind the router with prefixed tool names
+        (<code>crm_*</code> / <code>mem_*</code> / <code>reva_*</code>).
+        Duplicates show up as raw <code>search_contacts</code> /
+        <code>memory_recall</code> tool names and break intent routing.
+      </div>
+    </div>
+
+    <h3 style="margin-top:28px;">Step 3 — Run the engine</h3>
+    <div class="panel">
+      <p style="margin-top:0;">In any Claude Desktop chat, type:</p>
+      <pre>/reva-turbo:revmyengine</pre>
+      <p class="muted" style="margin-bottom:0;">
+        The engine will auto-detect that you're connected to the shared
+        Rev&nbsp;A workspace, ask one question (<em>what's your role?</em>),
+        and you're in. No company setup, no partners list, no workflow
+        config — all of that comes from the router.
+      </p>
+    </div>
+
+    <p class="muted" style="margin-top:24px;">
+      Need to do this from a terminal instead?
+      <a href="https://github.com/mrdulasolutions/RevOps-RevAMfg#for-end-users-rev-a-pms" target="_blank" rel="noopener">CLI install flow →</a>
+    </p>
+  </div>
 </main>
 <script>
 const form = document.getElementById('f');
-const btn = document.getElementById('btn');
-const out = document.getElementById('result');
-const mcpurlEl = document.getElementById('mcpurl');
-mcpurlEl.textContent = new URL('/mcp', location.href).toString();
+const btn  = document.getElementById('btn');
+const out  = document.getElementById('result');
+const post = document.getElementById('post');
+const s1 = document.getElementById('s1');
+const s2 = document.getElementById('s2');
+const mcpUrl = new URL('/mcp', location.href).toString();
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   btn.disabled = true; btn.textContent = 'Minting…';
-  out.classList.remove('err'); out.style.display = 'none'; out.innerHTML = '';
+  out.className = 'result'; out.style.display = 'none'; out.innerHTML = '';
+  post.className = 'post';
   try {
     const r = await fetch('/signup', {
       method: 'POST',
@@ -241,20 +341,24 @@ form.addEventListener('submit', async (e) => {
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.detail || ('HTTP ' + r.status));
-    const mcp = new URL('/mcp', location.href).toString();
     out.style.display = 'block';
     out.innerHTML = `
-      <strong>Your API key (save it — shown only once):</strong>
+      <h3>✓ You're in — welcome to Rev A Manufacturing</h3>
+      <p class="muted" style="margin:0 0 10px;">Save this key — it's shown once. If you lose it, ask the admin to mint a new one.</p>
       <pre>${data.api_key}</pre>
-      <strong>MCP endpoint:</strong> <code>${mcp}</code><br><br>
-      <strong>To configure the REVA-TURBO plugin:</strong>
-      <pre>curl -fsSL https://raw.githubusercontent.com/mrdulasolutions/RevOps-RevAMfg/main/plugin/install.sh \\
-  | REVA_MCP_URL=${mcp} REVA_API_KEY=${data.api_key} bash</pre>`;
+      <p style="margin:8px 0 0;"><span class="pill">workspace</span>${data.workspace_slug} &nbsp;
+        <span class="pill">endpoint</span><code>${mcpUrl}</code></p>
+    `;
+    document.getElementById('mcpurlp').textContent = mcpUrl;
+    post.className = 'post on';
+    s1.classList.add('done'); s1.classList.remove('active');
+    s2.classList.add('active');
+    window.scrollTo({top: out.offsetTop - 20, behavior:'smooth'});
   } catch (err) {
     out.classList.add('err'); out.style.display = 'block';
     out.innerHTML = '<strong>Error:</strong> ' + (err.message || err);
   } finally {
-    btn.disabled = false; btn.textContent = 'Mint my API key';
+    btn.disabled = false; btn.textContent = 'Mint my API key →';
   }
 });
 </script>

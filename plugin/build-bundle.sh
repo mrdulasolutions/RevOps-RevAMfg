@@ -65,8 +65,15 @@ find "$STAGE" \( -name '.DS_Store' -o -name '._*' \) -delete 2>/dev/null || true
 ( cd "$STAGE" && zip -rq "$OUT" "$PLUGIN_SLUG" )
 
 SIZE="$(du -h "$OUT" | cut -f1)"
-TOP_ENTRIES="$(unzip -l "$OUT" | awk 'NR>3 && $NF!="" {print $NF}' | awk -F/ '{print $1}' | sort -u)"
+# unzip -l has 4 leading columns (length, date, time, name). Name can
+# contain spaces, so we slice from column 4 onward.
+TOP_ENTRIES="$(unzip -l "$OUT" \
+  | awk 'NR>3 && NF>=4 {for (i=4;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":"\n")}' \
+  | awk -F/ 'NF>0 {print $1}' \
+  | sort -u \
+  | grep -v '^-\+$' \
+  | grep -v '^[0-9]*\s*files' || true)"
 echo "Built $OUT ($SIZE)"
-echo "Top-level entries:  $TOP_ENTRIES"
+echo "Top-level entries:  $(echo "$TOP_ENTRIES" | tr '\n' ' ')"
 echo
 echo "Upload via Claude Desktop → Plugins → Personal → Local uploads → +"

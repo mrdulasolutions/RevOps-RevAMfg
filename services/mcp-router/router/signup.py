@@ -390,7 +390,8 @@ SIGNUP_HTML = """<!doctype html>
     <label for="password">Password <span class="muted">(12+ chars — only for future key resets)</span></label>
     <input id="password" required type="password" autocomplete="new-password" minlength="12" />
 
-    <label for="token">Signup token <span class="muted">(one-time code from your admin)</span></label>
+    <label for="token">Signup token <span class="muted">(one-time code from your admin —
+      <a href="mailto:matt@mrdula.solutions?subject=RevAOps%20signup%20token%20request&body=Hi%20Matt%2C%0D%0A%0D%0AI%27d%20like%20to%20join%20the%20Rev%20A%20Manufacturing%20RevAOps%20engine.%20Can%20you%20send%20me%20a%20one-time%20signup%20token%3F%0D%0A%0D%0AName%3A%0D%0AWork%20email%3A%0D%0ARole%3A%0D%0A%0D%0AThanks%21">don't have one?</a>)</span></label>
     <input id="token" required autocomplete="off" placeholder="e.g. 4f2a…" />
 
     <button type="submit" id="btn">Mint my API key →</button>

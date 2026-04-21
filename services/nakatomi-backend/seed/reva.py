@@ -81,6 +81,103 @@ REVA_TAG_VOCABULARY = [
     "reva/partner-scorecard", "reva/ncr", "reva/shipping", "reva/itar",
 ]
 
+# ---------------------------------------------------------------------------
+# Company profile — lives in ``workspace.data.company_profile``. The router
+# exposes this via ``reva_get_company_profile`` so every PM's plugin pulls
+# the same source-of-truth on first run and never has to re-enter the
+# company name, leadership, partners, or escalation matrix locally.
+#
+# `memory_taxonomy`, `role_skill_map`, `escalation_matrix`, and `partners`
+# sit next to `company_profile` (under `workspace.data`) because the router's
+# `reva_get_workspace_config` tool surfaces them together.
+# ---------------------------------------------------------------------------
+
+REVA_COMPANY_PROFILE: dict[str, Any] = {
+    "legal_name": "Rev A Manufacturing",
+    "short_name": "Rev A Mfg",
+    "website": "https://www.revamfg.com",
+    "industry": "Contract manufacturing",
+    "business_model": (
+        "Receive RFQ → Qualify → Quote → Send specs to China partners → "
+        "Receive goods → Inspect/Repackage → Ship to customer"
+    ),
+    "capabilities": [
+        "Production machining (CNC milling, turning, multi-axis)",
+        "Injection tooling & molding",
+        "Prototyping / 3D printing / short-run",
+        "Sheet metal (laser, bending, welding)",
+        "Finishing (anodize, plate, powder coat, paint)",
+        "Assembly, sub-assembly, kitting, packaging",
+    ],
+    "leadership": [
+        {"name": "Donovan Weber", "role": "President & Co-founder",
+         "escalation_default": True},
+    ],
+    "pm_team": [
+        {"name": "Ray Yeh",      "role": "Senior Project Manager"},
+        {"name": "Harley Scott", "role": "Senior Project Manager"},
+    ],
+    "business_development": [
+        {"name": "Matt Nebo",    "role": "Director of Business Development", "region": "West Coast"},
+        {"name": "Barry Coyle",  "role": "Director of Business Development", "region": "Midwest"},
+        {"name": "Bryce Martel", "role": "Director of Business Development", "region": "East Coast"},
+        {"name": "Ryan Knight",  "role": "Business Development"},
+    ],
+    "report_prefix": "REVA-TURBO",
+    "report_naming": "REVA-TURBO-{Type}-{YYYY-MM-DD}-{ShortName}.docx",
+}
+
+REVA_ESCALATION_MATRIX: list[dict[str, str]] = [
+    {"issue": "Quality issue",         "first": "Senior PM (Ray Yeh / Harley Scott)", "second": "Donovan Weber"},
+    {"issue": "Delivery delay (>2wk)", "first": "Senior PM",                          "second": "Donovan Weber"},
+    {"issue": "Customer complaint",    "first": "Senior PM",                          "second": "Donovan Weber"},
+    {"issue": "New capability request","first": "BD Director (regional)",             "second": "Donovan Weber"},
+    {"issue": "Payment / credit",      "first": "Senior PM",                          "second": "Donovan Weber"},
+    {"issue": "Legal / contractual",   "first": "Donovan Weber (direct)",             "second": ""},
+]
+
+# Role → which skill subset to surface on the PM's dashboard on first run.
+# Roles not listed fall back to ``pm`` (the full workflow).
+REVA_ROLE_SKILL_MAP: dict[str, list[str]] = {
+    "pm": [
+        "reva-turbo-rfq-intake", "reva-turbo-rfq-qualify", "reva-turbo-rfq-quote",
+        "reva-turbo-china-package", "reva-turbo-china-track",
+        "reva-turbo-inspect", "reva-turbo-quality-gate", "reva-turbo-ncr",
+        "reva-turbo-logistics", "reva-turbo-customer-comms",
+        "reva-turbo-dashboard", "reva-turbo-order-track", "reva-turbo-escalate",
+    ],
+    "sales": [
+        "reva-turbo-rfq-intake", "reva-turbo-rfq-qualify", "reva-turbo-rfq-quote",
+        "reva-turbo-customer-profile", "reva-turbo-customer-comms",
+        "reva-turbo-customer-gate", "reva-turbo-dashboard", "reva-turbo-intel",
+    ],
+    "compliance": [
+        "reva-turbo-export-compliance", "reva-turbo-import-compliance",
+        "reva-turbo-isf-filing", "reva-turbo-audit-trail",
+        "reva-turbo-rules", "reva-turbo-dashboard",
+    ],
+    "clevel": [
+        "reva-turbo-dashboard", "reva-turbo-pulse", "reva-turbo-intel",
+        "reva-turbo-profit", "reva-turbo-report", "reva-turbo-escalate",
+    ],
+    "eng": [
+        "reva-turbo-rfq-qualify", "reva-turbo-china-package",
+        "reva-turbo-inspect", "reva-turbo-quality-gate", "reva-turbo-ncr",
+        "reva-turbo-change-order", "reva-turbo-partner-master",
+    ],
+}
+
+REVA_MEMORY_TAXONOMY: list[dict[str, str]] = [
+    {"tag": "reva/rfq",               "purpose": "Incoming RFQs, scope, targets"},
+    {"tag": "reva/quality",           "purpose": "Gate outcomes, inspection notes"},
+    {"tag": "reva/compliance",        "purpose": "EAR/ITAR/HTS rulings and docs"},
+    {"tag": "reva/china-source",      "purpose": "Supplier decisions, buyer-agent notes"},
+    {"tag": "reva/partner-scorecard", "purpose": "Partner quality / delivery / rate changes"},
+    {"tag": "reva/ncr",               "purpose": "Non-conformance records and RCAs"},
+    {"tag": "reva/shipping",          "purpose": "Freight, customs, ISF, delivery notes"},
+    {"tag": "reva/itar",              "purpose": "ITAR-specific findings (maximum scrutiny)"},
+]
+
 
 def _slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
@@ -150,11 +247,35 @@ class NakatomiSeeder:
                 else:
                     raise
 
+    def upsert_workspace_profile(self) -> None:
+        """Publish the Rev A company profile + config into ``workspace.data``.
+
+        Non-destructive: preserves any other keys (e.g. ``user_roles`` that
+        PMs write via ``reva_set_user_role``).
+        """
+        ws = self._req("GET", "/workspace") or {}
+        data = dict(ws.get("data") or {})
+        data["company_profile"] = REVA_COMPANY_PROFILE
+        data["escalation_matrix"] = REVA_ESCALATION_MATRIX
+        data["role_skill_map"] = REVA_ROLE_SKILL_MAP
+        data["memory_taxonomy"] = REVA_MEMORY_TAXONOMY
+        # Leave partners alone if already populated — they're PM-editable.
+        data.setdefault("partners", [])
+        self._req("PATCH", "/workspace", json={"data": data})
+        print(
+            f"+ workspace.data published: company_profile, escalation_matrix "
+            f"({len(REVA_ESCALATION_MATRIX)}), role_skill_map "
+            f"({len(REVA_ROLE_SKILL_MAP)} roles), memory_taxonomy "
+            f"({len(REVA_MEMORY_TAXONOMY)} tags)"
+        )
+
     def run(self) -> None:
         print(f"Seeding Rev A schema against {self.base_url}")
         self.upsert_pipeline()
         print("Custom fields:")
         self.upsert_custom_fields()
+        print("Workspace profile:")
+        self.upsert_workspace_profile()
         print("Tag vocabulary (advisory — Nakatomi allows any tag):")
         for t in REVA_TAG_VOCABULARY:
             print(f"  • {t}")

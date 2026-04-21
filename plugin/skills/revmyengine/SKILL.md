@@ -1,13 +1,15 @@
 ---
 name: revmyengine
 preamble-tier: 1
-version: 1.2.0
+version: 2.1.1
 description: |
   REVA-TURBO master orchestrator for Rev A Manufacturing PM workflow.
   Routes requests to the correct sub-skill based on context. Chains the
   RFQ-to-delivery lifecycle. Handles in-engine slash commands (/status,
   /help, /whoami, etc.). Injects trust level overlay and voice profile
-  into every skill invocation. Detects first-run and triggers setup wizard.
+  into every skill invocation. On first run, fetches the Rev A company
+  profile from the router (no local company setup needed) and asks a
+  single role question (PM / sales / compliance / C-level / eng).
   Use for any PM activity: "new RFQ", "quote", "send to China", "track
   order", "inspect", "dashboard", "escalate", or any /command.
 compatibility: Claude Code, Claude desktop, Claude CoWork
@@ -19,6 +21,37 @@ allowed-tools:
   - Glob
   - Grep
   - AskUserQuestion
+  # Router MCP tools — the plugin's only remote data source. All company
+  # profile, pipeline schema, partners roster, memory, and CRM access
+  # flows through here. No local YAML.
+  - mcp__reva__reva_whoami
+  - mcp__reva__reva_get_company_profile
+  - mcp__reva__reva_get_workspace_config
+  - mcp__reva__reva_set_user_role
+  - mcp__reva__reva_remember_about_entity
+  - mcp__reva__reva_recall_for_entity
+  - mcp__reva__crm_search_contacts
+  - mcp__reva__crm_get_contact
+  - mcp__reva__crm_create_contact
+  - mcp__reva__crm_update_contact
+  - mcp__reva__crm_search_companies
+  - mcp__reva__crm_create_company
+  - mcp__reva__crm_list_pipelines
+  - mcp__reva__crm_create_deal
+  - mcp__reva__crm_move_deal_stage
+  - mcp__reva__crm_log_activity
+  - mcp__reva__crm_add_note
+  - mcp__reva__crm_create_task
+  - mcp__reva__crm_list_tasks
+  - mcp__reva__crm_relate
+  - mcp__reva__crm_timeline
+  - mcp__reva__crm_describe_schema
+  - mcp__reva__mem_store
+  - mcp__reva__mem_recall
+  - mcp__reva__mem_associate
+  - mcp__reva__mem_update
+  - mcp__reva__mem_delete
+  - mcp__reva__mem_health
 hooks:
   PreToolUse:
     - matcher: "Edit|Write"
@@ -94,20 +127,196 @@ touch ~/.reva-turbo/.telemetry-prompted
 
 This only happens once. If `TEL_PROMPTED` is `yes`, skip entirely.
 
-## First-Run Detection
+## First-Run Detection (server-driven — no local company setup)
 
-If `SETUP_DONE` is `"false"` or empty, prompt the PM:
+REVA-TURBO is backed by a shared MCP router. The router already knows the
+company profile (Rev A Manufacturing — legal name, leadership, escalation
+matrix, partner list, capabilities) and the PM lifecycle schema. **The
+plugin must never re-ask for any of that.** On first run we only need to
+learn the user's *role*, then we pull everything else over MCP.
 
-> 🔧 **Welcome to REVA-TURBO!** I'll help you configure the engine for your team. This takes about 10 minutes and covers your company profile, workflow, connectors, partners, shipping, and document preferences.
+### Step 1 — call `reva_whoami`
 
-Use AskUserQuestion:
-- A) Run setup now — let's configure everything
-- B) Skip for now — use defaults, I'll set up later
+Call the MCP tool (this will be exposed as `mcp__reva__reva_whoami` once
+the `reva` MCP server is connected — see the preflight check below):
 
-If A: Read and execute `~/.claude/skills/reva-turbo/skills/reva-turbo-setup/SKILL.md`
-If B: Run `~/.claude/skills/reva-turbo/bin/reva-turbo-config set setup_completed skipped` and continue.
+```
+mcp__reva__reva_whoami {}
+```
 
-This only triggers on first use. Once setup is completed or skipped, it won't ask again.
+The response tells us four things:
+1. The user's identity (user_id, email, display_name) — attribute workflow
+   events correctly.
+2. The workspace they landed in (must be `slug: "reva"` — if not, something
+   is wrong with signup; stop and ask the user to re-run signup).
+3. `pm_role` + `needs_role` — whether we must ask the role question.
+4. `tool_prefixes` — confirms the router is the reva router
+   (`crm`, `mem`, `reva`). If these are missing or the tool call itself
+   fails, the router isn't connected — jump to **Preflight — MCP router
+   connected?** below and run the paste-your-key flow. Never send the
+   PM into Desktop Settings; the plugin now self-configures from a
+   pasted `nk_...` key.
+
+### Step 2 — ask the role question (only if `needs_role: true`)
+
+Use `AskUserQuestion`. Ask ONE question, five lettered options:
+
+> **What's your role at Rev A?** I'll activate the skills that match your
+> day and keep the rest out of the way. You can change this any time with
+> `/role`.
+
+Options:
+- A) **Project Manager** — full RFQ → delivery workflow
+- B) **Sales / BD** — intake, qualify, quote, customer comms
+- C) **Compliance** — EAR / ITAR / HTS / ISF / audit
+- D) **C-level** — dashboard, profit, pulse, intel
+- E) **Engineering** — qualify, China package, inspect, NCR, change orders
+
+Map answer → role slug: A→`pm`, B→`sales`, C→`compliance`, D→`clevel`,
+E→`eng`. Then call:
+
+```
+mcp__reva__reva_set_user_role {"role": "<slug>"}
+```
+
+### Step 3 — pull server config and cache locally
+
+Call both, once, and write the results to local state so other skills can
+read them without re-hitting the router on every invocation:
+
+```
+mcp__reva__reva_get_company_profile {}
+mcp__reva__reva_get_workspace_config {}
+```
+
+Write the results to:
+- `~/.reva-turbo/state/company-profile.json` (from `reva_get_company_profile`)
+- `~/.reva-turbo/state/workspace-config.json` (from `reva_get_workspace_config`)
+
+Mark setup done:
+
+```bash
+~/.claude/skills/reva-turbo/bin/reva-turbo-config set setup_completed true
+~/.claude/skills/reva-turbo/bin/reva-turbo-config set pm_role "<slug>"
+~/.claude/skills/reva-turbo/bin/reva-turbo-config set bootstrap_version 2 2>/dev/null || true
+```
+
+### Step 4 — confirm and land
+
+Welcome the PM with the role-appropriate greeting and show the three
+things they can do right now:
+
+> Welcome to REVA-TURBO, <display_name>. You're connected to Rev A's
+> shared CRM and memory as **<role>**. Here are the three most common
+> ways to start:
+>
+> - **New RFQ** — paste the email or specs, I'll intake + qualify.
+> - **/status** — what's on your plate today.
+> - **/role** — change your role or view company config.
+
+### Legacy setup wizard (advanced / admin only)
+
+The old 8-section `reva-turbo-setup` wizard is kept for admins who are
+standing up a *new* deployment (company, partners roster, connectors,
+document branding). A regular PM at Rev A should never hit it — their
+environment is already configured server-side.
+
+If the PM explicitly types `/setup`, route to `reva-turbo-setup` with a
+warning: *"This is the legacy deployment wizard. For Rev A, your config
+comes from the router — you can safely ignore this. Continue only if
+your admin asked you to."*
+
+### Preflight — MCP router connected?
+
+Before running Step 1, confirm the `reva` MCP server is actually
+available. If the `mcp__reva__reva_whoami` tool doesn't exist in the
+current tool surface, walk the PM through the one-minute paste flow.
+
+**Say exactly this** (keep it warm, concrete, two links, three steps):
+
+> **Welcome to Rev A — let's get you connected.** You need a personal
+> API key to talk to the REVA router. It takes about 60 seconds.
+>
+> **Step 1.** Open this page and mint your key:
+> **https://mcp-router-production-460a.up.railway.app/signup**
+>
+> (Your admin gave you a signup token — paste it on that page, pick a
+> display name and email, click "Create account." You'll get a key that
+> starts with `nk_`.)
+>
+> **Step 2.** Copy the whole key, paste it back here in this chat, and
+> say something like *"here's my key: nk_…"*. I'll wire the plugin up
+> for you — you don't need to open Settings.
+>
+> **Step 3.** Quit and reopen Claude Desktop (Cmd-Q, then relaunch).
+> That's the only time we need you to restart. Come back here, say
+> *"let's go"*, and we're off.
+>
+> ⚠️ One hygiene note: if you have a standalone Nakatomi or AutoMem
+> connector installed under **Desktop → Settings → Connectors**, remove
+> it. The REVA-TURBO plugin already bundles both — keeping a duplicate
+> exposes the raw tool names (`search_contacts`, `memory_recall`) and
+> breaks routing.
+
+**When the PM pastes a key** (any string starting with `nk_` in their
+next message, or they invoke `/connect <key>` explicitly): run the
+block in the **`/connect` — wire up credentials** section below, then
+tell them to restart Desktop.
+
+**Do not proceed to Steps 1–4 until `mcp__reva__reva_whoami` succeeds.**
+If a restart was just requested, acknowledge the paste, confirm the
+file was written, and wait.
+
+### `/connect <nk_key>` — wire up credentials (inline command)
+
+Extract the key from the PM's message (grep for `nk_[A-Za-z0-9_-]+`).
+If the user also provided a router URL, capture that too (look for an
+`https://…/mcp` token); otherwise default to the Rev A production URL.
+
+Write credentials to the file the MCP launcher reads on Desktop
+startup (`bin/reva-mcp-launch.sh`):
+
+```bash
+mkdir -p ~/.reva-turbo/state
+_KEY="NK_KEY_HERE"          # replace with the extracted nk_... value
+_URL="MCP_URL_HERE"          # replace; default: https://mcp-router-production-460a.up.railway.app/mcp
+cat > ~/.reva-turbo/state/mcp-credentials.env <<EOF
+REVA_MCP_URL=$_URL
+REVA_API_KEY=$_KEY
+EOF
+chmod 600 ~/.reva-turbo/state/mcp-credentials.env
+```
+
+Immediately validate the key by hitting the router's `/auth/me`
+endpoint (this is proxied through to Nakatomi and returns the user
+record on a valid key):
+
+```bash
+_BASE="${_URL%/mcp}"
+curl -fsS -H "Authorization: Bearer $_KEY" "$_BASE/auth/me" | head -c 400
+```
+
+- If `curl` succeeds (HTTP 200, JSON with `email`/`workspace`): tell
+  the PM **"✓ Key validated — you're <email> in workspace <slug>. Now
+  quit Claude Desktop (Cmd-Q) and reopen it. Then come back and say
+  'let's go'."**
+- If `curl` fails (401 / 404 / network error): do NOT tell them to
+  restart. Tell them exactly what came back: *"That key didn't
+  validate — the router replied <status>. Double-check you pasted the
+  whole `nk_...` string, or re-mint at
+  https://mcp-router-production-460a.up.railway.app/signup."* Wipe
+  the file (`rm ~/.reva-turbo/state/mcp-credentials.env`) so the next
+  attempt starts clean.
+
+**Safety rails:**
+- Never echo the key back in full — show only the first 8 chars and
+  last 4 (`nk_abcd1234…wxyz`).
+- Never commit the key anywhere, never put it in `/refresh`'s
+  diagnostic output, never pass it to telemetry.
+- The file mode is 600 — belt-and-suspenders against any other
+  process on the box.
+
+Do not proceed to Steps 1–4 until the tool call succeeds.
 
 ## Trust Level Injection
 
@@ -156,7 +365,11 @@ Voice applies to greeting style, signoff, tone, email length, technical depth, f
 | `/audit` | delegated | → reva-turbo-audit-trail mode:summary |
 | `/alerts` | delegated | → reva-turbo-pulse mode:review |
 | `/rules` | delegated | → reva-turbo-rules mode:list |
-| `/setup` | delegated | → reva-turbo-setup |
+| `/setup` | delegated | → reva-turbo-setup (legacy; admin only) |
+| `/role [slug]` | inline | Show or change PM role (pm/sales/compliance/clevel/eng); calls `reva_set_user_role` and refreshes local cache |
+| `/refresh` | inline | Re-pull `reva_get_company_profile` + `reva_get_workspace_config` into local cache |
+| `/connect <nk_...>` | inline | Paste-key-in-chat onboarding: validate key against `/auth/me`, write `~/.reva-turbo/state/mcp-credentials.env`, prompt restart |
+| `/connected` | inline | Diagnostic: confirm router + show tool counts (`crm_*`, `mem_*`, `reva_*`) and current `mcp_url` |
 | `/send-logs` | inline | Package dev log + email to matt@mrdula.solutions |
 | `/logs` | inline | Display recent telemetry entries in readable format |
 
@@ -276,6 +489,92 @@ reva-turbo-rfq-intake
 **Why export compliance comes before the quote:** You must know if an item can legally be exported before investing time in quoting it. If the item is ITAR-controlled, sanctioned, or requires a license that won't be granted, quoting is wasted effort. The compliance gate screens the RFQ specs against EAR/ITAR/sanctions BEFORE the PM generates pricing.
 
 After completing a skill, tell the PM: "Next step in the workflow: [skill name]. Want me to run it?"
+
+## /role, /refresh, /connected — router-backed inline commands
+
+These three commands are the PM's bridge to the server-side config. Run
+them inline (don't delegate to a sub-skill).
+
+### `/role` — show or change role
+
+No arg: read `~/.reva-turbo/state/company-profile.json` +
+`~/.claude/skills/reva-turbo/bin/reva-turbo-config get pm_role`, display:
+
+```
+You are <display_name> — <role>.
+Role unlocks these skills: [first 6 from workspace-config.json
+role_skill_map[<role>], ellipsis if more]
+Change: /role pm | sales | compliance | clevel | eng
+```
+
+With arg (e.g. `/role sales`): validate against the five slugs, call
+`mcp__reva__reva_set_user_role {"role": "<slug>"}`, update local config
+(`reva-turbo-config set pm_role <slug>`), re-pull workspace config into
+`~/.reva-turbo/state/workspace-config.json`, confirm.
+
+### `/refresh` — re-sync from router
+
+Re-call:
+- `mcp__reva__reva_get_company_profile` → write
+  `~/.reva-turbo/state/company-profile.json`
+- `mcp__reva__reva_get_workspace_config` → write
+  `~/.reva-turbo/state/workspace-config.json`
+
+Print a one-line summary (company name, workspace slug, N pipelines, N
+partners, N role skills for current role).
+
+### `/connected` — diagnostic
+
+Call `mcp__reva__reva_whoami`. Report:
+
+```
+✓ Router: <workspace.name> (<workspace.slug>)
+✓ Identity: <display_name> <<email>>
+✓ Role: <pm_role or "not set — run /role">
+✓ Tool prefixes: crm_* / mem_* / reva_*
+```
+
+If the `mcp__reva__reva_whoami` call fails, check whether a creds file
+exists so you can give the right next step:
+
+```bash
+_CRED=~/.reva-turbo/state/mcp-credentials.env
+[ -f "$_CRED" ] && echo "creds_file: present" || echo "creds_file: missing"
+```
+
+**Case A — `creds_file: missing`** (PM never ran `/connect`):
+
+```
+✗ Router not connected — no credentials on disk yet.
+  1. Mint your key: https://mcp-router-production-460a.up.railway.app/signup
+  2. Paste it back here: /connect nk_yourkeyhere
+  3. Quit and reopen Claude Desktop.
+
+  If you also have a standalone Nakatomi or AutoMem connector under
+  Desktop → Settings → Connectors, remove it — this plugin already
+  bundles both (crm_*/mem_*). Duplicates expose the raw tool names
+  (search_contacts, memory_recall) and break routing.
+```
+
+**Case B — `creds_file: present`** (creds exist but router still
+silent — either the PM hasn't restarted Desktop yet, the key is bad,
+or the router is down). Run a live probe:
+
+```bash
+. ~/.reva-turbo/state/mcp-credentials.env
+curl -fsS -o /dev/null -w "%{http_code}" \
+  -H "Authorization: Bearer $REVA_API_KEY" \
+  "${REVA_MCP_URL%/mcp}/auth/me"
+```
+
+- `200` → creds are good, MCP just hasn't reloaded: *"Quit Claude
+  Desktop (Cmd-Q) and reopen — the plugin re-reads credentials on app
+  start."*
+- `401` → bad/expired key: *"Re-mint at
+  https://mcp-router-production-460a.up.railway.app/signup and run
+  /connect <new-key>."*
+- Connection error → *"Can't reach the router. Check Wi-Fi; if it
+  persists, ping your admin — the router may be down."*
 
 ## Workflow State
 

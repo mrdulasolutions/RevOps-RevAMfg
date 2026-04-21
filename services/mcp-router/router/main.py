@@ -4,6 +4,7 @@ exposes a ``/health`` probe for Railway.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 
 from fastapi import FastAPI
@@ -38,9 +39,19 @@ def create_app() -> FastAPI:
     logging.basicConfig(level=settings.log_level.upper())
     log = logging.getLogger("reva.router")
 
-    app = FastAPI(title="REVA MCP Router", version="0.1.0")
-
     mcp = build_mcp()
+
+    # FastMCP's streamable-HTTP session manager runs inside its own anyio task
+    # group; mounting the sub-app alone doesn't start it. Wiring the session
+    # manager's lifespan into the parent FastAPI app is what keeps the task
+    # group alive for the server's lifetime — without it every /mcp/ request
+    # 500s with "Task group is not initialized".
+    @contextlib.asynccontextmanager
+    async def lifespan(_: FastAPI):
+        async with mcp.session_manager.run():
+            yield
+
+    app = FastAPI(title="REVA MCP Router", version="0.1.0", lifespan=lifespan)
     app.mount("/mcp", mcp.streamable_http_app())
 
     # Self-service signup (GET /signup HTML, POST /signup JSON)

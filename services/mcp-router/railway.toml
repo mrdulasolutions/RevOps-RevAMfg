@@ -6,8 +6,10 @@ builder = "dockerfile"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "uvicorn router.main:app --host 0.0.0.0 --port $PORT"
+# No startCommand: Railway runs it via exec without shell expansion, so
+# "$PORT" stays literal and uvicorn rejects it. The Dockerfile's CMD
+# already wraps in `sh -c` which expands correctly. Let that drive.
 healthcheckPath = "/health"
-healthcheckTimeout = 30
+healthcheckTimeout = 60
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3

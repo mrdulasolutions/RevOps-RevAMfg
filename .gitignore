@@ -21,3 +21,7 @@ TURBO_STATE_DIR:-*
 
 # Plugin build artifacts — shipped via GitHub Releases, not committed
 plugin/dist/
+
+# Railway deploy state (contains generated secrets)
+railway/.deploy-state
+.railway/

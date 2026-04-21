@@ -89,6 +89,13 @@ Don't unzip it.
 uploads → `+`** and drop in the zip. Click **Enable**. No settings to
 fill in — the plugin self-configures in the next step.
 
+> ⚠️ **Already have RevAOps installed from before?** Claude Desktop's
+> plugin uploader does **not** auto-upgrade an existing install. If
+> you're on `v2.0.x` or earlier, go to **Plugins → Installed → RevAOps →
+> ⋯ → Remove**, then **quit Desktop (Cmd-Q)**, relaunch, and _then_
+> upload the new zip. Skipping this leaves you on the old launcher and
+> the engine can't pick up your key.
+
 **4. Connect your key in chat.** In any Claude Desktop conversation,
 type:
 

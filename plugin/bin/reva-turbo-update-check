@@ -1,24 +1,100 @@
 #!/usr/bin/env bash
-# reva-turbo-update-check — check for engine version updates
+# reva-turbo-update-check — check for engine version updates + stale installs.
 #
-# Compares local VERSION against remote. Outputs upgrade notice if available.
-# Silent on success (no update) or error (network issues).
+# Two jobs:
+#   1. Compare local VERSION against remote (TODO — still local-only).
+#   2. Detect a stale plugin.json from a pre-2.1.x install. Claude
+#      Desktop's plugin uploader does NOT overwrite an installed plugin
+#      when the user drops in a newer zip — the old plugin.json (with
+#      `${user_config.*}` substitution in mcpServers) stays on disk,
+#      and the MCP server never loads the PM's key file. This is the
+#      #1 support issue for existing PMs. We detect it loudly so the
+#      engine's startup output tells them exactly what to do.
+#
+# Silent on success (no update + clean install) or network errors.
 set -uo pipefail
 
 REVA_TURBO_DIR="${REVA_TURBO_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 STATE_DIR="${REVA_TURBO_STATE_DIR:-$HOME/.reva-turbo}"
 VERSION_FILE="$REVA_TURBO_DIR/VERSION"
+PLUGIN_JSON="$REVA_TURBO_DIR/.claude-plugin/plugin.json"
 SNOOZE_FILE="$STATE_DIR/.update-snoozed"
 
-# Skip if snoozed (within last 24h)
+# Skip version gossip if snoozed (within last 24h). Stale-install check
+# is NOT snoozable — it's a hard breakage, we want it surfaced every run.
+snoozed=0
 if [ -f "$SNOOZE_FILE" ]; then
-  SNOOZE_AGE="$(find "$SNOOZE_FILE" -mmin -1440 2>/dev/null | wc -l | tr -d ' ')"
-  [ "$SNOOZE_AGE" -gt 0 ] 2>/dev/null && exit 0
+  age_min="$(find "$SNOOZE_FILE" -mmin -1440 2>/dev/null | wc -l | tr -d ' ')"
+  [ "$age_min" -gt 0 ] 2>/dev/null && snoozed=1
 fi
 
 LOCAL_VERSION="$(cat "$VERSION_FILE" 2>/dev/null | tr -d '[:space:]' || echo "0.0.0")"
 
-# For now, no remote check — just validate local version exists
-if [ "$LOCAL_VERSION" = "0.0.0" ]; then
-  echo "WARNING: REVA-TURBO VERSION file missing or empty"
+# ------------------------------------------------------------------
+# Stale-install detection.
+#
+# Signature of a healthy 2.1.x install (what the release zip ships):
+#   mcpServers.reva.command = "bash"
+#   mcpServers.reva.args[0] contains "reva-mcp-launch.sh"
+#
+# Signature of a stale pre-2.1 install:
+#   mcpServers.reva.command = "npx"  (runs mcp-remote directly)
+#   args contain "${user_config.mcp_url}" / "${user_config.api_key}"
+#
+# We don't want to hard-parse JSON in bash. grep signals are enough:
+# the strings are stable and distinctive.
+# ------------------------------------------------------------------
+stale=0
+if [ -f "$PLUGIN_JSON" ]; then
+  # Healthy install reference the launcher script by name.
+  if ! grep -q 'reva-mcp-launch.sh' "$PLUGIN_JSON" 2>/dev/null; then
+    stale=1
+  fi
+  # Or: the old `${user_config.*}` template is still in place.
+  if grep -q '\${user_config\.' "$PLUGIN_JSON" 2>/dev/null; then
+    stale=1
+  fi
 fi
+
+if [ "$stale" = "1" ]; then
+  # Intentionally verbose — this is the moment we save the PM from a
+  # half-hour of "why won't my engine see the key?" debugging.
+  cat >&2 <<'EOF'
+
+┌──────────────────────────────────────────────────────────────────────┐
+│  ⚠  STALE INSTALL DETECTED — upgrade required                       │
+├──────────────────────────────────────────────────────────────────────┤
+│  Your RevAOps plugin was installed from an older zip (pre-v2.1.1).   │
+│  Claude Desktop's plugin uploader does NOT auto-upgrade, so the      │
+│  old launcher is still on disk and your key file is being ignored.   │
+│                                                                      │
+│  Fix (takes 60 seconds):                                             │
+│    1. Claude Desktop → Plugins → Installed → RevAOps → ⋯ → Remove   │
+│    2. Quit Desktop entirely (Cmd-Q), then relaunch.                  │
+│    3. Download the latest zip:                                       │
+│       https://github.com/mrdulasolutions/RevOps-RevAMfg/releases/    │
+│       latest                                                         │
+│    4. Plugins → Personal → Local uploads → + → drop the new zip.    │
+│    5. Run /reva-turbo:revmyengine again — it'll pick up your        │
+│       existing key automatically.                                    │
+│                                                                      │
+│  No need to re-mint — your API key is stored separately under        │
+│  ~/.reva-turbo/state/mcp-credentials.env and survives re-install.    │
+└──────────────────────────────────────────────────────────────────────┘
+
+EOF
+  # Don't exit non-zero — update-check is called on every engine launch,
+  # and the engine skill needs to continue even when stale. The loud
+  # stderr banner is the signal; revmyengine can also detect the
+  # missing mcp__reva__* tools and echo the same message in-chat.
+fi
+
+# ------------------------------------------------------------------
+# Version sanity.
+# ------------------------------------------------------------------
+if [ "$LOCAL_VERSION" = "0.0.0" ]; then
+  echo "WARNING: REVA-TURBO VERSION file missing or empty" >&2
+fi
+
+# Remote version check — not wired yet. When it lands, skip if snoozed=1.
+: "$snoozed"

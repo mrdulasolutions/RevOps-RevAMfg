@@ -197,86 +197,182 @@ def _extract_detail(resp: httpx.Response, fallback: str) -> str:
 
 
 SIGNUP_HTML = """<!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>REVA-OPS · Join the team</title>
+<title>REV A MFG · Join the RevAOps engine</title>
+<meta name="theme-color" content="#0a0a0a">
 <style>
+  /* Palette pulled from revamfg.com: warm near-black background, cream
+     copy, burnt-orange (#bf6a3f) CTA, warm gray muted. Mirrors the
+     homepage's data-theme="dark" look so the signup flow feels like an
+     extension of the brand rather than a separate tool. */
   :root {
-    --bg:#0b1020; --fg:#e6ecf3; --accent:#4ea3ff; --accent-dim:#2d75cc;
-    --muted:#8593a8; --card:#121a33; --card-2:#0f1630;
-    --ok:#16a06b; --err:#ff6b6b; --warn-bg:#2b230f; --warn-fg:#ffd479;
-    --border:#1f2b4a;
+    --bg:#0a0a0a;
+    --bg-warm:#1c1410;
+    --fg:#f4eade;
+    --fg-dim:#c9c4b3;
+    --muted:#847c6c;
+    --accent:#bf6a3f;
+    --accent-hover:#d17a4e;
+    --accent-dim:#7a4529;
+    --card:#17110d;
+    --card-2:#0f0b08;
+    --border:#2a1f17;
+    --border-bright:#3d2d21;
+    --ok:#a3c49a;
+    --ok-bg:#17221a;
+    --ok-border:#2a3d2e;
+    --err:#e58b7c;
+    --err-bg:#2a1714;
+    --err-border:#4a2a24;
+    --warn-bg:#261a0f;
+    --warn-fg:#e8c48f;
+    --warn-border:#4a3420;
   }
   *,*::before,*::after { box-sizing:border-box; }
   html,body { margin:0; padding:0; background:var(--bg); color:var(--fg);
-    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-  main { max-width:620px; margin:5vh auto; padding:24px; }
-  header { display:flex; align-items:baseline; gap:10px; margin-bottom:4px; }
-  header h1 { font-size:28px; margin:0; letter-spacing:-0.01em; }
-  header .tag { font-size:11px; color:var(--muted); text-transform:uppercase;
-    letter-spacing:0.08em; background:var(--card); padding:3px 7px; border-radius:4px; }
-  p.sub { color:var(--muted); margin:0 0 24px; }
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",
+    system-ui,sans-serif; -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility; }
+  /* Subtle warm vignette — echoes the homepage hero's dark-warm tone
+     without overpowering the form. */
+  body::before {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:-1;
+    background:
+      radial-gradient(ellipse 90% 60% at 50% -10%, rgba(191,106,63,0.08), transparent 60%),
+      radial-gradient(ellipse 60% 80% at 100% 100%, rgba(191,106,63,0.04), transparent 70%);
+  }
+  main { max-width:640px; margin:6vh auto 4vh; padding:24px; }
 
-  .steps { display:flex; gap:6px; margin:12px 0 20px; }
-  .step { flex:1; padding:8px 10px; background:var(--card); border-radius:6px;
-    font-size:12px; color:var(--muted); border:1px solid transparent;
-    display:flex; align-items:center; gap:8px; }
-  .step .n { width:18px; height:18px; border-radius:50%; background:var(--card-2);
+  /* Logo block — "REV A MFG" uppercase with heavy tracking mirrors the
+     homepage wordmark; the "RevAOps Engine" sub is the product line. */
+  .brand { margin-bottom:32px; }
+  .logo { font-size:11px; font-weight:700; letter-spacing:0.32em;
+    color:var(--fg); text-transform:uppercase; margin:0 0 6px;
+    display:flex; align-items:center; gap:10px; }
+  .logo::after { content:""; flex:1; height:1px; background:var(--border-bright); }
+  h1.title { font-size:34px; font-weight:600; letter-spacing:-0.02em;
+    margin:0 0 8px; line-height:1.1; color:var(--fg); }
+  h1.title em { font-style:normal; color:var(--accent); }
+  p.sub { color:var(--fg-dim); margin:0; font-size:15px;
+    max-width:52ch; }
+  p.tagline { color:var(--muted); margin:4px 0 0; font-size:12px;
+    letter-spacing:0.12em; text-transform:uppercase; }
+
+  /* Step tracker — warm-stone pills with copper highlight when active. */
+  .steps { display:flex; gap:8px; margin:28px 0 20px; }
+  .step { flex:1; padding:10px 12px; background:var(--card-2);
+    border-radius:4px; font-size:12px; color:var(--muted);
+    border:1px solid var(--border); display:flex; align-items:center;
+    gap:10px; transition:border-color 0.15s, color 0.15s; }
+  .step .n { width:20px; height:20px; border-radius:50%;
+    background:transparent; border:1px solid var(--border-bright);
     color:var(--muted); font-weight:600; font-size:11px;
-    display:inline-flex; align-items:center; justify-content:center; }
-  .step.active { color:var(--fg); border-color:var(--accent-dim); }
-  .step.active .n { background:var(--accent); color:#001126; }
-  .step.done .n { background:var(--ok); color:#fff; }
-  .step.done { color:var(--fg); }
+    display:inline-flex; align-items:center; justify-content:center;
+    transition:all 0.15s; }
+  .step.active { color:var(--fg); border-color:var(--accent); }
+  .step.active .n { background:var(--accent); color:#0a0a0a; border-color:var(--accent); }
+  .step.done { color:var(--fg-dim); border-color:var(--accent-dim); }
+  .step.done .n { background:var(--accent-dim); color:var(--fg); border-color:var(--accent-dim); }
 
-  form, .panel { background:var(--card); padding:22px; border-radius:10px; border:1px solid var(--border); }
-  label { display:block; font-size:13px; color:var(--muted); margin:14px 0 4px; font-weight:500; }
+  form, .panel { background:var(--card); padding:24px; border-radius:6px;
+    border:1px solid var(--border); }
+  form { box-shadow:0 1px 0 rgba(191,106,63,0.04) inset; }
+  label { display:block; font-size:11px; color:var(--muted);
+    margin:18px 0 6px; font-weight:600; letter-spacing:0.08em;
+    text-transform:uppercase; }
   label:first-of-type { margin-top:0; }
-  input { width:100%; padding:11px 13px; border:1px solid var(--border);
-    background:var(--card-2); color:var(--fg); border-radius:6px; font:inherit; }
-  input:focus { outline:none; border-color:var(--accent); }
-  button { margin-top:20px; width:100%; padding:12px; background:var(--accent); color:#001126;
-    border:0; border-radius:6px; font-weight:600; font-size:15px; cursor:pointer;
-    transition:background 0.15s; }
-  button:hover:not(:disabled) { background:#69b4ff; }
-  button:disabled { opacity:0.6; cursor:progress; }
+  label .hint { color:var(--muted); font-weight:400; text-transform:none;
+    letter-spacing:0; margin-left:6px; font-size:11px; }
+  input { width:100%; padding:12px 14px; border:1px solid var(--border);
+    background:var(--card-2); color:var(--fg); border-radius:4px;
+    font:inherit; transition:border-color 0.15s, background 0.15s; }
+  input::placeholder { color:var(--muted); opacity:0.7; }
+  input:focus { outline:none; border-color:var(--accent);
+    background:#0a0a0a; }
+  button { margin-top:24px; width:100%; padding:14px;
+    background:var(--accent); color:#0a0a0a; border:0; border-radius:4px;
+    font-weight:700; font-size:14px; letter-spacing:0.05em;
+    text-transform:uppercase; cursor:pointer;
+    transition:background 0.15s, transform 0.05s;
+    font-family:inherit; }
+  button:hover:not(:disabled) { background:var(--accent-hover); }
+  button:active:not(:disabled) { transform:translateY(1px); }
+  button:disabled { opacity:0.5; cursor:progress; background:var(--accent-dim); }
 
-  .result { margin-top:20px; padding:18px; border-radius:8px;
-    background:#0d2b1e; border:1px solid #184d37; display:none; }
-  .result.err { background:#2a0f16; border-color:#4a1820; }
-  .result h3 { margin:0 0 10px; font-size:16px; }
-  code { background:var(--card-2); padding:2px 6px; border-radius:4px; user-select:all;
-    font-family:"SF Mono",ui-monospace,monospace; font-size:13px; word-break:break-all; }
-  pre { background:var(--card-2); padding:12px; border-radius:6px; overflow-x:auto;
-    margin:8px 0; font-size:13px; user-select:all; font-family:"SF Mono",ui-monospace,monospace; }
+  .result { margin-top:20px; padding:20px; border-radius:6px;
+    background:var(--ok-bg); border:1px solid var(--ok-border); display:none; }
+  .result.err { background:var(--err-bg); border-color:var(--err-border); color:var(--err); }
+  .result h3 { margin:0 0 10px; font-size:16px; color:var(--fg);
+    letter-spacing:-0.01em; }
+  .result.err h3, .result.err strong { color:var(--err); }
+  code { background:var(--card-2); padding:3px 7px; border-radius:3px;
+    user-select:all; font-family:"SF Mono","JetBrains Mono",
+    ui-monospace,monospace; font-size:13px; word-break:break-all;
+    color:var(--fg); border:1px solid var(--border); }
+  pre { background:var(--card-2); padding:14px 16px; border-radius:4px;
+    overflow-x:auto; margin:10px 0; font-size:13px; user-select:all;
+    font-family:"SF Mono","JetBrains Mono",ui-monospace,monospace;
+    color:var(--fg); border:1px solid var(--border); }
   .muted { color:var(--muted); font-size:13px; }
-  .pill { display:inline-block; background:var(--card-2); padding:3px 8px; border-radius:999px;
-    font-size:11px; color:var(--muted); margin-right:6px; }
+  .pill { display:inline-block; background:var(--card-2); padding:4px 10px;
+    border-radius:999px; font-size:10px; color:var(--muted);
+    margin-right:6px; letter-spacing:0.08em; text-transform:uppercase;
+    border:1px solid var(--border); font-weight:600; }
 
-  .hygiene { margin-top:12px; padding:14px 16px; border-radius:8px;
-    background:var(--warn-bg); border:1px solid #55421a; color:var(--warn-fg); font-size:13px; }
-  .hygiene strong { color:#ffe29a; }
+  .hygiene { margin-top:14px; padding:16px 18px; border-radius:4px;
+    background:var(--warn-bg); border:1px solid var(--warn-border);
+    color:var(--warn-fg); font-size:13px; line-height:1.55; }
+  .hygiene strong { color:#f4d9a8; display:block; margin-bottom:4px;
+    font-size:12px; letter-spacing:0.06em; text-transform:uppercase; }
+  .hygiene code { background:rgba(0,0,0,0.25); color:var(--warn-fg);
+    border-color:var(--warn-border); }
+
+  .section-head { margin:32px 0 10px; font-size:11px; font-weight:700;
+    letter-spacing:0.2em; text-transform:uppercase; color:var(--accent);
+    display:flex; align-items:center; gap:12px; }
+  .section-head::after { content:""; flex:1; height:1px;
+    background:linear-gradient(to right, var(--accent-dim), transparent); }
+  .section-head h3 { margin:0; font-size:18px; font-weight:600;
+    color:var(--fg); letter-spacing:-0.01em; text-transform:none; }
 
   .post { display:none; }
   .post.on { display:block; }
-  .post ol { padding-left:20px; margin:8px 0; }
-  .post li { margin:10px 0; }
+  .post ol { padding-left:22px; margin:10px 0; }
+  .post li { margin:12px 0; color:var(--fg-dim); }
   .post li strong { color:var(--fg); }
+  .post p { color:var(--fg-dim); }
 
-  a { color:var(--accent); text-decoration:none; }
-  a:hover { text-decoration:underline; }
+  footer { margin-top:40px; padding-top:20px;
+    border-top:1px solid var(--border); font-size:11px; color:var(--muted);
+    letter-spacing:0.06em; text-transform:uppercase;
+    display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  footer .fa { color:var(--fg-dim); }
+
+  a { color:var(--accent); text-decoration:none;
+    border-bottom:1px solid transparent; transition:border-color 0.15s; }
+  a:hover { border-bottom-color:var(--accent); }
+
+  @media (max-width:520px) {
+    main { padding:20px 16px; margin-top:3vh; }
+    h1.title { font-size:26px; }
+    .steps { flex-direction:column; }
+    .step { font-size:13px; }
+    button { letter-spacing:0.03em; }
+  }
 </style>
 </head>
 <body>
 <main>
-  <header>
-    <h1>REVA-OPS</h1>
-    <span class="tag">Rev&nbsp;A Manufacturing</span>
-  </header>
-  <p class="sub">You're one minute from having the full PM engine — CRM,
-  memory, and 48 skills — connected to Claude Desktop.</p>
+  <div class="brand">
+    <p class="logo">Rev&nbsp;A&nbsp;Mfg</p>
+    <h1 class="title">Join the <em>RevAOps</em> engine</h1>
+    <p class="sub">One minute from mint to working PM copilot — CRM, memory,
+    and 48 skills wired into Claude Desktop.</p>
+    <p class="tagline">Manufactured where it makes sense</p>
+  </div>
 
   <div class="steps">
     <div class="step active" id="s1"><span class="n">1</span> Mint API key</div>
@@ -303,55 +399,65 @@ SIGNUP_HTML = """<!doctype html>
   <div id="result" class="result"></div>
 
   <div id="post" class="post">
-    <h3 style="margin-top:28px;">Step 2 — Install the plugin</h3>
+    <div class="section-head"><h3>Step 2 — Install the plugin</h3></div>
     <div class="panel">
+      <div class="hygiene" style="margin-top:0;margin-bottom:16px;">
+        <strong>Already have RevAOps installed? Remove it first.</strong>
+        Claude Desktop's plugin uploader does <em>not</em> auto-upgrade an
+        existing install — if you're on <code>v2.0.x</code> or earlier you
+        must uninstall before uploading the new zip. Go to
+        <strong>Plugins → Installed → RevAOps → ⋯ → Remove</strong>, then
+        quit Desktop (<code>Cmd-Q</code>), relaunch, and continue below.
+        Skipping this leaves you on a stale launcher and the engine won't
+        load your key.
+      </div>
       <ol>
         <li><strong>Download the latest plugin zip</strong> from
           <a href="https://github.com/mrdulasolutions/RevOps-RevAMfg/releases/latest"
              target="_blank" rel="noopener">GitHub Releases</a>
           — look for <code>reva-turbo-&lt;version&gt;.zip</code>
-          (v2.1.1 or later). Don't unzip it.</li>
+          (v2.1.2 or later). Don't unzip it.</li>
         <li><strong>Claude Desktop → Plugins → Personal → Local uploads → +</strong>
           and drop in the zip. Click <strong>Enable</strong>.</li>
-        <li><strong>No settings to fill in.</strong> The 2.1.1 plugin
+        <li><strong>No settings to fill in.</strong> The 2.1.2 plugin
           self-configures — you'll paste your key in chat in Step 3.</li>
       </ol>
 
       <div class="hygiene">
-        <strong>Important — remove any legacy connectors.</strong>
+        <strong>Also remove any legacy Nakatomi / AutoMem connectors.</strong>
         If you previously added a standalone <em>Nakatomi</em> or
         <em>AutoMem</em> MCP connector in Claude Desktop → Settings →
-        Connectors, <strong>remove it now</strong>. This plugin wraps
-        both behind the router with prefixed tool names
-        (<code>crm_*</code> / <code>mem_*</code> / <code>reva_*</code>).
-        Duplicates show up as raw <code>search_contacts</code> /
-        <code>memory_recall</code> tool names and break intent routing.
+        Connectors, remove it now. This plugin wraps both behind the
+        router with prefixed tool names (<code>crm_*</code> /
+        <code>mem_*</code> / <code>reva_*</code>). Duplicates show up as
+        raw <code>search_contacts</code> / <code>memory_recall</code>
+        names and break intent routing.
       </div>
     </div>
 
-    <h3 style="margin-top:28px;">Step 3 — Run the engine &amp; paste your key</h3>
+    <div class="section-head"><h3>Step 3 — Run the engine &amp; paste your key</h3></div>
     <div class="panel">
       <p style="margin-top:0;">In any Claude Desktop chat, type:</p>
       <pre>/reva-turbo:revmyengine</pre>
-      <p>The engine will greet you and notice it doesn't have a key yet.
-      It'll ask you to paste one. Reply with:</p>
+      <p>The engine greets you and notices it doesn't have a key yet.
+      Reply with:</p>
       <pre>/connect <span style="color:var(--accent);">&lt;paste your nk_... key here&gt;</span></pre>
       <p>The engine validates the key against the router, saves it to
       your local config, and tells you to quit &amp; reopen Claude
-      Desktop (Cmd-Q, relaunch). That one restart is the only manual
-      step — after it, say <em>"let's go"</em> and you're in.</p>
+      Desktop (<code>Cmd-Q</code>, relaunch). That one restart is the
+      only manual step — after it, say <em>"let's go"</em> and you're in.</p>
       <p class="muted" style="margin-bottom:0;">
-        Behind the scenes: the plugin is connected to the shared
+        Behind the scenes: the plugin is already connected to the shared
         Rev&nbsp;A workspace, so it asks exactly one question
         (<em>what's your role?</em>) and pulls company profile,
         partners, and pipelines from the router — no local setup.
       </p>
     </div>
 
-    <h3 style="margin-top:28px;">Already using HubSpot, Salesforce, Attio, or Pipedrive?</h3>
+    <div class="section-head"><h3>Already using HubSpot, Salesforce, Attio, or Pipedrive?</h3></div>
     <div class="panel">
-      <p style="margin-top:0;">You can keep using your existing CRM as
-      the system of record. After Step 3, run:</p>
+      <p style="margin-top:0;">You can keep your existing CRM as the
+      system of record. After Step 3, run:</p>
       <pre>/integrate hubspot   <span class="muted">(or salesforce / attio / pipedrive)</span></pre>
       <p style="margin-bottom:0;">Skills will then write to your CRM
       first and shadow-write to Nakatomi + AutoMem so the shared Rev&nbsp;A
@@ -360,11 +466,16 @@ SIGNUP_HTML = """<!doctype html>
       <code>/integrate nakatomi</code>.</p>
     </div>
 
-    <p class="muted" style="margin-top:24px;">
+    <p class="muted" style="margin-top:28px;">
       Need to do this from a terminal instead?
       <a href="https://github.com/mrdulasolutions/RevOps-RevAMfg#for-end-users-rev-a-pms" target="_blank" rel="noopener">CLI install flow →</a>
     </p>
   </div>
+
+  <footer>
+    <span class="fa">Rev&nbsp;A Manufacturing · RevAOps</span>
+    <span>v2.1.2</span>
+  </footer>
 </main>
 <script>
 const form = document.getElementById('f');
@@ -408,12 +519,12 @@ form.addEventListener('submit', async (e) => {
     if (!r.ok) throw new Error(data.detail || ('HTTP ' + r.status));
     out.style.display = 'block';
     out.innerHTML = `
-      <h3>✓ You're in — welcome to Rev A Manufacturing</h3>
+      <h3>You're in — welcome to Rev&nbsp;A Manufacturing</h3>
       <p class="muted" style="margin:0 0 10px;">Copy this key — it's shown once. If you lose it, ask the admin to mint a new one.</p>
       <pre>${data.api_key}</pre>
-      <p style="margin:8px 0 0;"><span class="pill">workspace</span>${data.workspace_slug} &nbsp;
+      <p style="margin:10px 0 0;"><span class="pill">workspace</span><span style="color:var(--fg-dim);">${data.workspace_slug}</span> &nbsp;
         <span class="pill">endpoint</span><code>${mcpUrl}</code></p>
-      <p style="margin:14px 0 0;"><strong>Next:</strong> install the plugin (Step 2),
+      <p style="margin:16px 0 0;color:var(--fg-dim);"><strong style="color:var(--fg);">Next:</strong> install the plugin (Step 2),
         run <code>/reva-turbo:revmyengine</code> in Claude Desktop, and paste the key
         back with <code>/connect ${data.api_key.slice(0,10)}…</code>. The plugin
         will do the rest.</p>

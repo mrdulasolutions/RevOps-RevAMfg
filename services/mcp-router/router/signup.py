@@ -402,32 +402,48 @@ SIGNUP_HTML = """<!doctype html>
   <div id="post" class="post">
     <div class="section-head"><h3>Step 2 — Install the plugin</h3></div>
     <div class="panel">
-      <div class="hygiene" style="margin-top:0;margin-bottom:16px;">
-        <strong>Already have RevAOps installed? Remove it first.</strong>
-        Claude Desktop's plugin uploader does <em>not</em> auto-upgrade an
-        existing install — if you're on <code>v2.0.x</code> or earlier you
-        must uninstall before uploading the new zip. Go to
-        <strong>Plugins → Installed → RevAOps → ⋯ → Remove</strong>, then
-        quit Desktop (<code>Cmd-Q</code>), relaunch, and continue below.
-        Skipping this leaves you on a stale launcher and the engine won't
-        load your key.
+      <p style="margin:0 0 14px;color:var(--fg);"><strong>Pick a path. Both end with the same working engine.</strong></p>
+
+      <div style="padding:16px 18px;border-radius:4px;background:#1a1108;border:1px solid var(--accent-dim);margin-bottom:16px;">
+        <p style="margin:0 0 8px;color:var(--accent);font-weight:700;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;">
+          Option A — Hands-free (recommended)
+        </p>
+        <p style="margin:0 0 10px;color:var(--fg-dim);">Paste this one-liner into Terminal. It downloads the latest zip,
+          drops it into Claude Desktop's plugins dir, writes your key, and
+          relaunches Desktop — no clicking through menus, safely re-runs
+          if you already had an old version.</p>
+        <pre id="oneliner">curl -fsSL https://raw.githubusercontent.com/mrdulasolutions/RevOps-RevAMfg/main/plugin/scripts/desktop-install.sh \
+  | REVA_API_KEY=<span style="color:var(--accent);">&lt;your nk_... key from Step 1&gt;</span> bash</pre>
+        <p class="muted" style="margin:10px 0 0;">Already inside Claude?
+          If you have the <strong>Control your Mac</strong> connector
+          enabled (Desktop → Settings → Connectors), just say
+          <code>/heal</code> in any chat and Claude runs the one-liner
+          for you — truly hands-free.</p>
       </div>
-      <ol>
-        <li><strong>Download the latest plugin zip</strong> from
-          <a href="https://github.com/mrdulasolutions/RevOps-RevAMfg/releases/latest"
-             target="_blank" rel="noopener">GitHub Releases</a>
-          — look for <code>reva-turbo-&lt;version&gt;.zip</code>
-          (v2.1.2 or later). Don't unzip it.</li>
-        <li><strong>Claude Desktop → Plugins → Personal → Local uploads → +</strong>
-          and drop in the zip. Click <strong>Enable</strong>.</li>
-        <li><strong>No settings to fill in.</strong> The 2.1.2 plugin
-          self-configures — you'll paste your key in chat in Step 3.</li>
-      </ol>
+
+      <div style="padding:16px 18px;border-radius:4px;background:var(--card-2);border:1px solid var(--border);">
+        <p style="margin:0 0 8px;color:var(--fg-dim);font-weight:700;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;">
+          Option B — Manual upload
+        </p>
+        <ol style="margin:0;padding-left:20px;color:var(--fg-dim);">
+          <li style="margin:8px 0;"><strong>Download</strong> <code>reva-turbo-&lt;version&gt;.zip</code> (v2.1.2+) from
+            <a href="https://github.com/mrdulasolutions/RevOps-RevAMfg/releases/latest"
+               target="_blank" rel="noopener">GitHub Releases</a>. Don't unzip.</li>
+          <li style="margin:8px 0;"><strong>If you already have RevAOps installed</strong> (v2.0.x or earlier), go to
+            <strong>Plugins → Installed → RevAOps → ⋯ → Remove</strong>,
+            then quit Desktop (<code>Cmd-Q</code>) and relaunch. The
+            uploader doesn't auto-upgrade — skipping this leaves you on
+            a stale launcher and the engine won't load your key.</li>
+          <li style="margin:8px 0;"><strong>Claude Desktop → Plugins → Personal → Local uploads → +</strong>
+            and drop in the zip. Click <strong>Enable</strong>. No
+            settings to fill in — you'll paste your key in Step 3.</li>
+        </ol>
+      </div>
 
       <div class="hygiene">
-        <strong>Also remove any legacy Nakatomi / AutoMem connectors.</strong>
+        <strong>Remove any legacy Nakatomi / AutoMem connectors.</strong>
         If you previously added a standalone <em>Nakatomi</em> or
-        <em>AutoMem</em> MCP connector in Claude Desktop → Settings →
+        <em>AutoMem</em> MCP connector under Claude Desktop → Settings →
         Connectors, remove it now. This plugin wraps both behind the
         router with prefixed tool names (<code>crm_*</code> /
         <code>mem_*</code> / <code>reva_*</code>). Duplicates show up as
@@ -525,10 +541,10 @@ form.addEventListener('submit', async (e) => {
       <pre>${data.api_key}</pre>
       <p style="margin:10px 0 0;"><span class="pill">workspace</span><span style="color:var(--fg-dim);">${data.workspace_slug}</span> &nbsp;
         <span class="pill">endpoint</span><code>${mcpUrl}</code></p>
-      <p style="margin:16px 0 0;color:var(--fg-dim);"><strong style="color:var(--fg);">Next:</strong> install the plugin (Step 2),
-        run <code>/reva-turbo:revmyengine</code> in Claude Desktop, and paste the key
-        back with <code>/connect ${data.api_key.slice(0,10)}…</code>. The plugin
-        will do the rest.</p>
+      <p style="margin:16px 0 0;color:var(--fg-dim);"><strong style="color:var(--fg);">Next:</strong> install the plugin. Easiest path:
+        open Terminal and paste this one-liner (already has your key):</p>
+      <pre style="margin-top:10px;">curl -fsSL https://raw.githubusercontent.com/mrdulasolutions/RevOps-RevAMfg/main/plugin/scripts/desktop-install.sh | REVA_API_KEY=${data.api_key} bash</pre>
+      <p style="margin:10px 0 0;color:var(--fg-dim);">Prefer clicking? See <strong>Step 2 / Option B</strong> below for the manual upload path.</p>
     `;
     post.className = 'post on';
     s1.classList.add('done'); s1.classList.remove('active');

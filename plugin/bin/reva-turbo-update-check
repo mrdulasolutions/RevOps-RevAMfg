@@ -58,28 +58,48 @@ fi
 
 if [ "$stale" = "1" ]; then
   # Intentionally verbose — this is the moment we save the PM from a
-  # half-hour of "why won't my engine see the key?" debugging.
+  # half-hour of "why won't my engine see the key?" debugging. Lead
+  # with the hands-free path (say "/heal" in chat); fall back to the
+  # manual 5-step recovery for PMs whose Claude doesn't have the
+  # required connectors.
   cat >&2 <<'EOF'
 
 ┌──────────────────────────────────────────────────────────────────────┐
-│  ⚠  STALE INSTALL DETECTED — upgrade required                       │
+│  ⚠  STALE INSTALL DETECTED — RevAOps needs a refresh                │
 ├──────────────────────────────────────────────────────────────────────┤
-│  Your RevAOps plugin was installed from an older zip (pre-v2.1.1).   │
-│  Claude Desktop's plugin uploader does NOT auto-upgrade, so the      │
-│  old launcher is still on disk and your key file is being ignored.   │
+│  Your plugin was installed from a pre-v2.1.1 zip. Claude Desktop's   │
+│  uploader does NOT auto-upgrade, so the old launcher is still on     │
+│  disk and the engine can't pick up your API key.                     │
 │                                                                      │
-│  Fix (takes 60 seconds):                                             │
-│    1. Claude Desktop → Plugins → Installed → RevAOps → ⋯ → Remove   │
-│    2. Quit Desktop entirely (Cmd-Q), then relaunch.                  │
-│    3. Download the latest zip:                                       │
+│  HANDS-FREE FIX (recommended — takes ~30 seconds):                   │
+│    Say  /heal  in this chat.                                         │
+│                                                                      │
+│    Claude will download the latest zip, replace the stale install,   │
+│    write your credentials, and relaunch Desktop. Requires one of:    │
+│      • "Control your Mac" connector (Desktop → Settings →            │
+│        Connectors → Add)                                             │
+│      • Claude Code's built-in Bash tool                              │
+│    If neither is present Claude will tell you exactly which          │
+│    connector to enable, then run /heal again.                        │
+│                                                                      │
+│  TERMINAL FIX (zero connectors needed):                              │
+│    Open Terminal and paste:                                          │
+│      curl -fsSL https://raw.githubusercontent.com/mrdulasolutions/\  │
+│      RevOps-RevAMfg/main/plugin/scripts/desktop-install.sh \         │
+│        | REVA_API_KEY=nk_YOURKEY bash                                │
+│                                                                      │
+│  MANUAL FIX (last resort — 60 seconds):                              │
+│    1. Claude Desktop → Plugins → Installed → RevAOps → ⋯ → Remove  │
+│    2. Quit Desktop (Cmd-Q), then relaunch.                           │
+│    3. Download the latest zip from                                   │
 │       https://github.com/mrdulasolutions/RevOps-RevAMfg/releases/    │
 │       latest                                                         │
 │    4. Plugins → Personal → Local uploads → + → drop the new zip.    │
-│    5. Run /reva-turbo:revmyengine again — it'll pick up your        │
-│       existing key automatically.                                    │
+│    5. Run /reva-turbo:revmyengine.                                   │
 │                                                                      │
-│  No need to re-mint — your API key is stored separately under        │
-│  ~/.reva-turbo/state/mcp-credentials.env and survives re-install.    │
+│  Your key is stored separately under                                 │
+│    ~/.reva-turbo/state/mcp-credentials.env                           │
+│  and survives re-install — no need to re-mint.                       │
 └──────────────────────────────────────────────────────────────────────┘
 
 EOF

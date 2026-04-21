@@ -372,6 +372,7 @@ Voice applies to greeting style, signoff, tone, email length, technical depth, f
 | `/connect <nk_...>` | inline | Paste-key-in-chat onboarding: validate key against `/auth/me`, write `~/.reva-turbo/state/mcp-credentials.env`, prompt restart |
 | `/connected` | inline | Diagnostic: confirm router + show tool counts (`crm_*`, `mem_*`, `reva_*`) and current `mcp_url` |
 | `/integrate [connector]` | inline | Show or change the team's primary CRM (nakatomi/hubspot/salesforce/attio/pipedrive). Calls `reva_set_primary_crm`; Nakatomi + AutoMem always shadow-write |
+| `/heal` | inline | Hands-free recovery when install is stale. Downloads the latest zip, replaces the installed plugin dir, writes credentials. See **`/heal` — hands-free recovery** section below |
 | `/send-logs` | inline | Package dev log + email to matt@mrdula.solutions |
 | `/logs` | inline | Display recent telemetry entries in readable format |
 
@@ -657,6 +658,114 @@ dance entirely. Nakatomi IS the primary.
 
 See [`docs/CONNECTORS.md`](../../docs/CONNECTORS.md) for the full
 contract and per-connector field mappings.
+
+## `/heal` — hands-free recovery from a stale Claude Desktop install
+
+Claude Desktop's plugin uploader does **not** overwrite an existing
+install when a PM drops in a newer zip. If a PM upgraded from `v2.0.x`
+(the `${user_config.*}`-substitution era) to `v2.1.x+` (the bash
+launcher era), the old `plugin.json` is still on disk, the MCP server
+fails to pick up the key file, and `mcp__reva__*` tools never load.
+`reva-turbo-update-check` prints a banner flagging this at every engine
+start — `/heal` is how we fix it hands-free.
+
+**Trigger.** Run `/heal` when any of these are true:
+- `reva-turbo-update-check` printed the `⚠ STALE INSTALL DETECTED` banner in the preamble.
+- The PM reports the engine "hangs" / "tools not showing" after an upload.
+- `mcp__reva__reva_whoami` is still missing **after** the PM confirmed they ran `/connect` and restarted Desktop.
+
+**How `/heal` works.** It runs
+[`plugin/scripts/desktop-install.sh`](../../scripts/desktop-install.sh)
+one-shot: quits Desktop, removes the stale install dir, downloads the
+latest release zip, extracts it to the plugins root, writes
+`~/.reva-turbo/state/mcp-credentials.env` with the PM's key, pings the
+router, and relaunches Desktop. End-to-end under 30 seconds.
+
+### Capability detection (check BEFORE running)
+
+The PM's Claude Desktop needs at least one of these to run the heal
+script hands-free. Check the tool surface for exact tool names:
+
+| Capability | Detection signal | How /heal uses it |
+|---|---|---|
+| **Bash tool** (Claude Code native) | `Bash` in tool surface | Runs `curl … \| bash` directly |
+| **Control your Mac** (`mcp__computer-use__*` / `mcp__Control_your_Mac__osascript`) | `mcp__Control_your_Mac__osascript` present | Runs `osascript -e 'do shell script "curl … | bash"'` |
+| **Filesystem + Bash-like fallback** | `mcp__*Filesystem*` write tools present but no shell | Degraded: see "Filesystem-only fallback" below |
+
+**If NONE of the above is available**, do not attempt the heal. Tell
+the PM exactly what to do:
+
+> I can install this hands-free, but I need one of these connectors to
+> run the recovery script:
+>
+> - **Control your Mac** (preferred — does the whole thing in one go)
+> - **Filesystem** with write access to `~/.claude/plugins` and `~/.reva-turbo`
+>
+> **To add it:** Claude Desktop → Settings → Connectors → Add, search
+> for "Control your Mac", enable, then come back and say `/heal` again.
+>
+> **Or**, one-shot from Terminal (zero connectors needed):
+>
+> ```bash
+> curl -fsSL https://raw.githubusercontent.com/mrdulasolutions/RevOps-RevAMfg/main/plugin/scripts/desktop-install.sh \
+>   | REVA_API_KEY=<your nk_... key> bash
+> ```
+
+### Run the heal (capability present)
+
+1. **Find the PM's key.** Read
+   `~/.reva-turbo/state/mcp-credentials.env` if it exists. If not,
+   ask the PM to paste their `nk_...` key (or direct them to
+   `/signup`). Never proceed without a key — the script exits non-zero.
+
+2. **Run the one-liner.** Via Bash tool:
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/mrdulasolutions/RevOps-RevAMfg/main/plugin/scripts/desktop-install.sh \
+     | REVA_API_KEY="$NK_KEY" bash
+   ```
+   Via `mcp__Control_your_Mac__osascript`:
+   ```applescript
+   do shell script "curl -fsSL https://raw.githubusercontent.com/mrdulasolutions/RevOps-RevAMfg/main/plugin/scripts/desktop-install.sh | REVA_API_KEY='" & theKey & "' bash 2>&1"
+   ```
+
+3. **Read the script's stdout**. It prints:
+   - `[reva] router reachable (HTTP 200)` on success → relaunch line follows
+   - `[reva] WARN: router rejected the key` → bad key; have them re-mint at `/signup`
+   - `[reva] ERROR: …` with exit code 2/3/4 → report the exact message
+
+4. **Confirm in chat.** On success say exactly:
+   > **✓ Healed.** Claude Desktop is relaunching. When it comes back,
+   > say *"let's go"* and we'll pick up where we left off — no need to
+   > run `/connect` again.
+
+### Filesystem-only fallback
+
+If only a Filesystem MCP with write access is available (no shell
+execution), we can't download the zip but we CAN patch the installed
+`plugin.json` in place and drop in the launcher. This is the path the
+prior session's agent discovered:
+
+1. Overwrite
+   `$PLUGINS_ROOT/reva-turbo/.claude-plugin/plugin.json` with the
+   content of the currently-running plugin's `.claude-plugin/plugin.json`
+   (read via Filesystem, write via Filesystem).
+2. Copy
+   `$PLUGINS_ROOT/reva-turbo/bin/reva-mcp-launch.sh` from the running
+   plugin's `bin/`.
+3. Write `~/.reva-turbo/state/mcp-credentials.env` with the key.
+4. Ask the PM to **Cmd-Q + relaunch** (we can't do this without shell).
+
+This path only works if the running plugin is ≥ v2.1.2 (it is, because
+`/heal` itself is defined here). If the running plugin is stale the
+only option is the Terminal one-liner.
+
+### When NOT to run `/heal`
+
+- First-time install (no prior plugin dir) — regular `/signup` flow is
+  shorter and doesn't need shell access.
+- MCP tools are loading fine (`mcp__reva__reva_whoami` responds). The
+  heal is destructive (removes the install dir); don't run it on a
+  healthy install.
 
 ## Workflow State
 

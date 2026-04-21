@@ -274,14 +274,12 @@ SIGNUP_HTML = """<!doctype html>
         <li><strong>Download the latest plugin zip</strong> from
           <a href="https://github.com/mrdulasolutions/RevOps-RevAMfg/releases/latest"
              target="_blank" rel="noopener">GitHub Releases</a>
-          — look for <code>reva-turbo-&lt;version&gt;.zip</code>.
-          Don't unzip it.</li>
-        <li><strong>Open Claude Desktop → Plugins → Personal → Local uploads → +</strong>
-          and drop in the zip.</li>
-        <li>On enable, Claude prompts for two values:
-          <pre>mcp_url  =  <span id="mcpurlp"></span>
-api_key  =  (your nk_... key above)</pre>
-        </li>
+          — look for <code>reva-turbo-&lt;version&gt;.zip</code>
+          (v2.1.1 or later). Don't unzip it.</li>
+        <li><strong>Claude Desktop → Plugins → Personal → Local uploads → +</strong>
+          and drop in the zip. Click <strong>Enable</strong>.</li>
+        <li><strong>No settings to fill in.</strong> The 2.1.1 plugin
+          self-configures — you'll paste your key in chat in Step 3.</li>
       </ol>
 
       <div class="hygiene">
@@ -296,15 +294,22 @@ api_key  =  (your nk_... key above)</pre>
       </div>
     </div>
 
-    <h3 style="margin-top:28px;">Step 3 — Run the engine</h3>
+    <h3 style="margin-top:28px;">Step 3 — Run the engine &amp; paste your key</h3>
     <div class="panel">
       <p style="margin-top:0;">In any Claude Desktop chat, type:</p>
       <pre>/reva-turbo:revmyengine</pre>
+      <p>The engine will greet you and notice it doesn't have a key yet.
+      It'll ask you to paste one. Reply with:</p>
+      <pre>/connect <span style="color:var(--accent);">&lt;paste your nk_... key here&gt;</span></pre>
+      <p>The engine validates the key against the router, saves it to
+      your local config, and tells you to quit &amp; reopen Claude
+      Desktop (Cmd-Q, relaunch). That one restart is the only manual
+      step — after it, say <em>"let's go"</em> and you're in.</p>
       <p class="muted" style="margin-bottom:0;">
-        The engine will auto-detect that you're connected to the shared
-        Rev&nbsp;A workspace, ask one question (<em>what's your role?</em>),
-        and you're in. No company setup, no partners list, no workflow
-        config — all of that comes from the router.
+        Behind the scenes: the plugin is connected to the shared
+        Rev&nbsp;A workspace, so it asks exactly one question
+        (<em>what's your role?</em>) and pulls company profile,
+        partners, and pipelines from the router — no local setup.
       </p>
     </div>
 
@@ -344,12 +349,15 @@ form.addEventListener('submit', async (e) => {
     out.style.display = 'block';
     out.innerHTML = `
       <h3>✓ You're in — welcome to Rev A Manufacturing</h3>
-      <p class="muted" style="margin:0 0 10px;">Save this key — it's shown once. If you lose it, ask the admin to mint a new one.</p>
+      <p class="muted" style="margin:0 0 10px;">Copy this key — it's shown once. If you lose it, ask the admin to mint a new one.</p>
       <pre>${data.api_key}</pre>
       <p style="margin:8px 0 0;"><span class="pill">workspace</span>${data.workspace_slug} &nbsp;
         <span class="pill">endpoint</span><code>${mcpUrl}</code></p>
+      <p style="margin:14px 0 0;"><strong>Next:</strong> install the plugin (Step 2),
+        run <code>/reva-turbo:revmyengine</code> in Claude Desktop, and paste the key
+        back with <code>/connect ${data.api_key.slice(0,10)}…</code>. The plugin
+        will do the rest.</p>
     `;
-    document.getElementById('mcpurlp').textContent = mcpUrl;
     post.className = 'post on';
     s1.classList.add('done'); s1.classList.remove('active');
     s2.classList.add('active');

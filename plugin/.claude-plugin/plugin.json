@@ -1,7 +1,7 @@
 {
   "name": "reva-turbo",
-  "version": "2.1.0",
-  "description": "REVA-TURBO Skills Engine — Rev A Manufacturing PM workflow from RFQ intake through customer delivery. 48 skills + server-driven onboarding (role-only first-run, all company/partners/workflow config pulled from the MCP router). Covers quoting, China sourcing, compliance, quality, and fulfillment.",
+  "version": "2.1.1",
+  "description": "REVA-TURBO Skills Engine — Rev A Manufacturing PM workflow from RFQ intake through customer delivery. 48 skills + zero-friction onboarding: PM pastes their nk_… key in chat, plugin wires up the router automatically (no Settings UI hunting). Covers quoting, China sourcing, compliance, quality, and fulfillment.",
   "author": {
     "name": "Rev A Manufacturing / MrDula Solutions",
     "url": "https://github.com/mrdulasolutions"
@@ -57,25 +57,11 @@
     "shell": "bash >= 4",
     "node": ">= 18 (required — mcp-remote bridges plugin stdio MCP to the HTTP router)"
   },
-  "userConfig": {
-    "mcp_url": {
-      "description": "REVA MCP router URL (from your admin). Example: https://reva-ops.up.railway.app/mcp",
-      "sensitive": false
-    },
-    "api_key": {
-      "description": "Your personal REVA API key (nk_...). Get one at <mcp_url minus /mcp>/signup using the signup token your admin shared.",
-      "sensitive": true
-    }
-  },
   "mcpServers": {
     "reva": {
-      "command": "npx",
+      "command": "bash",
       "args": [
-        "-y",
-        "mcp-remote",
-        "${user_config.mcp_url}",
-        "--header",
-        "Authorization: Bearer ${user_config.api_key}"
+        "${CLAUDE_PLUGIN_ROOT}/bin/reva-mcp-launch.sh"
       ]
     }
   }

@@ -36,8 +36,12 @@ if [ -f "$CRED_FILE" ]; then
 fi
 
 # Fall back to the Rev A production router if the PM hasn't overridden it.
-# The /mcp suffix matches the router's mount point in services/mcp-router.
-: "${REVA_MCP_URL:=https://mcp-router-production-460a.up.railway.app/mcp}"
+# The /mcp/ suffix (TRAILING SLASH is load-bearing) matches the router's
+# mount point. Without the slash, Starlette's Mount issues a 307 redirect
+# to /mcp/ and mcp-remote drops the POST body (and the Authorization
+# header, if the redirect downgrades to HTTP behind Railway's proxy) —
+# the classic "Missing session ID" install failure.
+: "${REVA_MCP_URL:=https://mcp-router-production-460a.up.railway.app/mcp/}"
 : "${REVA_API_KEY:=}"
 
 # Hand off to mcp-remote. `-y` bypasses the npx prompt, which would hang

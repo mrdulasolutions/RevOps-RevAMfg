@@ -32,7 +32,7 @@ set -uo pipefail
 
 REPO="mrdulasolutions/RevOps-RevAMfg"
 TAG="${REVA_RELEASE_TAG:-latest}"
-DEFAULT_MCP_URL="https://mcp-router-production-460a.up.railway.app/mcp"
+DEFAULT_MCP_URL="https://mcp-router-production-460a.up.railway.app/mcp/"
 REVA_MCP_URL="${REVA_MCP_URL:-$DEFAULT_MCP_URL}"
 
 # Pretty-ish output that still reads fine inside AppleScript's `do shell

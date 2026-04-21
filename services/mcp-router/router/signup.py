@@ -491,7 +491,7 @@ SIGNUP_HTML = """<!doctype html>
 
   <footer>
     <span class="fa">Rev&nbsp;A Manufacturing · RevAOps</span>
-    <span>v2.1.3</span>
+    <span>v2.1.4</span>
   </footer>
 </main>
 <script>

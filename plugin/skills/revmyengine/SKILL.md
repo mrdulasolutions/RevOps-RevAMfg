@@ -1,7 +1,7 @@
 ---
 name: revmyengine
 preamble-tier: 1
-version: 2.1.3
+version: 2.1.4
 description: |
   REVA-TURBO master orchestrator for Rev A Manufacturing PM workflow.
   Routes requests to the correct sub-skill based on context. Chains the
@@ -373,6 +373,7 @@ Voice applies to greeting style, signoff, tone, email length, technical depth, f
 | `/connected` | inline | Diagnostic: confirm router + show tool counts (`crm_*`, `mem_*`, `reva_*`) and current `mcp_url` |
 | `/integrate [connector]` | inline | Show or change the team's primary CRM (nakatomi/hubspot/salesforce/attio/pipedrive). Calls `reva_set_primary_crm`; Nakatomi + AutoMem always shadow-write |
 | `/heal` | inline | Hands-free recovery when install is stale. Downloads the latest zip, replaces the installed plugin dir, writes credentials. See **`/heal` — hands-free recovery** section below |
+| `/demo [dry\|live\|clean]` | inline | Walk a fictional 500-unit CNC bracket RFQ through the full Rev A lifecycle so a PM can see the engine work before touching real data. See **`/demo` — end-to-end lifecycle walkthrough** below |
 | `/send-logs` | inline | Package dev log + email to matt@mrdula.solutions |
 | `/logs` | inline | Display recent telemetry entries in readable format |
 
@@ -766,6 +767,148 @@ only option is the Terminal one-liner.
 - MCP tools are loading fine (`mcp__reva__reva_whoami` responds). The
   heal is destructive (removes the install dir); don't run it on a
   healthy install.
+
+## `/demo` — end-to-end lifecycle walkthrough
+
+Traditional SaaS onboarding shows a populated product before the user
+touches it. The engine's version of that: run a fictional 500-unit
+CNC-bracket RFQ through all 14 lifecycle stages so the PM sees every
+skill fire — intake, qualify, customer onboarding, quote, submission,
+order, China package, partner select, tracking, shipping, inspect, QA
+gate, outbound, close — without risking real data.
+
+The canonical scenario (customer, RFQ specs, expected quote, partner,
+stage mapping) lives in
+[`references/demo-scenario.md`](./references/demo-scenario.md). Read
+that file every time `/demo` fires — don't improvise customer names,
+prices, or PNs. Consistency is how this reads as a product demo rather
+than ad-lib.
+
+### Mode selection
+
+When the PM types plain `/demo` (no arg), **ask once** via
+`AskUserQuestion`:
+
+> **Demo mode?**
+>
+> - **Dry run** — I narrate each stage with what the engine would do,
+>   but don't write anything to the CRM. Zero cleanup after.
+> - **Live demo** — I actually create a tagged demo customer, RFQ,
+>   quote, and deal in Nakatomi so you see real data light up your
+>   dashboard. Everything is marked `reva-demo` and can be wiped with
+>   `/demo clean`.
+
+Accept `dry`, `live`, or `clean` as direct arguments (`/demo dry`,
+`/demo live`, `/demo clean`) and skip the question.
+
+### Dry run (`/demo dry`)
+
+For each of the 14 stages in `demo-scenario.md`:
+
+1. Print a stage header: `Stage N — <stage name> [skill: <skill-slug>]`.
+2. Summarize in 2–4 sentences what the skill *would* do with this
+   fictional input. Use the numbers from the scenario file (quantities,
+   tolerances, prices, lead times) verbatim — don't round or paraphrase.
+3. Show the concrete output the engine would produce — for example at
+   Stage 4 show the per-unit cost breakdown table; at Stage 8 show the
+   3-partner scoring grid; at Stage 11 show the inspection sample
+   math. The table in `demo-scenario.md` is already per-unit-priced;
+   reuse those values.
+4. End each stage with `→ Next: <stage N+1 name>` so the narrative reads as a chain.
+
+After Stage 14, print a summary:
+- Total lifecycle time (7 weeks modeled end-to-end)
+- Quote value ($11,200) and realized margin
+- Which skills fired (count + list)
+- Links to the SKILL.md files for the 3 most complex ones
+
+No tool calls. No CRM writes. No emails. This is pure narration with
+real skill names so the PM learns the mental model.
+
+### Live demo (`/demo live`)
+
+Same 14-stage walk, but at each stage also invoke the router write
+path. Every record MUST carry the tagging envelope from
+`demo-scenario.md`:
+
+```json
+{
+  "source": "reva-demo",
+  "tags": ["reva-demo", "reva-demo-0001"],
+  "metadata": {
+    "demo_run_id": "<ISO-8601 start ts>",
+    "demo_operator": "<PM email>"
+  }
+}
+```
+
+Before creating anything, **check for stragglers from a prior run**:
+
+```
+crm_search {"filters": {"tag": "reva-demo"}}
+```
+
+If any results come back, ask: *"Found N leftover records from a
+previous demo run — wipe them first? [y/N]"* If yes, run `/demo clean`
+inline before starting. If no, bail and tell the PM to resolve
+manually — don't create duplicate demo records.
+
+Stage-by-stage tool calls (adjust tool names to match the PM's primary
+CRM — HubSpot / Salesforce / etc. tool prefixes differ, but the
+shadow-write contract in `docs/CONNECTORS.md` still applies):
+
+- **Stage 1–3** (intake / qualify / onboard): `crm_create_account`
+  (NexGen), `crm_create_contact` (Sarah + 2 supporting), `crm_create_rfq`.
+- **Stage 4**: `crm_create_quote` with the line-item breakdown.
+- **Stage 5**: `crm_create_communication` — **body only, do NOT send**.
+  Stamp `status="draft"`.
+- **Stage 6–8**: `crm_create_order`, `crm_create_manufacturing_package`,
+  `crm_create_partner_award`.
+- **Stage 9**: `crm_create_production_job` with 10 milestone stubs
+  (don't simulate progress — leave them at `planned`).
+- **Stage 10–14**: `crm_create_shipment`, `crm_create_inspection`
+  (outcome ACCEPT), `crm_create_qa_gate`, `crm_create_outbound_shipment`,
+  `crm_close_order`.
+
+Also write a matching memory at each stage via `mem_store` with
+`{"tags": ["reva-demo"], "metadata": {"demo_run_id": "..."}}` so the
+AutoMem pane shows the timeline.
+
+After Stage 14, tell the PM:
+- Where to see it: *"Open the dashboard — filter by tag `reva-demo`.
+  You'll see NexGen Aerospace with $11,200 in quoted value, one active
+  order, and 14 timeline entries."*
+- How to clean up: *"When you're done poking around, run
+  `/demo clean` and everything above gets wiped in one sweep."*
+
+### Cleanup (`/demo clean`)
+
+1. Warn first: *"This will permanently delete every record tagged
+   `reva-demo` in workspace `<slug>`. Continue?"* Require explicit yes.
+2. `crm_search {"filters": {"tag": "reva-demo"}}` across every entity
+   type the router exposes.
+3. For each hit, call the matching `crm_*_delete` tool. Delete
+   children before parents (shipments/jobs before orders, contacts
+   before accounts, quotes before RFQs).
+4. `mem_recall {"tags": ["reva-demo"]}` → `mem_delete` each match.
+5. Report counts: *"Removed 1 account, 3 contacts, 1 RFQ, 1 quote, 1
+   order, 1 manufacturing package, 1 partner award, 1 production job,
+   2 shipments, 1 inspection, 1 QA gate, and 14 memory entries."*
+
+If any delete fails, stop, report the specific error, and tell the PM
+they can safely re-run `/demo clean` — deletes are idempotent on
+already-gone records, so retry after fixing the blocker.
+
+### When not to run `/demo`
+
+- **In a workspace with real production data** if the PM is not
+  entirely sure the tagging filter will be honored by every downstream
+  system (BI dashboards, invoicing). The tag IS reliable in Nakatomi,
+  but if the primary CRM is HubSpot/Salesforce and the shadow-write
+  contract isn't honoring `tags[]` end-to-end, demo records will show
+  up in real reports. When in doubt, use `/demo dry`.
+- **During live customer calls** — takes 60–90 seconds of narration
+  and the PM will want to follow along. Schedule a dry training block.
 
 ## Workflow State
 

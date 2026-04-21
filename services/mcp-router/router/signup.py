@@ -426,7 +426,7 @@ SIGNUP_HTML = """<!doctype html>
           Option B — Manual upload
         </p>
         <ol style="margin:0;padding-left:20px;color:var(--fg-dim);">
-          <li style="margin:8px 0;"><strong>Download</strong> <code>reva-turbo-&lt;version&gt;.zip</code> (v2.1.2+) from
+          <li style="margin:8px 0;"><strong>Download</strong> <code>reva-turbo-&lt;version&gt;.zip</code> (v2.1.3+) from
             <a href="https://github.com/mrdulasolutions/RevOps-RevAMfg/releases/latest"
                target="_blank" rel="noopener">GitHub Releases</a>. Don't unzip.</li>
           <li style="margin:8px 0;"><strong>If you already have RevAOps installed</strong> (v2.0.x or earlier), go to
@@ -491,7 +491,7 @@ SIGNUP_HTML = """<!doctype html>
 
   <footer>
     <span class="fa">Rev&nbsp;A Manufacturing · RevAOps</span>
-    <span>v2.1.2</span>
+    <span>v2.1.3</span>
   </footer>
 </main>
 <script>

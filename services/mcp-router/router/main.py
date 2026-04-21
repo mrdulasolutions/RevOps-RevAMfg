@@ -52,6 +52,20 @@ def create_app() -> FastAPI:
             yield
 
     app = FastAPI(title="REVA MCP Router", version="0.1.0", lifespan=lifespan)
+
+    # Normalize /mcp → /mcp/ IN-PLACE (no 307 redirect). Starlette's Mount
+    # would otherwise redirect any missing-trailing-slash request, and
+    # mcp-remote / other MCP clients drop the POST body (and Authorization
+    # header, if the redirect downgrades to HTTP) when following a 307.
+    # Rewriting the path at the ASGI layer bypasses that entirely — clients
+    # can POST to /mcp OR /mcp/ and both work.
+    @app.middleware("http")
+    async def normalize_mcp_trailing_slash(request, call_next):
+        if request.scope["path"] == "/mcp":
+            request.scope["path"] = "/mcp/"
+            request.scope["raw_path"] = b"/mcp/"
+        return await call_next(request)
+
     app.mount("/mcp", mcp.streamable_http_app())
 
     # Self-service signup (GET /signup HTML, POST /signup JSON)

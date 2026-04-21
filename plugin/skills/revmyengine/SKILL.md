@@ -1,7 +1,7 @@
 ---
 name: revmyengine
 preamble-tier: 1
-version: 2.1.4
+version: 2.1.5
 description: |
   REVA-TURBO master orchestrator for Rev A Manufacturing PM workflow.
   Routes requests to the correct sub-skill based on context. Chains the
@@ -272,15 +272,41 @@ file was written, and wait.
 
 Extract the key from the PM's message (grep for `nk_[A-Za-z0-9_-]+`).
 If the user also provided a router URL, capture that too (look for an
-`https://…/mcp` token); otherwise default to the Rev A production URL.
+`https://…/mcp` token); otherwise default to
+`https://mcp-router-production-460a.up.railway.app/mcp/` (trailing
+slash is load-bearing — see note at end of section).
 
-Write credentials to the file the MCP launcher reads on Desktop
-startup (`bin/reva-mcp-launch.sh`):
+#### ⚠️ CRITICAL: detect the execution environment BEFORE writing
+
+The credentials file must land on the **user's real Mac** at
+`~/.reva-turbo/state/mcp-credentials.env` — that's the file Claude
+Desktop's launcher reads on startup. **In Claude Cowork**, the `Bash`
+tool writes to an ephemeral sandbox filesystem, *not* the real Mac —
+credentials written via Bash inside Cowork never reach Desktop and
+the plugin stays disconnected.
+
+Capability detection (check BEFORE writing creds):
+
+| Environment | Signal | Write creds via |
+|---|---|---|
+| **Claude Code** (runs on the Mac itself) | `Bash` tool present AND no `mcp__computer-use__*` / `mcp__Control_your_Mac__*` | Bash — writes land on the real Mac |
+| **Claude Cowork** (sandboxed) | Both `Bash` AND `mcp__Control_your_Mac__osascript` present | `mcp__Control_your_Mac__osascript` — punches through the sandbox to the real Mac |
+| **Claude Desktop with Bash** (rare) | `Bash` only, no osascript | Bash works; native macOS filesystem |
+| **Claude Desktop, no Bash, osascript present** | `mcp__Control_your_Mac__osascript` only | osascript |
+| **No shell-capable tool at all** | Filesystem MCP write tools only | Filesystem MCP writing to `$HOME/.reva-turbo/state/mcp-credentials.env` |
+
+**Rule of thumb:** *if `mcp__Control_your_Mac__osascript` is present,
+prefer it over `Bash` for credential writes.* Cowork has both Bash
+(sandbox) and osascript (real Mac) — if you use Bash you silently
+miss the Mac, and the PM watches you "succeed" while nothing actually
+works.
+
+#### Write creds via Bash (Claude Code / native Desktop)
 
 ```bash
 mkdir -p ~/.reva-turbo/state
 _KEY="NK_KEY_HERE"          # replace with the extracted nk_... value
-_URL="MCP_URL_HERE"          # replace; default: https://mcp-router-production-460a.up.railway.app/mcp
+_URL="MCP_URL_HERE"          # default: https://mcp-router-production-460a.up.railway.app/mcp/
 cat > ~/.reva-turbo/state/mcp-credentials.env <<EOF
 REVA_MCP_URL=$_URL
 REVA_API_KEY=$_KEY
@@ -288,13 +314,34 @@ EOF
 chmod 600 ~/.reva-turbo/state/mcp-credentials.env
 ```
 
-Immediately validate the key by hitting the router's `/auth/me`
-endpoint (this is proxied through to Nakatomi and returns the user
-record on a valid key):
+#### Write creds via osascript (Cowork — THE DEFAULT when osascript is present)
+
+```applescript
+do shell script "mkdir -p $HOME/.reva-turbo/state && cat > $HOME/.reva-turbo/state/mcp-credentials.env <<'EOF'
+REVA_MCP_URL=https://mcp-router-production-460a.up.railway.app/mcp/
+REVA_API_KEY=NK_KEY_HERE
+EOF
+chmod 600 $HOME/.reva-turbo/state/mcp-credentials.env"
+```
+
+Substitute `NK_KEY_HERE` with the actual `nk_...` value **before**
+sending to `mcp__Control_your_Mac__osascript`. Never log the key.
+
+#### Validate the key immediately (same environment)
+
+Hit the router's `/auth/me` endpoint — proxied through to Nakatomi,
+returns the user record on a valid key. Use the **same execution
+environment** you used to write the creds so you're validating against
+the same network (e.g. osascript if you wrote via osascript, Bash if
+you wrote via Bash):
 
 ```bash
-_BASE="${_URL%/mcp}"
+# Bash environments:
+_BASE="${_URL%/mcp/}"
 curl -fsS -H "Authorization: Bearer $_KEY" "$_BASE/auth/me" | head -c 400
+
+# osascript environment:
+do shell script "curl -fsS -H 'Authorization: Bearer NK_KEY_HERE' 'https://mcp-router-production-460a.up.railway.app/auth/me' 2>&1 | head -c 400"
 ```
 
 - If `curl` succeeds (HTTP 200, JSON with `email`/`workspace`): tell
@@ -316,6 +363,18 @@ curl -fsS -H "Authorization: Bearer $_KEY" "$_BASE/auth/me" | head -c 400
   diagnostic output, never pass it to telemetry.
 - The file mode is 600 — belt-and-suspenders against any other
   process on the box.
+
+**Why the trailing slash on `/mcp/` is load-bearing:** the router
+mounts FastMCP under `/mcp`. A POST to `/mcp` (no slash) triggers
+Starlette's auto-redirect to `/mcp/` as a 307. Some MCP clients
+(notably `mcp-remote` ≤ 0.x) drop the request body when following a
+307 POST — and if the origin is behind a proxy that doesn't pass
+X-Forwarded-Proto through, the redirect target can come back `http://`
+instead of `https://`, at which point the Authorization header gets
+stripped on protocol downgrade. The router has proxy-header trust
+enabled as of v2.1.5 and rewrites `/mcp` → `/mcp/` in middleware, so
+both URLs now work server-side — but the credentials file should
+always carry the trailing-slash form. Defense in depth.
 
 Do not proceed to Steps 1–4 until the tool call succeeds.
 

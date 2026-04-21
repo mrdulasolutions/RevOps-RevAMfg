@@ -108,7 +108,7 @@ admin key with anyone.
 ## Rotating the signup token
 
 ```bash
-railway variable set "REVA_SIGNUP_TOKEN=$(openssl rand -hex 16)" --service mcp-router
+railway variables --service mcp-router --set "REVA_SIGNUP_TOKEN=$(openssl rand -hex 16)"
 # Old token stops working on the next deploy. Existing PMs are unaffected
 # (their API keys don't depend on the signup token after mint).
 ```

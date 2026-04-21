@@ -1,6 +1,6 @@
 {
   "name": "reva-turbo",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "REVA-TURBO Skills Engine — Rev A Manufacturing PM workflow from RFQ intake through customer delivery. 48 skills covering quoting, China sourcing, compliance, quality, and fulfillment.",
   "author": {
     "name": "Rev A Manufacturing / MrDula Solutions",
@@ -55,9 +55,7 @@
   },
   "requirements": {
     "shell": "bash >= 4",
-    "optional": {
-      "node": ">= 18 (for docx report generation)"
-    }
+    "node": ">= 18 (required — mcp-remote bridges plugin stdio MCP to the HTTP router)"
   },
   "userConfig": {
     "mcp_url": {
@@ -71,11 +69,14 @@
   },
   "mcpServers": {
     "reva": {
-      "type": "http",
-      "url": "${user_config.mcp_url}",
-      "headers": {
-        "Authorization": "Bearer ${user_config.api_key}"
-      }
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "${user_config.mcp_url}",
+        "--header",
+        "Authorization: Bearer ${user_config.api_key}"
+      ]
     }
   }
 }

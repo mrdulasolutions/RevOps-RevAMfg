@@ -1,7 +1,7 @@
 ---
 name: revmyengine
 preamble-tier: 1
-version: 2.1.1
+version: 2.1.2
 description: |
   REVA-TURBO master orchestrator for Rev A Manufacturing PM workflow.
   Routes requests to the correct sub-skill based on context. Chains the
@@ -28,6 +28,7 @@ allowed-tools:
   - mcp__reva__reva_get_company_profile
   - mcp__reva__reva_get_workspace_config
   - mcp__reva__reva_set_user_role
+  - mcp__reva__reva_set_primary_crm
   - mcp__reva__reva_remember_about_entity
   - mcp__reva__reva_recall_for_entity
   - mcp__reva__crm_search_contacts
@@ -370,6 +371,7 @@ Voice applies to greeting style, signoff, tone, email length, technical depth, f
 | `/refresh` | inline | Re-pull `reva_get_company_profile` + `reva_get_workspace_config` into local cache |
 | `/connect <nk_...>` | inline | Paste-key-in-chat onboarding: validate key against `/auth/me`, write `~/.reva-turbo/state/mcp-credentials.env`, prompt restart |
 | `/connected` | inline | Diagnostic: confirm router + show tool counts (`crm_*`, `mem_*`, `reva_*`) and current `mcp_url` |
+| `/integrate [connector]` | inline | Show or change the team's primary CRM (nakatomi/hubspot/salesforce/attio/pipedrive). Calls `reva_set_primary_crm`; Nakatomi + AutoMem always shadow-write |
 | `/send-logs` | inline | Package dev log + email to matt@mrdula.solutions |
 | `/logs` | inline | Display recent telemetry entries in readable format |
 
@@ -575,6 +577,86 @@ curl -fsS -o /dev/null -w "%{http_code}" \
   /connect <new-key>."*
 - Connection error → *"Can't reach the router. Check Wi-Fi; if it
   persists, ping your admin — the router may be down."*
+
+## `/integrate` — choose the team's primary CRM
+
+REVA-TURBO ships with Nakatomi and AutoMem as the built-in CRM + memory
+pair. If the PM's team already uses HubSpot, Salesforce, Attio, or
+Pipedrive in Claude Desktop, they can make that the **system of record**
+so reads/writes prefer it — while Nakatomi + AutoMem continue to mirror
+the data so the shared Rev A timeline stays complete.
+
+**No arg** — show current config:
+
+1. Read `~/.reva-turbo/state/workspace-config.json` → `primary_crm` +
+   `connector_registry`.
+2. For each registered connector, detect whether the PM's Desktop has
+   its MCP tools available (check the tool surface for tools whose
+   names start with `mcp_tool_prefix` — e.g. `hubspot_` implies the
+   HubSpot connector is installed in Desktop → Settings → Connectors).
+3. Display:
+
+   ```
+   Primary CRM: <display> (<slug>)
+   Shadow-writes to: Nakatomi + AutoMem (always)
+
+   Available connectors:
+     ✓ nakatomi    — Nakatomi (bundled)      [currently primary]
+     ✓ hubspot     — HubSpot                 [installed, can be primary]
+     ✗ salesforce  — Salesforce              [not installed in Desktop]
+     …
+
+   Change: /integrate <slug>
+   ```
+
+**With arg** (e.g. `/integrate hubspot`):
+
+1. Validate against `connector_registry` — if the slug isn't in the
+   registry, tell the PM which slugs are valid and stop.
+2. If the chosen connector isn't `nakatomi` and we don't detect its
+   tools (`mcp__<prefix>*` missing from the surface), warn the PM:
+   *"HubSpot MCP tools aren't available — install the HubSpot
+   connector in Desktop → Settings → Connectors first, then re-run
+   /integrate hubspot. Switching anyway will put every skill in
+   shadow-write-only mode until the connector is installed. Continue?
+   (yes/no)."* Don't proceed without explicit yes.
+3. Call `mcp__reva__reva_set_primary_crm {"connector": "<slug>"}`.
+4. Re-pull config into `~/.reva-turbo/state/workspace-config.json`
+   (same as `/refresh`).
+5. Confirm: *"✓ Primary CRM is now <display>. All skills will read
+   from <display> first and shadow-write to Nakatomi + AutoMem. Revert
+   any time with /integrate nakatomi."*
+
+### Shadow-write contract for skill authors
+
+When a skill writes a customer, contact, deal, note, or activity, it
+MUST follow this sequence:
+
+1. **Primary write.** Call the external connector (if primary) or
+   `mcp__reva__crm_*` (if primary is nakatomi). Capture the returned
+   external/internal ID.
+2. **Shadow-write to Nakatomi.** If primary is NOT nakatomi, ALSO call
+   `mcp__reva__crm_*` with the same payload, tagging
+   `{"source": "<connector_slug>", "source_id": "<external_id>"}` in
+   the note/description so later reads can resolve back to the primary.
+3. **Memory write.** Call `mcp__reva__reva_remember_about_entity` (or
+   `mcp__reva__mem_store` + `mcp__reva__mem_associate`) with the
+   Nakatomi entity_id from step 2 — this keeps AutoMem's graph
+   consistent regardless of where the primary record lives.
+4. **Return the primary's record to the PM** (not Nakatomi's shadow
+   copy) — when the PM says "look up Acme Corp" they should see the
+   HubSpot Acme Corp, not a stale mirror.
+
+**Read path.** Reads prefer the primary connector. If the primary
+connector errors or is unavailable (tools missing), fall back to
+Nakatomi and tell the PM: *"HubSpot is unreachable — showing the Rev A
+mirror from Nakatomi. Data may be up to 5 min behind the primary."*
+
+**When primary is `nakatomi`** (the default): skip the shadow-write
+dance entirely. Nakatomi IS the primary.
+
+See [`docs/CONNECTORS.md`](../../docs/CONNECTORS.md) for the full
+contract and per-connector field mappings.
 
 ## Workflow State
 

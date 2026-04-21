@@ -165,6 +165,10 @@ def register(mcp: FastMCP) -> None:
                 "memory": settings.mem_tool_prefix,
                 "cross": "reva",
             },
+            # Primary system of record. Skills read this to decide whether
+            # to hit Nakatomi directly (crm_*) or route through an external
+            # connector the PM has installed in Desktop (hubspot_*, sf_*…).
+            "primary_crm": data.get("primary_crm") or "nakatomi",
         }
 
     @mcp.tool(name="reva_get_company_profile")
@@ -212,6 +216,12 @@ def register(mcp: FastMCP) -> None:
             "memory_taxonomy": data.get("memory_taxonomy") or [],
             "escalation_matrix": data.get("escalation_matrix") or [],
             "role_skill_map": data.get("role_skill_map") or {},
+            # Connector story — which external CRM (if any) is the team's
+            # system of record. Skills use this to decide whether to talk
+            # to an external connector first (e.g. HubSpot MCP tools) and
+            # shadow-write to Nakatomi, or to stay internal.
+            "primary_crm": data.get("primary_crm") or "nakatomi",
+            "connector_registry": data.get("connector_registry") or [],
         }
 
     @mcp.tool(name="reva_set_user_role")
@@ -245,3 +255,77 @@ def register(mcp: FastMCP) -> None:
             "PATCH", "/workspace", token=admin, json={"data": data}
         )
         return {"user_id": user_id, "role": role, "ok": True}
+
+    @mcp.tool(name="reva_set_primary_crm")
+    async def set_primary_crm(ctx: Context, connector: str) -> dict:
+        """Set the workspace's primary CRM (system of record).
+
+        Writes ``workspace.data.primary_crm``. ``connector`` must be the
+        ``slug`` of an entry in ``workspace.data.connector_registry`` (e.g.
+        ``nakatomi``, ``hubspot``, ``salesforce``, ``attio``, ``pipedrive``).
+
+        This is a **team-level** setting: whoever runs it changes the
+        system of record for the whole Rev A workspace. Skills read this
+        on every write to decide where the authoritative record goes;
+        the bundled Nakatomi + AutoMem always mirror the write so the
+        shared Rev A timeline stays complete.
+
+        Requires admin-token escalation (PATCH /workspace is owner-only
+        in Nakatomi). The caller's own token is still checked via
+        ``/auth/me`` so we can log *who* flipped it.
+        """
+        slug = (connector or "").strip().lower()
+        if not slug:
+            raise RuntimeError("connector is required")
+
+        # Identify caller (for logging) and sanity-check workspace membership.
+        token = token_from_ctx(ctx)
+        me = await nakatomi.request("GET", "/auth/me", token=token)
+        actor_id = (me or {}).get("id")
+        if not actor_id:
+            raise RuntimeError("could not resolve caller user_id")
+
+        admin = _admin_token()
+        ws = await nakatomi.request("GET", "/workspace", token=admin)
+        data = dict(ws.get("data") or {})
+
+        registry = data.get("connector_registry") or []
+        valid_slugs = {entry.get("slug") for entry in registry if entry.get("slug")}
+        if slug not in valid_slugs:
+            raise RuntimeError(
+                f"connector '{slug}' is not in the workspace registry. "
+                f"Valid options: {sorted(valid_slugs) or ['<empty — run deploy.sh seed>']}. "
+                "Ask your admin to extend `REVA_CONNECTOR_REGISTRY` if you "
+                "need a connector that isn't listed."
+            )
+        entry = next(e for e in registry if e.get("slug") == slug)
+        if not entry.get("primary_compatible", True):
+            raise RuntimeError(
+                f"connector '{slug}' is registered but not primary-compatible "
+                "(it's observe-only). Pick a different connector."
+            )
+
+        previous = data.get("primary_crm") or "nakatomi"
+        data["primary_crm"] = slug
+        # Audit trail. Lightweight — we don't want a full log table here,
+        # but the last N flips are useful for "who changed the CRM?" debug.
+        history = list(data.get("primary_crm_history") or [])
+        history.append({
+            "from": previous,
+            "to": slug,
+            "actor_user_id": actor_id,
+            "actor_email": (me or {}).get("email"),
+        })
+        data["primary_crm_history"] = history[-10:]  # keep last 10 flips
+        await nakatomi.request(
+            "PATCH", "/workspace", token=admin, json={"data": data}
+        )
+        return {
+            "primary_crm": slug,
+            "previous": previous,
+            "display": entry.get("display", slug),
+            "mcp_tool_prefix": entry.get("mcp_tool_prefix"),
+            "bundled": bool(entry.get("bundled")),
+            "notes": entry.get("notes", ""),
+            "ok": True,
+        }

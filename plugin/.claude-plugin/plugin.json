@@ -1,7 +1,8 @@
 {
   "name": "reva-turbo",
-  "version": "2.1.1",
-  "description": "REVA-TURBO Skills Engine — Rev A Manufacturing PM workflow from RFQ intake through customer delivery. 48 skills + zero-friction onboarding: PM pastes their nk_… key in chat, plugin wires up the router automatically (no Settings UI hunting). Covers quoting, China sourcing, compliance, quality, and fulfillment.",
+  "displayName": "RevAOps Plugin",
+  "version": "2.1.2",
+  "description": "The Rev A Manufacturing PM copilot — full RFQ-to-delivery workflow with CRM, memory, and 48 skills. Paste your key in chat and you're in; bring your own CRM (HubSpot, Salesforce, Attio, Pipedrive) or use the bundled Nakatomi + AutoMem defaults.",
   "author": {
     "name": "Rev A Manufacturing / MrDula Solutions",
     "url": "https://github.com/mrdulasolutions"

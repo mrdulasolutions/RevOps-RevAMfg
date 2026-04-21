@@ -348,6 +348,18 @@ SIGNUP_HTML = """<!doctype html>
       </p>
     </div>
 
+    <h3 style="margin-top:28px;">Already using HubSpot, Salesforce, Attio, or Pipedrive?</h3>
+    <div class="panel">
+      <p style="margin-top:0;">You can keep using your existing CRM as
+      the system of record. After Step 3, run:</p>
+      <pre>/integrate hubspot   <span class="muted">(or salesforce / attio / pipedrive)</span></pre>
+      <p style="margin-bottom:0;">Skills will then write to your CRM
+      first and shadow-write to Nakatomi + AutoMem so the shared Rev&nbsp;A
+      timeline stays complete. Reads prefer your CRM and fall back to
+      Nakatomi if it's unreachable. Revert any time with
+      <code>/integrate nakatomi</code>.</p>
+    </div>
+
     <p class="muted" style="margin-top:24px;">
       Need to do this from a terminal instead?
       <a href="https://github.com/mrdulasolutions/RevOps-RevAMfg#for-end-users-rev-a-pms" target="_blank" rel="noopener">CLI install flow →</a>

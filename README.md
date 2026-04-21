@@ -67,41 +67,91 @@ RevOps-RevAMfg/
 
 ## For end users (Rev A PMs)
 
-Your admin deploys the backend once and shares two things with you: the
-**router URL** (e.g. `https://mcp-router-production-460a.up.railway.app/mcp`)
-and a one-time **signup token**. From there it's three steps — no terminal
-needed.
+**You need:** a work email (`@revamfg.com` or `@mrdula.solutions`), the
+one-time **signup token** from your admin, and Claude Desktop installed.
+No terminal, no settings hunting.
 
-**1. Get your personal API key.** Visit `<router-url-without-/mcp>/signup`
-in your browser. Enter your name, work email, a password (12+ chars — only
-used for future key resets), and the signup token. The page shows your
-`nk_...` key once. Copy it.
+**1. Mint your API key.** Click this link:
 
-**2. Download the plugin bundle.** Grab the latest `reva-turbo-<version>.zip`
-from the project's [GitHub Releases](https://github.com/mrdulasolutions/RevOps-RevAMfg/releases)
-page. (The zip contains a single top-level `reva-turbo/` directory — don't
-unzip it before upload.)
+> **https://mcp-router-production-460a.up.railway.app/signup**
 
-**3. Upload it into Claude Desktop.** Open **Plugins → Personal → Local
-uploads → `+`** and drop in the zip. On enable, Claude prompts for two
-values:
+Fill in your name, your `@revamfg.com` or `@mrdula.solutions` email, a
+password (12+ chars — only used if you ever need the admin to reset your
+key), and paste the signup token. The page shows a key that starts with
+`nk_`. **Copy it now** — it's only shown once.
 
-- **`mcp_url`** — the router URL your admin shared (the full `/mcp` form)
-- **`api_key`** — the `nk_...` key from step 1 (stored in your OS keychain,
-  not a plaintext file)
+**2. Download the plugin.** Grab the latest `reva-turbo-<version>.zip`
+from [GitHub Releases →
+latest](https://github.com/mrdulasolutions/RevOps-RevAMfg/releases/latest).
+Don't unzip it.
 
-That's it. Run `/reva-turbo:revmyengine` and the engine is connected to the
-shared CRM and memory. Everything you log is available to the whole team,
-and every action is attributed to your user on the Nakatomi timeline.
+**3. Install it in Claude Desktop.** Open **Plugins → Personal → Local
+uploads → `+`** and drop in the zip. Click **Enable**. No settings to
+fill in — the plugin self-configures in the next step.
 
-> Prefer the terminal? The legacy CLI path still works for Claude Code
-> users:
+**4. Connect your key in chat.** In any Claude Desktop conversation,
+type:
+
+```
+/reva-turbo:revmyengine
+```
+
+The engine greets you and notices it doesn't have a key yet. Reply with:
+
+```
+/connect nk_yourkeyhere
+```
+
+The engine validates the key against the router, saves it locally
+(mode-600 file at `~/.reva-turbo/state/mcp-credentials.env`), and tells
+you to quit and reopen Claude Desktop (Cmd-Q, then relaunch).
+
+**5. Pick your role.** On the next launch, run `/reva-turbo:revmyengine`
+again. It asks one question — *what's your role?* (PM / Sales /
+Compliance / C-level / Eng) — and you're in.
+
+Everything you log is shared with the Rev A team, and every action is
+attributed to your user on the Nakatomi timeline.
+
+> **Only `@revamfg.com` and `@mrdula.solutions` emails can sign up.** The
+> signup token alone isn't enough — the router enforces the email
+> allowlist. If you need access under a different domain, contact the
+> admin (`matt@mrdula.solutions`) to add yours to
+> `REVA_ALLOWED_EMAIL_DOMAINS` on the router.
+
+> **Prefer the terminal?** The legacy CLI path still works for Claude
+> Code users:
 > ```bash
 > curl -fsSL https://raw.githubusercontent.com/mrdulasolutions/RevOps-RevAMfg/main/plugin/install.sh \
->   | REVA_MCP_URL=https://<router>.up.railway.app/mcp bash
+>   | REVA_MCP_URL=https://mcp-router-production-460a.up.railway.app/mcp bash
 > ```
-> It drops into the same signup wizard and writes `~/.claude/mcp.json`
-> directly.
+> It drops into the same signup wizard and writes
+> `~/.reva-turbo/state/mcp-credentials.env` directly.
+
+### Have your own CRM connector in Claude?
+
+REVA-TURBO ships with Nakatomi (CRM) and AutoMem (semantic memory) as
+the defaults — those come over the router automatically. But if you've
+already connected **HubSpot**, **Salesforce**, **Attio**, or any other
+CRM to Claude Desktop, you can keep using it as your source of truth:
+
+```
+/integrate hubspot
+```
+
+After you do this, skills that write customer/deal/contact data will:
+
+1. **Write to HubSpot first** (your primary CRM — this is the record of
+   truth).
+2. **Shadow-write the same data to Nakatomi** so the whole Rev A team
+   sees the activity on the shared timeline.
+3. **Store the semantic memory in AutoMem** linked to both IDs.
+
+Reads prefer HubSpot when it's available and fall back to Nakatomi on
+an outage. Run `/integrate nakatomi` (the default) to revert.
+
+See [`docs/CONNECTORS.md`](./docs/CONNECTORS.md) for the full list of
+supported connectors and the shadow-write contract.
 
 See [`docs/AUTH.md`](./docs/AUTH.md) for the full auth flow and rotation
 story.

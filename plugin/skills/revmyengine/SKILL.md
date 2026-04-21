@@ -1,7 +1,7 @@
 ---
 name: revmyengine
 preamble-tier: 1
-version: 2.1.2
+version: 2.1.3
 description: |
   REVA-TURBO master orchestrator for Rev A Manufacturing PM workflow.
   Routes requests to the correct sub-skill based on context. Chains the
@@ -755,7 +755,7 @@ prior session's agent discovered:
 3. Write `~/.reva-turbo/state/mcp-credentials.env` with the key.
 4. Ask the PM to **Cmd-Q + relaunch** (we can't do this without shell).
 
-This path only works if the running plugin is ≥ v2.1.2 (it is, because
+This path only works if the running plugin is ≥ v2.1.3 (it is, because
 `/heal` itself is defined here). If the running plugin is stale the
 only option is the Terminal one-liner.
 
